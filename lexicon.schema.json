@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jewdah-afk/aaa-kit/lexicon.schema.json",
+  "title": "aaa-kit lexicon",
+  "type": "object",
+  "required": ["version", "count", "terms"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "count": { "type": "integer", "minimum": 400 },
+    "terms": {
+      "type": "array",
+      "minItems": 400,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["term", "tier", "domain", "meaning", "use-when", "pairs-with", "prompt-phrase", "source", "starter"],
+        "properties": {
+          "term": { "type": "string", "minLength": 2, "maxLength": 60 },
+          "tier": { "type": "string", "minLength": 2 },
+          "domain": {
+            "enum": ["hierarchy", "ui", "reward", "vfx", "materials", "shaders", "algorithms", "world", "economy",
+                     "code", "performance", "art", "audio-feel", "game-feel", "process"]
+          },
+          "meaning": { "type": "string", "minLength": 10 },
+          "use-when": { "type": "string", "minLength": 5 },
+          "pairs-with": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "prompt-phrase": { "type": "string", "minLength": 10 },
+          "source": { "type": "string", "minLength": 3 },
+          "starter": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

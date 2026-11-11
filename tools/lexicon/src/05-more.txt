@@ -1,0 +1,36 @@
+@domain ui
+XP bar | T3 hud | The bar showing progress to the next level. | Levelling. | XP blue, eased fill, level-up | fill the XP bar in XP blue with an eased leading edge; burst at full | Living Effects Lab
+HP bar | T3 hud | The player's or an enemy's health display. | Combat status. | ghost bar, danger red | show HP as a bar with a ghost bar trailing losses | industry
+boss bar | T3 hud | A wide health bar for a boss, with phase markers. | Boss fights. | HP bar, boss rung | show the boss bar top-centre with ticks at each phase threshold | industry
+minimap | T3 hud | A small overview map. | Navigation. | landmark | show landmarks and the player arrow on a minimap, nothing else | industry
+fog of war | T4 world | Hiding unexplored or out-of-sight areas. | Exploration and strategy. | minimap | reveal fog of war in a soft-edged radius around the player | industry
+off-screen indicator | T3 hud | An arrow at the screen edge pointing to something off screen. | Objectives and threats. | telegraph | point an edge arrow at the off-screen boss, red only for threats | industry
+quest tracker | T3 hud | A compact list of current goals. | Guiding players. | one loud element per panel | track one active quest at a time with a progress count | industry
+notification dot | T3 hud | A small dot showing something new in a menu. | Menu discoverability. | badge | show a bone-white notification dot on tabs with unseen items | industry
+settings menu | T3 hud | Options for audio, graphics, controls and accessibility. | Every game. | reduced motion | include reduced motion, music, SFX and render quality in settings | industry
+shop card | T3 hud | One purchasable item's tile: icon, name, price and buy button. | Shops. | call to action, rarity frame | build the shop card: rarity frame, icon, name, gold price, one Buy button | industry
+@domain vfx
+ribbon | T2 combat | A strip of geometry following a path, textured and faded. | Trails, beams, banners. | trail, Beam | build the trail as a ribbon of quads that fade along their length | industry
+Beam | T2 combat | Roblox's textured strip between two attachments. | Lasers and lightning in Roblox. | ribbon, chain lightning | draw the laser as a Beam and animate its CurveSize | industry
+Highlight | T2 combat | Roblox's outline-and-fill effect on a model. | Hit flashes and selection. | impact flash | flash the hit enemy with a white Highlight for one frame | industry
+ParticleEmitter | T2 combat | Roblox's particle system component. | Sparks, dust, magic. | burst emit | call ParticleEmitter:Emit(12) on hit instead of leaving it enabled | industry
+flipbook | all | An animated texture played from a grid of frames. | Explosions and smoke. | cel VFX | play the explosion as a 4×4 flipbook at 24 fps | industry
+spark | T2 combat | A tiny bright fast particle. | Impacts and metal hits. | decoration slot, additive blending | emit 6 sparks with gravity, additive, 150 ms life | industry
+heat haze | T4 world | Wavy distortion above hot surfaces. | Lava and fire. | distortion | add a subtle heat haze above the lava, 2 px amplitude | industry
+@domain materials
+cel shading | T5 materials | Rendering with flat colour bands and hard shadow edges. | Stylised 3D or 2D. | toon ramp | cel-shade with two light bands and a hard terminator | industry
+normal map | T5 materials | A texture storing surface direction for lighting detail. | Detail without geometry. | PBR | bake a normal map for the bevelled edges | industry
+matcap | T5 materials | Lighting looked up from a sphere image by surface normal. | Cheap stylised metal and clay. | chrome | shade the icon with a chrome matcap for a cheap metal look | industry
+@domain algorithms
+spring damper | all | A damped spring used to smooth or animate values. | Camera, UI and needles. | spring animation | smooth the needle with a critically damped spring | industry
+perlin noise | T6 engines | Ken Perlin's gradient noise. | Smooth natural variation. | gradient noise | use math.noise (Perlin) remapped to 0..1 for terrain | industry
+simplex noise | T6 engines | A faster gradient noise with fewer artefacts in higher dimensions. | 3D and 4D noise. | gradient noise | use simplex noise for animated 3D fields | industry
+blue noise | T6 engines | Noise with even spacing and no low-frequency clumps. | Dithering and sampling. | dithering, Poisson disk | sample with blue noise so the pattern has no clumps | industry
+flood fill | T6 engines | Filling a connected region from a seed. | Region detection and paint. | cellular automaton | flood fill from the spawn to find reachable cells | industry
+@domain economy
+idle game | economy | A game where progress continues with little input. | Genre framing. | automation, offline earnings | design the idle loop: tap early, automate mid, prestige late | industry
+incremental game | economy | A game about numbers growing through upgrades and resets. | Genre framing. | prestige, big number | structure the incremental loop around three reset layers | industry
+conversion rate | economy | The exchange rate between two currencies. | Multi-currency economies. | faucet, sink | convert coins to gems at 1000:1 with a daily cap | industry
+@domain process
+code review | process | Reading a change for bugs before merging. | Every change. | done-check | review the diff for correctness before merging | industry
+draft PR | process | A pull request opened for review before it's ready to merge. | Sharing work in progress. | code review | open a draft PR on a feature branch | industry

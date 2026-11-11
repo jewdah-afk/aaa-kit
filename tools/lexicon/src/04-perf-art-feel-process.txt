@@ -1,0 +1,70 @@
+@domain performance
+frame budget | all | The milliseconds available per frame (16.6 ms at 60 fps). | Planning any per-frame work. | phone multiplier | keep this system under 0.8 ms of the 16.6 ms frame budget | aaa-kit/CLAUDE.md
+phone multiplier | all | Assuming a phone runs roughly 4–5× slower than a desktop. | Estimating mobile cost. | frame budget | budget for a 5× slower phone: 2 ms on desktop means 10 ms on a phone | cursed-survivors/docs/budgets.md
+per-layer timing | all | Measuring each render layer's milliseconds separately. | Finding the expensive layer. | frame budget | time each layer with os.clock and show a rolling average | cursed-survivors/docs/budgets.md
+hot path | framework | Code that runs every frame or per entity. | Optimising and logging rules. | no hot-path prints | keep the hot path allocation-free and print-free | aaa-kit/docs/FRAMEWORK.md
+no hot-path prints | framework | Never printing per hit, per frame or per sale. | Logging. | hot path | remove prints from the per-hit handler; warn once per real failure | aaa-kit/docs/FRAMEWORK.md
+allocation-free loop | all | A per-frame loop that creates no tables or closures. | Avoiding GC hitches. | hot path, object pooling | hoist tables out of the render loop so it allocates nothing per frame | industry
+native codegen | framework | Luau's --!native compilation for faster inner loops. | Heavy maths in Studio. | interpreter budget | mark the inner pixel loop --!native and measure interpreted too | industry
+interpreter budget | framework | Planning for live clients that may run Luau without native codegen. | Client performance. | native codegen | measure the renderer interpreted, since live clients may not use native | cursed-survivors/docs/decisions.md
+baking | all | Precomputing expensive results once (textures, shaded sprites). | Static content. | cache | bake the shaded sprites per palette band at load | cursed-survivors/docs/decisions.md
+cache | all | Storing a computed result to reuse. | Repeated expensive work. | baking | cache the noise field; recompute only the animated tail | industry
+dirty flag | all | Marking something as changed so it's rebuilt only then. | Avoiding per-frame rebuilds. | cache | rebuild the chunk only when its dirty flag is set | industry
+frame-sliced work | all | Splitting heavy work across several frames. | Generation and baking. | dirty flag | generate 100 props per frame with task.wait() between batches | industry
+half-rate update | all | Running a system every other frame or at a lower rate. | Expensive ambient systems. | intensity budget | update the light map at 30 Hz and the world pass every other frame on phones | cursed-survivors/docs/budgets.md
+culling | all | Skipping work for things off screen or hidden. | Many objects. | LOD | cull particles outside the viewport before updating them | industry
+draw call | all | One batch of rendering submitted to the GPU. | 3D and web performance. | batching | batch the props to cut draw calls | industry
+batching | all | Combining many draws into one. | Many similar objects. | draw call | batch all coins into one instanced draw | industry
+p95 frame time | all | The frame time 95 % of frames beat; shows hitches averages hide. | Performance reporting. | frame budget | report average and p95 frame time for the endgame scene | cursed-survivors/docs/budgets.md
+@domain art
+silhouette | all | An object's outline shape, readable without detail. | Character, enemy and icon design. | silhouette read, figure-ground gate | make each enemy family readable from its silhouette alone at 16 px | industry
+silhouette read | all | Testing identification with a solid black fill. | Reviewing designs. | silhouette | fill every sprite black and check each family is still identifiable | industry
+value structure | all | The arrangement of lights and darks in a frame. | Composition and readability. | luminance band | design value structure in greyscale before colour | industry
+greyscale check | all | Viewing a frame without colour to judge value. | Readability reviews. | value structure | review the capture in greyscale; threats must still pop | industry
+focal point | all | Where the eye goes first. | Composition. | saliency map | make the reward the focal point: brightest, largest, centred | industry
+visual noise | all | Detail that competes for attention without carrying meaning. | Busy screens. | detail density | cut visual noise: remove decor that doesn't help a decision | industry
+lantern light | T2 combat | The hero's own warm light, the only warm source in a cool world. | Exploration-driven lighting. | colour job | the hero carries the only warm lantern light; the world stays cool | vault/Notes/16 Hierarchy Codex
+banded lighting | all | Lighting quantised to a few luminance bands. | Cel and pixel looks. | luminance band, toon ramp | quantise lighting to 8 bands with dithered transitions | cursed-survivors/docs/decisions.md
+palette ramp | all | An ordered set of shades for one hue family. | Consistent shading. | palette quantisation | give each material a 5-step palette ramp from shadow to highlight | industry
+hue shift | all | Shifting hue as value changes (cooler shadows, warmer lights). | Richer shading. | palette ramp | shift shadows toward blue and highlights toward yellow | industry
+saturation hierarchy | all | Reserving high saturation for what matters. | Directing attention with colour. | colour job | keep the world desaturated so threats and pickups own saturation | industry
+phone-first framing | all | Designing for a phone screen before desktop. | Any Roblox UI or camera. | safe area, thumb zone | design at 390×844 first, then scale up | aaa-kit/CLAUDE.md
+outline weight | all | The thickness of an outline relative to the sprite. | Consistent sprite style. | thin ring | use 1 px outlines on 16 px sprites and 2 px on 32 px | industry
+light direction | all | One consistent key-light direction across all art. | Visual consistency. | rim light | light every sprite from the top-left | industry
+art bible | all | The written rules of a game's look. | Keeping a team consistent. | colour job, palette ramp | write the art bible: palette, light direction, outline rule, colour jobs | industry
+mood board | all | A collection of references that defines a target look. | Starting a new look. | art bible | assemble a mood board of 12 references before drawing | industry
+contrast ratio | all | The ratio between two luminances; for text ≥ 4.5:1. | Text and UI legibility. | figure-ground gate | keep UI text at least 4.5:1 against its plate | industry
+@domain audio-feel
+audio cue | all | A sound tied to a visual event. | Feedback. | sting, layered impact sound | pair the reveal with a rising tone and a hit on the onset frame | vault/Notes/15 Attention System
+sting | T1 moments | A short musical phrase marking a moment. | Rewards and level-ups. | audio cue | play a tier-specific sting on the reveal | industry
+layered impact sound | T2 combat | An impact built from transient, body and tail layers. | Weighty hits. | audio cue | layer a sharp transient, a mid body and a short tail for each hit | industry
+pitch variation | all | Randomising pitch slightly to avoid repetition. | Repeated sounds. | audio cue | vary pitch ±6 % on every coin pickup | industry
+rising pitch chain | T3 hud | Each consecutive pickup plays a slightly higher note. | Combos and coin streams. | combo meter | raise pickup pitch one semitone per pickup in a streak, reset after 1 s | industry
+ducking | all | Lowering music under important sounds. | Mixing. | audio cue | duck music 6 dB under the reveal sting | industry
+music intensity | all | Music level and filter following the intensity rung. | Adaptive music. | intensity ladder | open the music's high shelf as the intensity rung climbs | cursed-survivors/src/shared/Intensity.luau
+haptics | all | Controller or phone vibration on events. | Mobile and console feel. | hit-stop | pulse a 20 ms haptic on hits and a 60 ms one on kills | industry
+@domain game-feel
+game feel | all | How responsive and physical control feels. | Polishing play. | juice, hit-stop | tune game feel: input to motion within one frame, clear impacts | industry
+input buffer | all | Remembering an input briefly so it fires when possible. | Action timing. | coyote time | buffer jump inputs for 100 ms | industry
+coyote time | all | Allowing a jump shortly after leaving a ledge. | Platformers. | input buffer | allow jumps up to 80 ms after leaving the ledge | industry
+squash and stretch | all | Deforming shapes to show speed and impact. | Characters and pickups. | overshoot | squash the coin 20 % on landing and stretch it toward the magnet | industry
+follow-through | all | Parts continuing to move after the main motion stops. | Natural animation. | overlap | let the cape follow through for 150 ms after the stop | industry
+overlap | all | Different parts moving slightly out of sync. | Organic motion. | follow-through | offset hair and cape motion by 2 frames | industry
+anticipation pose | all | A small opposite motion before an action. | Attacks and jumps. | anticipation | crouch 3 frames before the jump | industry
+camera lag | all | The camera trailing its target slightly. | Smooth cameras. | camera lead | lag the camera 0.1 s behind the player | industry
+camera lead | all | The camera looking ahead in the movement direction. | Fast movement. | camera lag | lead the camera 20 % of screen width in the move direction | industry
+aim assist | all | Gently helping aim toward valid targets. | Mobile shooters. | game feel | snap aim within 12° to the nearest target on touch | cursed-survivors/tests/aim.luau
+readability under spectacle | all | Keeping gameplay information clear while effects are maxed. | Late-game screens. | protected region, intensity ladder | at max spectacle every threat must still pass the gate | vault/Research/Render Deep Dive/09
+reduced motion | all | A setting or OS preference to tone down motion. | Accessibility. | screen shake | honour reduced motion: shake at 25 %, no flashes | industry
+@domain process
+brief | process | A structured request: goal, tier, deliverable, constraints, quality bar, done-check. | Starting any task. | prompt amplifier, done-check | write a brief before building: goal, tier, deliverable, constraints, bar, done | aaa-kit/.claude/skills/prompt-amplifier
+prompt amplifier | process | Turning a vague request into a brief with options. | Weak prompts. | brief | amplify the prompt into a brief, then proceed on Solid | aaa-kit/.claude/skills/prompt-amplifier
+solid bold insane | process | Three escalation levels: ship-ready, signature, memorable. | Offering options. | prompt amplifier | offer solid, bold and insane versions and start on solid | aaa-kit/.claude/skills/prompt-amplifier
+done-check | process | An observable condition that proves the work is done. | Ending any task. | brief | done when the capture at 390×844 shows the price readable and the test passes | aaa-kit/.claude/skills/prompt-amplifier
+self-check | process | The checklist a skill runs before saying done. | Finishing skill work. | done-check | run the skill's self-check and list any item that fails | aaa-kit/.claude/skills
+before/after capture | process | Screenshots of the same state before and after a change. | Visual changes. | done-check | capture before and after at the same seed and size | cursed-survivors/docs/look
+parity checklist | process | A list of features to match against a reference. | Ports and remakes. | done-check | track feature parity in a checklist: done, partial, missing | cursed-survivors/docs/PARITY_CHECKLIST.md
+handoff note | process | A written state of work for the next session. | Ending a session. | brief | write a handoff: what's done, what's verified, what's next | cursed-survivors/docs/HANDOFF.md
+skeleton first | process | Build every system end to end with placeholders, then raise quality module by module. | Starting a big game. | parity checklist | build the full skeleton playable first, then polish one module at a time | cursed-survivors/docs/decisions.md
+vertical slice | process | One small part of the game at final quality. | Proving the look and feel. | skeleton first | build a vertical slice: one stage, one weapon, one reward at ship quality | industry
+playtest | process | Watching real players use the build. | Validating feel and difficulty. | done-check | playtest with 3 players and note where they hesitate | industry

@@ -1,0 +1,88 @@
+@domain vfx
+hit-stop | T2 combat | Freezing gameplay for a few frames on impact. | Making hits feel heavy. | screen shake, impact flash, intensity budget | add a 2-frame hit-stop on hits and 6 frames on kills | industry
+screen shake | T2 combat | Offsetting the camera on impact. | Impacts and explosions. | trauma, hit-stop | add a 6 px screen shake that decays over 120 ms | industry
+trauma | T2 combat | A 0–1 value driving shake as trauma squared, decaying linearly. | Stacking multiple hits into shake. | screen shake | add 0.35 trauma per hit; shake = 6 px × trauma², decaying in 450 ms | industry
+impact flash | T2 combat | A 1–2 frame white overlay on the struck target. | Confirming a hit. | onset frame, hit-stop | flash the target white for 1 frame on hit | industry
+impact frame | T2 combat | A held, high-contrast inverted frame on a huge hit, anime-style. | Boss hits and finales. | boss rung, hit-stop | on the boss's final hit show 2 inverted impact frames before colour returns | industry
+impact ring | T2 combat | An expanding ring at the hit point. | Showing where a hit landed. | shockwave | expand a 2 px ring from the hit point to 24 px over 150 ms | industry
+shockwave | T2 combat | An expanding ring that flashes and pushes particles outward. | Nukes and screen clears. | impact ring, distortion | fire a shockwave that shoves every particle outward and flashes the screen 30 % | Living Effects Lab
+distortion | T2 combat | Bending the image around an effect (heat haze, shockwave refraction). | Big explosions and heat. | shockwave, refraction | distort the background in a ring behind the shockwave | industry
+muzzle flash | T2 combat | A 1–2 frame burst of light at a weapon's barrel. | Shooting. | onset frame | show a 2-frame muzzle flash and a 1-frame light pop | industry
+trail | T2 combat | A fading ribbon behind a moving object. | Swings, projectiles, dashes. | swing smear, ribbon | trail the blade with a ribbon that fades over 120 ms | industry
+swing smear | T2 combat | A stretched arc drawn along a melee swing's path. | Melee attacks. | trail, cel VFX | draw a 3-frame swing smear following the blade arc | vault/Notes/22 Cel VFX
+cel VFX | T2 combat | Hand-drawn-style effects with flat colour shapes and hard edges. | Stylised games. | swing smear, toon ramp | use cel VFX: flat colour bursts with 2–3 tones and hard edges | vault/Notes/22 Cel VFX
+branching lightning | T2 combat | Bolts built by midpoint displacement with forks. | Chain lightning. | midpoint displacement, glow | strike with a midpoint-displaced bolt, two forks and a 1-frame screen flash | Living Effects Lab
+chain lightning | T2 combat | Lightning jumping from target to target. | Multi-target attacks. | branching lightning | chain to 4 targets within 120 px, 60 ms per jump | industry
+ember dissolve | T2 combat | A noise-threshold burn-away with a glowing edge. | Death and despawn. | dissolve threshold, value noise | dissolve the corpse with noise and a 2 px glowing ember edge over 400 ms | Living Effects Lab
+dissolve threshold | T2 combat | A rising cutoff on a noise texture that removes pixels below it. | Any dissolve. | ember dissolve | raise the dissolve threshold from 0 to 1 over 0.4 s | industry
+shatter | T2 combat | Splitting a surface into triangles that fly from the impact. | Breaking shields and glass. | Voronoi, impact ring | shatter the shield into jittered triangles flying from the hit point | Living Effects Lab
+aura | T2 combat | A persistent effect around a character showing a passive state. | Buffs and passives. | protected region | breathe a cellular-automaton aura ring around the hero, 30 % alpha | Living Effects Lab
+time freeze | T2 combat | Halting motion with a cold tint and a sweeping clock hand. | Stopwatch and freeze powers. | hit-stop | freeze the world, tint it cold, sweep a clock hand over 1 s | Living Effects Lab
+magnet vortex | T2 combat | Pickups spiralling into a point with stretched streaks. | Collecting and magnets. | magnet pickup | spiral pickups into the player with motion-stretched streaks | Living Effects Lab
+magnet pickup | T2 combat | Pickups accelerating toward the collector once in range. | XP gems and coins. | magnet vortex, coin arc | accelerate gems toward the player within 80 px, ease-in, arrive in 0.3 s | industry
+plasma orb | T2 combat | Crawling noise inside a glass sphere. | Charge-ups and energy items. | charge-up, glass | fill the orb with crawling plasma noise and a Fresnel glass rim | Living Effects Lab
+glyph rain | T2 combat | Falling glyph columns with bright heads and fading tails. | Digital zones. | glyph ramp | rain glyph columns with bright heads and 12-glyph fading tails | Living Effects Lab
+telegraph | T2 combat | A warning shape showing where an attack will land. | Boss and enemy attacks. | anticipation, danger red | draw the attack's real area in red 0.6 s before it lands, filling as it charges | industry
+kill chain | T2 combat | Short arcs linking consecutive kills across a crowd. | Crowd clears. | branching lightning, decoration slot | link each kill to the next within 80 px with a short arc | cursed-survivors/docs/look
+bloom | all | Bright areas bleeding light into their surroundings. | True light sources. | glow, intensity budget | bloom only true emitters: threshold 0.9, intensity from the rung | industry
+glow | all | A soft halo around a bright shape. | Emitters and active states. | bloom, SDF glow | add a soft glow only while the item is active | industry
+additive blending | all | Adding colour values together so overlaps get brighter. | Light, fire, sparks. | glow | draw sparks with additive blending so overlaps brighten | industry
+particle budget | all | A cap on live particles per system and per screen. | Performance and clarity. | decoration slot, intensity budget | cap the burst at 40 particles, scaled by the rung's particle multiplier | industry
+burst emit | all | Emitting a fixed number of particles at once instead of a stream. | Impacts and pickups. | particle budget | emit 12 particles in one burst instead of a continuous emitter | industry
+sub-emitter | all | A particle that spawns its own particles (sparks from a spark). | Fireworks and debris. | burst emit | give each firework shell a sub-emitter of 8 sparks on death | industry
+motion blur | all | Stretching a fast object along its motion. | Fast projectiles and pickups. | trail | stretch fast sprites along velocity by up to 3× their length | industry
+afterimage | T2 combat | Fading copies of a sprite along its path. | Dashes and teleports. | trail | leave 4 afterimages 30 ms apart that fade over 150 ms | industry
+dust puff | T2 combat | Small soft clouds where something lands or turns. | Grounding movement. | burst emit | puff 3 dust sprites on landing and sharp turns | industry
+debris | T2 combat | Small pieces flying from an impact under gravity. | Breakables and explosions. | sub-emitter | throw 6 debris chips with gravity and one bounce | industry
+@domain materials
+holo foil | T5 materials | A trading-card foil whose rainbow shifts with tilt and a sheen band sweeps. | Mythic and shiny variants. | Fresnel, iridescence | give Mythic cards holo foil: hue shifts with tilt, sheen follows the pointer | Living Effects Lab
+brushed metal | T5 materials | Streak texture with an anisotropic highlight along the grain. | Metal UI panels, Rare items. | anisotropic highlight | brushed metal: horizontal streaks with a highlight stretched along the grain | Living Effects Lab
+anisotropic highlight | T5 materials | A highlight stretched in one direction by surface grain. | Brushed metal and hair. | brushed metal | stretch the highlight 6× along the grain direction | industry
+chrome | T5 materials | A mirror metal reflecting its environment with high contrast. | Legendary and premium items. | environment reflection, Fresnel | liquid chrome: dark base, sharp white highlights, reflected sky gradient | Living Effects Lab
+faceted gem | T5 materials | A cut gem whose facets light up as it turns, with star glints. | Currency icons and gem items. | star glint | facet the gem into 8 sides that brighten as they face the light | Living Effects Lab
+star glint | T5 materials | A four-point sparkle on a highlight. | Gems and polished metal. | faceted gem | add at most 3 star glints at once, each 200 ms | industry
+glass | T5 materials | A surface showing mostly what's behind it with a bright rim and chromatic edges. | Potions and lens UI. | refraction, Fresnel | glass: refract the background, thin bright rim, slight chromatic split at edges | Living Effects Lab
+crystal | T5 materials | A raymarched or faceted transparent solid with internal colour. | Gem items and crystals. | faceted gem, SDF | a crystal with deeper internal colour than its surface and sharp facet edges | Living Effects Lab
+soap film | T5 materials | Thin-film interference colours flowing across a bubble. | Bubble pets and shields. | thin-film interference | flow thin-film colours across the bubble with a slow swirl | Living Effects Lab
+molten | T5 materials | Plasma noise through a black-body heat ramp with a cooling crust. | Lava zones and forges. | black-body ramp | molten core: noise through a black-body ramp with dark crust cracks | Living Effects Lab
+black-body ramp | T5 materials | A colour ramp from black through red, orange and yellow to white by temperature. | Heat, fire, lava. | molten | colour heat with a black-body ramp: black → red → orange → white | industry
+emissive | T5 materials | A surface that emits its own light. | Lights and active states. | bloom | make only active elements emissive; turn emission off when inactive | industry
+satin | T5 materials | A soft sheen between flat and metallic. | Uncommon items. | rarity-as-material | satin finish: one soft broad highlight, no sparkle | aaa-kit/HIERARCHY.md
+void material | T5 materials | A starfield seen through the surface with glitch slices on the rim. | Secret rarity. | glitch slice | void material: parallax starfield inside, glitch slices on the rim | aaa-kit/.claude/skills/materials
+glitch slice | T5 materials | Horizontal bands of an image shifted sideways for a frame. | Secret items and digital corruption. | void material | shift 1–2 horizontal slices 4 px sideways for one frame every second | Living Effects Lab
+Fresnel | T5 materials | Surfaces reflect more at grazing angles; the rim gets brighter. | Glass, water, rims. | rim light | add a Fresnel rim: pow(1 − dot(n, v), 5) | industry
+rim light | all | A bright edge on the side away from the main light. | Separating a figure from its background. | Fresnel, figure-ground gate | add a cool rim light so the hero separates from dark ground | industry
+PBR | T5 materials | Physically based rendering with albedo, normal, metalness and roughness maps. | 3D surfaces. | SurfaceAppearance | author PBR maps: albedo, normal, metalness, roughness | industry
+roughness | T5 materials | How blurry a surface's reflections are. | Material tuning. | PBR | roughness 0.15 for polished gold, 0.6 for worn iron | industry
+environment reflection | T5 materials | Reflecting the surrounding sky or scene on a surface. | Metals and glass. | chrome | reflect the sky gradient in the chrome so it reads as metal | industry
+toon ramp | T5 materials | Lighting quantised into 2–4 flat steps. | Cel shading. | luminance band, cel VFX | light with a 3-step toon ramp and a hard terminator | industry
+iridescence | T5 materials | Colour that shifts with viewing angle. | Foil, beetle shells, oil. | thin-film interference, holo foil | iridescent hue = view angle × film thickness | industry
+@domain shaders
+signed distance field | T6 engines | A function returning distance to a shape's edge, negative inside. | Shapes with soft edges, outlines and glows. | smooth union, SDF glow | build the shape as a signed distance field and derive fill, outline and glow from it | aaa-kit/.claude/skills/shaders-and-sdf
+SDF | T6 engines | Short for signed distance field. | Any procedural shape. | signed distance field | draw the panel as an SDF rounded box with 1 px anti-aliasing | aaa-kit/.claude/skills/shaders-and-sdf
+smooth union | T6 engines | Blending two SDFs with a smooth minimum so they merge like liquid. | Metaballs and organic shapes. | signed distance field, metaball | merge the blobs with a smooth union, k = 0.4 | industry
+metaball | T6 engines | Blobs that merge when close, built from smooth unions. | Liquid UI, slimes. | smooth union | render health orbs as metaballs that merge as they fill | Living Effects Lab
+SDF glow | T6 engines | A falloff computed from distance outside a shape. | Cheap glows. | signed distance field, glow | glow = (1 − d / 12)² outside the shape | aaa-kit/.claude/skills/shaders-and-sdf
+analytic anti-aliasing | T6 engines | Edge smoothing from the distance value (clamp(0.5 − d)). | Crisp SDF edges. | SDF | anti-alias with coverage = clamp(0.5 − d, 0, 1) | industry
+raymarching | T6 engines | Rendering by stepping along rays by the SDF distance until hitting a surface. | 3D procedural scenes in shaders. | sphere tracing, soft shadow | raymarch the scene with up to 128 steps and an early out at 0.0005 | industry
+sphere tracing | T6 engines | Raymarching where each step is the distance to the nearest surface. | SDF scenes. | raymarching | sphere-trace the SDF scene and stop at 12 units | industry
+soft shadow | T6 engines | Penumbra estimated from the closest SDF approach along the light ray. | Raymarched lighting. | raymarching | soft shadows: res = min(res, 10·h/t) along the light ray | industry
+ambient occlusion | all | Darkening creases where ambient light can't reach. | Grounding objects. | soft shadow | add 5-tap SDF ambient occlusion in the creases | industry
+value noise | T6 engines | Smooth noise from interpolated random values on a grid. | Cheap organic variation. | fBm, hash function | use hashed value noise so results are seedable | industry
+gradient noise | T6 engines | Noise from interpolated random gradients (Perlin, simplex). | Smoother natural noise. | value noise, fBm | use gradient noise for terrain to avoid blocky artefacts | industry
+fBm | T6 engines | Fractal Brownian motion: summed octaves of noise at doubling frequency and halving amplitude. | Clouds, terrain, fire. | octave, domain warping | 5-octave fBm, lacunarity 2, gain 0.5 | industry
+octave | T6 engines | One layer of fBm at a given frequency. | Tuning noise detail. | fBm | add octaves until the detail stops showing at play size | industry
+domain warping | T6 engines | Offsetting noise input by another noise for swirling organic shapes. | Marble, smoke, corruption. | fBm | warp the noise domain by a second fBm at strength 4 | industry
+hash function | T6 engines | A fast deterministic function turning coordinates into pseudo-random numbers. | Seedable randomness in shaders and Luau. | value noise | hash cell coordinates instead of calling the RNG | industry
+thin-film interference | T5 materials | Colour from light reflecting off two surfaces of a thin layer. | Soap, oil, beetles. | iridescence, soap film | hue = fract(k · thickness · cos θ) through a spectral palette | industry
+refraction | T5 materials | Light bending through a surface, offsetting what's seen behind. | Glass and water. | glass, distortion | offset the background sample by the surface normal × 0.03 | industry
+gravitational lens | T1 moments | Bending the background around a point mass. | Black holes and portals. | portal backdrop | lens the background: offset = normalize(p) · k / distance | Living Effects Lab
+chromatic aberration | all | Splitting colour channels slightly at edges. | Glass, impact, glitch. | glass | split RGB by 1 px at the edges of the lens only | industry
+dithering | T6 engines | Using patterned pixels to suggest in-between tones. | Pixel-art gradients. | Bayer matrix | dither band edges with an 8×8 Bayer pattern | industry
+Bayer matrix | T6 engines | A fixed threshold pattern for ordered dithering. | Stable dithering in pixel art. | dithering | ordered dither with an 8×8 Bayer matrix so the pattern doesn't crawl | industry
+interleaved gradient noise | T6 engines | A screen-space noise for dithering smooth gradients without banding. | Removing banding. | dithering | dither gradients with interleaved gradient noise | industry
+OKLab | all | A perceptual colour space where equal steps look equal. | Palettes, bands and gradients. | luminance band | mix colours and measure lightness in OKLab, not sRGB | industry
+tone mapping | all | Compressing high-dynamic-range colour into displayable range. | Bright scenes and bloom. | bloom | tone-map with ACES so highlights roll off instead of clipping | industry
+gamma correction | all | Converting between linear light and display sRGB. | Any lighting maths. | OKLab | light in linear space and convert to sRGB at the end | industry
+full-screen triangle | T6 engines | One oversized triangle covering the screen for a fragment shader pass. | Shader post passes. | raymarching | draw the pass with a single full-screen triangle | industry
+ping-pong buffer | T6 engines | Two textures alternating as input and output across simulation steps. | GPU simulations. | reaction-diffusion | run reaction-diffusion in ping-pong buffers, 8 steps per frame | industry
