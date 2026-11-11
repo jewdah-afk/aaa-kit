@@ -1,0 +1,23 @@
+{
+  "name": "FrameworkStarter",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": { "$path": "src/shared" },
+      "Remotes": {
+        "$className": "Folder",
+        "Buy": { "$className": "RemoteFunction" },
+        "Tap": { "$className": "RemoteEvent" },
+        "State": { "$className": "RemoteEvent" }
+      }
+    },
+    "ServerScriptService": {
+      "Server": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": { "$path": "src/client" }
+      }
+    }
+  }
+}
