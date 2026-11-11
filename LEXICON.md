@@ -1,6 +1,6 @@
 # Lexicon
 
-434 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
+442 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
 
 ## Starter pack (40 terms)
 
@@ -51,7 +51,7 @@ The highest-leverage terms. Know these and most briefs write themselves.
 
 ## Domains
 
-[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (31) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
+[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (39) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
 
 ## Hierarchy
 
@@ -1762,6 +1762,70 @@ Deriving a tangent-space normal map from a height field by finite differences al
 > give rust +height and chips -height and derive an OpenGL normal map from it
 
 Tier: T5 materials · Pairs with: [normal map](#normal-map), [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Bake.luau
+
+### parallax occlusion mapping
+
+Marching the view ray into a height field per texel so bumps occlude each other on a flat surface. **Use when:** Portals, grates, gem interiors, lava pits without extra geometry.
+
+> render a 128px parallax-occlusion window with 16 steps, updated when the camera angle changes
+
+Tier: T5 materials · Pairs with: [height-to-normal](#height-to-normal), [interior mapping](#interior-mapping) · Source: aaa-kit/lib/surfacebake/Parallax.luau
+
+### interior mapping
+
+One ray-box hit per texel draws a whole room behind each window of a flat facade. **Use when:** City facades and windows at distance.
+
+> fake rooms behind every window with interior mapping instead of modelling interiors
+
+Tier: T4 world · Pairs with: [parallax occlusion mapping](#parallax-occlusion-mapping) · Source: aaa-kit/lib/surfacebake/Parallax.luau
+
+### shell texturing
+
+Stacked copies of a mesh pushed out along normals, each with a sparser alpha mask, giving strands real depth. **Use when:** Fur, grass, moss, velvet on close-up props and pets.
+
+> build 12 fur shells with tapering strand masks and drop to 4 shells at distance
+
+Tier: T5 materials · Pairs with: [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Parallax.luau
+
+### infinite zoom
+
+Octaves of a tile at doubling scales blended over log-scale so zooming never loops visibly. **Use when:** Portals, loading screens, falling-into-the-void moments.
+
+> infinite-zoom the reaction-diffusion tile with 6 octaves and a slight spiral
+
+Tier: T1 moments · Pairs with: [octave blend](#octave-blend) · Source: aaa-kit/lib/surfacebake/Parallax.luau
+
+### octave blend
+
+Weighting copies of a pattern at scales 2^k with a window over log-scale so the sum is self-similar. **Use when:** Infinite zooms and scale-free detail.
+
+> weight each octave by sin^2 over its log-scale position so the loop is invisible
+
+Tier: all · Pairs with: [infinite zoom](#infinite-zoom) · Source: aaa-kit/lib/surfacebake/Parallax.luau
+
+### baked-field animation
+
+Precomputing expensive per-texel fields once so each animation frame is only arithmetic over buffers. **Use when:** Realtime moving surfaces on Roblox clients.
+
+> prepare the rune mask and phase once, then pulse it every frame for under a millisecond
+
+Tier: T3 HUD · Pairs with: [amortised update](#amortised-update), [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Animate.luau
+
+### amortised update
+
+Spreading a fixed per-frame budget of work over several frames, round-robin. **Use when:** Any per-frame image work that would blow the frame budget.
+
+> refresh 32 rows of the 256px texture per frame so the whole image updates every 8 frames
+
+Tier: all · Pairs with: [frame budget](#frame-budget), [baked-field animation](#baked-field-animation) · Source: aaa-kit/lib/surfacebake/Animate.luau
+
+### dissolve edge
+
+A noise-threshold dissolve with a hot rim where the threshold crosses the surface. **Use when:** Deaths, teleports, reveals.
+
+> dissolve the enemy over 0.8 s with an orange 0.08-wide burning rim
+
+Tier: T2 combat · Pairs with: [baked-field animation](#baked-field-animation) · Source: aaa-kit/lib/surfacebake/Animate.luau
 
 
 ## Shaders & SDF

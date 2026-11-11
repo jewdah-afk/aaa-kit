@@ -22,6 +22,9 @@
 --   edge       distance in studs to the nearest sharp edge (wear width independent of tessellation)
 --   up         normal . (0,1,0): 1 faces the sky (dust, snow, moss), -1 faces the ground
 --   y          object-space height in studs (water lines, mud splash)
+--   wave       sin bands along dir (+ warp, warpScale): marble, wood grain, weave, strata   -1..1
+--   rings      concentric rings around axis "x"/"y"/"z" (+ warp): tree rings, turned metal 0..1
+--   grid       distance to the nearest panel line across the dominant face axis       0..0.5
 --   image      triplanar sample of an RGBA8 buffer (img, w, h, scale, channel 1-4): any 2D algorithm render
 -- Colours are 0..1 sRGB. Everything is evaluated in object space, so it is seamless across UV islands.
 
@@ -72,12 +75,51 @@ local function field(term: any, c: Ctx, px: number, py: number, pz: number): num
 		return c.ny
 	elseif kind == "y" then
 		return py
+	elseif kind == "wave" then
+		-- parallel bands along dir, bent by fBm: marble veins, wood grain, carbon weave, strata
+		local d = term.dir or { 1, 0, 0 }
+		local ph = (px * d[1] + py * d[2] + pz * d[3]) * s
+		if term.warp then
+			local ws = term.warpScale or 1
+			ph += Noise.fbm(px * ws, py * ws, pz * ws, term.octaves or 4) * term.warp
+		end
+		return math.sin(ph * 2 * math.pi)
+	elseif kind == "rings" then
+		-- concentric rings around an axis (default Y): tree rings, turned metal, ripples. 0..1 sawtooth
+		local a = term.axis or "y"
+		local r = if a == "y" then math.sqrt(px * px + pz * pz) elseif a == "x" then math.sqrt(py * py + pz * pz) else math.sqrt(px * px + py * py)
+		local v = r * s
+		if term.warp then
+			local ws = term.warpScale or 1
+			v += Noise.fbm(px * ws, py * ws, pz * ws, term.octaves or 3) * term.warp
+		end
+		return v - math.floor(v)
+	elseif kind == "grid" then
+		-- distance (cell units, 0..0.5) to the nearest panel line on the two axes across the dominant
+		-- face direction: sci-fi panels, tiles, planks. Pair with lo/hi like { lo = 0.03, hi = 0 }
+		local ax, ay, az = math.abs(c.nx), math.abs(c.ny), math.abs(c.nz)
+		local u, v
+		if ax >= ay and ax >= az then
+			u, v = sy, sz
+		elseif ay >= az then
+			u, v = sx, sz
+		else
+			u, v = sx, sy
+		end
+		local du = math.abs(u - math.floor(u + 0.5))
+		local dv = math.abs(v - math.floor(v + 0.5))
+		return math.min(du, dv)
 	elseif kind == "image" then
 		local r, g, b, a = Noise.triplanar(term.img, term.w, term.h, px, py, pz, c.nx, c.ny, c.nz, s, term.sharp)
 		local ch = term.channel or 1
 		return if ch == 1 then r elseif ch == 2 then g elseif ch == 3 then b else a
 	end
 	error("unknown mask term " .. tostring(kind))
+end
+
+--- Raw value of one term (see the list at the top), for Animate's precomputed fields.
+function Recipe.field(term: any, c: Ctx, px: number, py: number, pz: number): number
+	return field(term, c, px, py, pz)
 end
 
 --- Mask value 0..1 of a term list at a position (geometry context fixed).

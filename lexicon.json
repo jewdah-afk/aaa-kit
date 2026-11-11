@@ -1,7 +1,7 @@
 {
   "$schema": "./lexicon.schema.json",
   "version": 1,
-  "count": 434,
+  "count": 442,
   "terms": [
     {
       "term": "loudness tier",
@@ -2901,6 +2901,113 @@
       ],
       "prompt-phrase": "give rust +height and chips -height and derive an OpenGL normal map from it",
       "source": "aaa-kit/lib/surfacebake/Bake.luau",
+      "starter": false
+    },
+    {
+      "term": "parallax occlusion mapping",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Marching the view ray into a height field per texel so bumps occlude each other on a flat surface.",
+      "use-when": "Portals, grates, gem interiors, lava pits without extra geometry.",
+      "pairs-with": [
+        "height-to-normal",
+        "interior mapping"
+      ],
+      "prompt-phrase": "render a 128px parallax-occlusion window with 16 steps, updated when the camera angle changes",
+      "source": "aaa-kit/lib/surfacebake/Parallax.luau",
+      "starter": false
+    },
+    {
+      "term": "interior mapping",
+      "tier": "T4 world",
+      "domain": "materials",
+      "meaning": "One ray-box hit per texel draws a whole room behind each window of a flat facade.",
+      "use-when": "City facades and windows at distance.",
+      "pairs-with": [
+        "parallax occlusion mapping"
+      ],
+      "prompt-phrase": "fake rooms behind every window with interior mapping instead of modelling interiors",
+      "source": "aaa-kit/lib/surfacebake/Parallax.luau",
+      "starter": false
+    },
+    {
+      "term": "shell texturing",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Stacked copies of a mesh pushed out along normals, each with a sparser alpha mask, giving strands real depth.",
+      "use-when": "Fur, grass, moss, velvet on close-up props and pets.",
+      "pairs-with": [
+        "UV-space bake"
+      ],
+      "prompt-phrase": "build 12 fur shells with tapering strand masks and drop to 4 shells at distance",
+      "source": "aaa-kit/lib/surfacebake/Parallax.luau",
+      "starter": false
+    },
+    {
+      "term": "infinite zoom",
+      "tier": "T1 moments",
+      "domain": "materials",
+      "meaning": "Octaves of a tile at doubling scales blended over log-scale so zooming never loops visibly.",
+      "use-when": "Portals, loading screens, falling-into-the-void moments.",
+      "pairs-with": [
+        "octave blend"
+      ],
+      "prompt-phrase": "infinite-zoom the reaction-diffusion tile with 6 octaves and a slight spiral",
+      "source": "aaa-kit/lib/surfacebake/Parallax.luau",
+      "starter": false
+    },
+    {
+      "term": "octave blend",
+      "tier": "all",
+      "domain": "materials",
+      "meaning": "Weighting copies of a pattern at scales 2^k with a window over log-scale so the sum is self-similar.",
+      "use-when": "Infinite zooms and scale-free detail.",
+      "pairs-with": [
+        "infinite zoom"
+      ],
+      "prompt-phrase": "weight each octave by sin^2 over its log-scale position so the loop is invisible",
+      "source": "aaa-kit/lib/surfacebake/Parallax.luau",
+      "starter": false
+    },
+    {
+      "term": "baked-field animation",
+      "tier": "T3 HUD",
+      "domain": "materials",
+      "meaning": "Precomputing expensive per-texel fields once so each animation frame is only arithmetic over buffers.",
+      "use-when": "Realtime moving surfaces on Roblox clients.",
+      "pairs-with": [
+        "amortised update",
+        "UV-space bake"
+      ],
+      "prompt-phrase": "prepare the rune mask and phase once, then pulse it every frame for under a millisecond",
+      "source": "aaa-kit/lib/surfacebake/Animate.luau",
+      "starter": false
+    },
+    {
+      "term": "amortised update",
+      "tier": "all",
+      "domain": "materials",
+      "meaning": "Spreading a fixed per-frame budget of work over several frames, round-robin.",
+      "use-when": "Any per-frame image work that would blow the frame budget.",
+      "pairs-with": [
+        "frame budget",
+        "baked-field animation"
+      ],
+      "prompt-phrase": "refresh 32 rows of the 256px texture per frame so the whole image updates every 8 frames",
+      "source": "aaa-kit/lib/surfacebake/Animate.luau",
+      "starter": false
+    },
+    {
+      "term": "dissolve edge",
+      "tier": "T2 combat",
+      "domain": "materials",
+      "meaning": "A noise-threshold dissolve with a hot rim where the threshold crosses the surface.",
+      "use-when": "Deaths, teleports, reveals.",
+      "pairs-with": [
+        "baked-field animation"
+      ],
+      "prompt-phrase": "dissolve the enemy over 0.8 s with an orange 0.08-wide burning rim",
+      "source": "aaa-kit/lib/surfacebake/Animate.luau",
       "starter": false
     },
     {

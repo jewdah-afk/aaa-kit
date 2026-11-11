@@ -44,6 +44,8 @@ Combat effects are tier 2 (HIERARCHY.md §2): they read instantly, then get out 
 
 ## Process
 
+Surface effects that move across a model (dissolve with a burning rim, a scan sweep, frost or corruption spreading from a hit, pulsing runes) are `Animate` effects over a baked texture: [procedural textures playbook §5](../../../docs/playbooks/procedural-textures.md#5-moving-surfaces-realtime).
+
 The craft behind these rules (one hero + two supports, ZOffset order, toon flipbooks, mesh templates, camera priorities, engine limits) is in the [VFX craft playbook](../../../docs/playbooks/vfx-craft.md); stress-test new effects with the [look-dev loop](../../../docs/playbooks/look-dev-loop.md#stress-testing-vfx).
 
 ## Example

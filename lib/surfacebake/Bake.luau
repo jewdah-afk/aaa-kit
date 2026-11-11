@@ -28,6 +28,9 @@ export type Maps = {
 	ao: buffer,
 	edge: buffer,
 	G: Raster.GBuffer,
+	-- per-texel f32 geometry fields, kept for Animate (curvature 0..1, ao 0..1, edge in studs)
+	fields: { curv: buffer, ao: buffer, edge: buffer },
+	edgeMax: number,
 	ms: { [string]: number },
 }
 
@@ -166,6 +169,8 @@ function Bake.run(m: Mesh, recipe: any, opts: Options?): Maps
 		ao = aoOut,
 		edge = edgeOut,
 		G = G,
+		fields = { curv = curvT, ao = aoT, edge = edgeT },
+		edgeMax = edgeMax,
 		ms = ms,
 	}
 end

@@ -58,6 +58,8 @@ Roblox has no custom shaders. This skill gives you the maths, then the three way
 
 ## Process
 
+Shader depth tricks without shaders (parallax occlusion mapping, interior mapping, infinite zoom, shell fur) are in `Parallax.luau`, with measured costs: [procedural textures playbook §6](../../../docs/playbooks/procedural-textures.md#6-depth-tricks-no-shaders), [depth lab](../../../examples/web/depth-lab.html).
+
 Roblox has no custom shaders, so shader-style surface maths (noise, Voronoi, triplanar, height-to-normal) is baked into textures instead: [procedural textures playbook](../../../docs/playbooks/procedural-textures.md), [`lib/surfacebake`](../../../lib/surfacebake/README.md).
 
 ## Example
