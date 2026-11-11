@@ -9,6 +9,7 @@ How we actually made our games: the processes, pipelines and hard-won rules behi
 | [Icon pipeline](icon-pipeline.md) | Icon style, generate → cut → re-ring → QA, uploads, Blender cel icons and the 3D export plan | [tools/icons](../../tools/icons/README.md) |
 | [World hierarchy](world-hierarchy.md) | The 7 world tiers, composition, value check, outline budget, the Explorer tree contract | — |
 | [VFX craft](vfx-craft.md) | One hero + two supports, ZOffset order, the four craft levers, shipped recipes, engine limits we hit, QA hooks | `lib/pixelfx`, `lib/frontier` |
+| [Procedural textures](procedural-textures.md) | Algorithm renders on real model assets: UV-space G-buffer, evaluate in 3D, edge/AO/up masks, height → OpenGL normals, triplanar for 2D renders, Studio bake vs client bake vs live updates | [lib/surfacebake](../../lib/surfacebake/README.md), [surface-bake lab](../../examples/web/surface-bake.html) |
 | [Look-dev loop](look-dev-loop.md) | Pass → capture → measure → NOTES → tests + golden → review; VFX stress tests; benches and budgets | `tools/capture_gifs.mjs` |
 | [Studio workflow](studio-workflow.md) | Repo as source, one test place, fast HTTP sync, Studio MCP, one-image uploads, dev saves, debug commands and attributes | — |
 | [Working with Claude](working-with-claude.md) | Handouts, owner rules captured live, specialist agents, parallel sessions, honest reporting | [.claude/agents](../../.claude/agents/), [handout template](templates/HANDOUT.md) |

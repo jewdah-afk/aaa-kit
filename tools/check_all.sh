@@ -13,6 +13,9 @@ for f in lib/frontier/qa/test_*.luau; do
   printf '%s: %s\n' "$f" "$done_line"
   [ "$done_line" = "@@DONE 0" ] || { echo "frontier check failed: $f"; exit 1; }
 done
+echo "== lib/surfacebake"
+done_line=$(cd lib/surfacebake/qa && lune run test_surfacebake.luau | grep -a '^@@DONE')
+echo "test_surfacebake.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "surfacebake check failed"; exit 1; }
 echo "== lib/pixelfx";   (cd lib/pixelfx/qa && lune run run.luau > /dev/null && echo "run.luau ok")
 echo "== doctor";        python3 tools/doctor.py --brief | head -1
 echo "== selene"

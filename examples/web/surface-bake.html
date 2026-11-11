@@ -1,0 +1,500 @@
+<title>Surface Bake Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* A tech-art bench: dark slate, one lit model, its UV maps laid out below like swatches on a board. */
+:root {
+  --ground: #101215;
+  --bench: #181b20;
+  --rim: #2a2f37;
+  --ink: #e9ecf1;
+  --dim: #98a1ae;
+  --accent: #5ab4ff;
+  --hot: #ffb02e;
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
+h1 { font-family: var(--display); font-size: clamp(28px, 5vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 18px; margin: 0; }
+p { margin: 0; max-width: 68ch; color: var(--dim); }
+p strong { color: var(--ink); font-weight: 500; }
+code { font-family: var(--mono); font-size: 0.88em; color: var(--ink); }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 820px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.view { background: var(--bench); border: 1px solid var(--rim); border-radius: 12px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
+.view canvas { width: 100%; max-width: 560px; aspect-ratio: 1; margin: 0 auto; display: block; border-radius: 8px; background: #0b0d10; touch-action: none; cursor: grab; }
+.readout { font-family: var(--mono); font-size: 12px; color: var(--dim); text-align: center; min-height: 1.5em; }
+.panel { background: var(--bench); border: 1px solid var(--rim); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button {
+  font: 500 13px var(--body); color: var(--ink); background: #20252c; border: 1px solid var(--rim);
+  border-radius: 999px; padding: 8px 12px; min-height: 36px; cursor: pointer;
+}
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #07121d; }
+.chips button:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row label { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--dim); }
+.maps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 820px) { .maps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .maps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+figure { margin: 0; display: grid; gap: 4px; min-width: 0; }
+figure canvas { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--rim); background:
+  repeating-conic-gradient(#1b1f25 0 25%, #14171b 0 50%) 0 0 / 16px 16px; }
+figcaption { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 820px) { .how { grid-template-columns: minmax(0, 1fr); } }
+.how div { background: var(--bench); border: 1px solid var(--rim); border-radius: 12px; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.how b { font-family: var(--display); font-size: 15px; font-weight: 700; }
+.how span { color: var(--dim); font-size: 14px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <div class="label">aaa-kit · lib/surfacebake</div>
+    <h1>Algorithm textures, baked onto the model</h1>
+    <p>Every texel of the UV map is traced back to the <strong>3D point on the model</strong> it paints. The algorithms run there (noise, Voronoi, edge distance, ambient occlusion, a reaction-diffusion render projected triplanar), so the result is seamless across UV islands and wear lands on real edges. The same recipe tables drive the Luau library that writes these maps into a Roblox <code>SurfaceAppearance</code>.</p>
+  </header>
+
+  <section class="stage">
+    <div class="view">
+      <canvas id="view" width="560" height="560" aria-label="Lit 3D preview of the textured model. Drag to rotate."></canvas>
+      <div class="readout" id="readout">baking…</div>
+    </div>
+    <div class="panel">
+      <div style="display:grid;gap:8px"><div class="label">Material recipe</div><div class="chips" id="recipes"></div></div>
+      <div style="display:grid;gap:8px"><div class="label">Model</div><div class="chips" id="meshes"></div></div>
+      <div style="display:grid;gap:8px"><div class="label">Texture size</div><div class="chips" id="sizes"></div></div>
+      <div class="row">
+        <label><input type="checkbox" id="spin" checked> Turntable</label>
+        <label><input type="checkbox" id="nmap" checked> Normal map</label>
+      </div>
+      <p style="font-size:13px">Drag the model to turn it. The page bakes in about the time Roblox needs for the same work on a client; the Luau timings are in the library README.</p>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <h2>The maps (UV space)</h2>
+    <div class="maps" id="maps"></div>
+  </section>
+
+  <section class="how">
+    <div><b>1 · Rasterise in UV space</b><span>Each triangle is drawn into the texture by its UVs. Every covered texel stores the object-space position, normal and tangent frame (a G-buffer), then islands are dilated 4 texels so mipmaps never bleed.</span></div>
+    <div><b>2 · Measure the surface</b><span>Per-vertex AO (hemisphere rays) finds crevices. Distance to the nearest sharp edge, in studs, finds rims to chip. Both are geometry, not UV, so they are the same width on any tessellation.</span></div>
+    <div><b>3 · Run the recipe</b><span>Masked layers (rust, chips, grime, moss, cracks) mix colour, roughness and metalness. Height is sampled at ±1 texel along the tangents in 3D, giving an OpenGL normal map without seams.</span></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- noise (improved Perlin, seeded)
+const PERM = new Uint8Array(512);
+(function () {
+  const p = Array.from({ length: 256 }, (_, i) => i);
+  let s = 1337;
+  for (let i = 255; i > 0; i--) { s = (Math.imul(s, 1103515245) + 12345) >>> 0; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+})();
+const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+function grad(h, x, y, z) { const u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14 ? x : z); return ((h & 1) ? -u : u) + ((h & 2) ? -v : v); }
+function noise3(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const A = PERM[X] + Y, AA = PERM[A] + Z, AB = PERM[A + 1] + Z, B = PERM[X + 1] + Y, BA = PERM[B] + Z, BB = PERM[B + 1] + Z;
+  const l = (a, b, t) => a + t * (b - a);
+  return l(l(l(grad(PERM[AA] & 15, x, y, z), grad(PERM[BA] & 15, x - 1, y, z), u), l(grad(PERM[AB] & 15, x, y - 1, z), grad(PERM[BB] & 15, x - 1, y - 1, z), u), v),
+    l(l(grad(PERM[AA + 1] & 15, x, y, z - 1), grad(PERM[BA + 1] & 15, x - 1, y, z - 1), u), l(grad(PERM[AB + 1] & 15, x, y - 1, z - 1), grad(PERM[BB + 1] & 15, x - 1, y - 1, z - 1), u), v), w);
+}
+function fbm(x, y, z, oct) { let s = 0, a = 1, n = 0; for (let i = 0; i < oct; i++) { s += noise3(x, y, z) * a; n += a; a *= 0.5; x = x * 2 + 17.3; y = y * 2 + 9.1; z = z * 2 + 3.7; } return s / n * 1.6; }
+function ridged(x, y, z, oct) { let s = 0, a = 1, n = 0; for (let i = 0; i < oct; i++) { const r = 1 - Math.abs(noise3(x, y, z) * 1.6); s += r * r * a; n += a; a *= 0.5; x = x * 2 + 17.3; y = y * 2 + 9.1; z = z * 2 + 3.7; } return s / n; }
+function warped(x, y, z, oct, k) { return fbm(x + fbm(x + 5.2, y + 1.3, z + 2.8, 3) * k, y + fbm(x + 1.7, y + 9.2, z + 4.1, 3) * k, z + fbm(x + 8.3, y + 2.8, z + 7.7, 3) * k, oct); }
+function hash3(ix, iy, iz, k) {
+  let h = (Math.imul(ix, 73856093) ^ Math.imul(iy, 19349663) ^ Math.imul(iz, 83492791) ^ Math.imul(k, 2654435761)) >>> 0;
+  h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0; h ^= h >>> 16; return (h >>> 0) / 4294967296;
+}
+function voronoi(x, y, z, jit) {
+  const cx = Math.floor(x), cy = Math.floor(y), cz = Math.floor(z); let f1 = 9, f2 = 9, id = 0; const j = jit ?? 1;
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+    const ix = cx + dx, iy = cy + dy, iz = cz + dz;
+    const px = ix + 0.5 + (hash3(ix, iy, iz, 1) - 0.5) * j, py = iy + 0.5 + (hash3(ix, iy, iz, 2) - 0.5) * j, pz = iz + 0.5 + (hash3(ix, iy, iz, 3) - 0.5) * j;
+    const d = Math.hypot(px - x, py - y, pz - z);
+    if (d < f1) { f2 = f1; f1 = d; id = hash3(ix, iy, iz, 4); } else if (d < f2) f2 = d;
+  }
+  return [f1, f2, id];
+}
+
+// ---------------------------------------------------------------- a 2D algorithm render to project: Gray-Scott reaction-diffusion
+const RD = (function () {
+  const N = 96, A = new Float32Array(N * N).fill(1), B = new Float32Array(N * N);
+  let s = 7; const rnd = () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
+  for (let k = 0; k < 40; k++) { const x0 = (rnd() * N) | 0, y0 = (rnd() * N) | 0; for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) B[((y0 + y + N) % N) * N + (x0 + x + N) % N] = 1; }
+  const A2 = new Float32Array(N * N), B2 = new Float32Array(N * N), f = 0.0545, kk = 0.062;
+  let a = A, b = B, a2 = A2, b2 = B2;
+  for (let it = 0; it < 2400; it++) {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const i = y * N + x, l = y * N + (x + N - 1) % N, r = y * N + (x + 1) % N, u = ((y + N - 1) % N) * N + x, d = ((y + 1) % N) * N + x;
+      const la = a[l] + a[r] + a[u] + a[d] - 4 * a[i], lb = b[l] + b[r] + b[u] + b[d] - 4 * b[i], abb = a[i] * b[i] * b[i];
+      a2[i] = a[i] + (1.0 * la * 0.2 - abb + f * (1 - a[i])); b2[i] = b[i] + (0.5 * lb * 0.2 + abb - (kk + f) * b[i]);
+    }
+    [a, a2] = [a2, a]; [b, b2] = [b2, b];
+  }
+  const img = new Uint8Array(N * N * 4);
+  for (let i = 0; i < N * N; i++) { const v = Math.max(0, Math.min(255, (b[i] * 3.2 * 255) | 0)); img[i * 4] = img[i * 4 + 1] = img[i * 4 + 2] = v; img[i * 4 + 3] = 255; }
+  return { img, w: N, h: N };
+})();
+function triplanar(t, px, py, pz, nx, ny, nz, scale) {
+  let ax = Math.abs(nx) ** 4, ay = Math.abs(ny) ** 4, az = Math.abs(nz) ** 4; const s = ax + ay + az; ax /= s; ay /= s; az /= s;
+  const tap = (u, v) => { const x = ((Math.floor(u * scale * t.w) % t.w) + t.w) % t.w, y = ((Math.floor(v * scale * t.h) % t.h) + t.h) % t.h; return t.img[(y * t.w + x) * 4] / 255; };
+  return tap(pz, py) * ax + tap(px, pz) * ay + tap(px, py) * az;
+}
+
+// ---------------------------------------------------------------- meshes (same layout as lib/surfacebake/Mesh.luau)
+function newMesh() { return { P: [], tris: [], UV: [], N: [], weld: new Map() }; }
+function addV(m, x, y, z) { const k = Math.round(x * 1e5) + "," + Math.round(y * 1e5) + "," + Math.round(z * 1e5); let id = m.weld.get(k); if (id !== undefined) return id; id = m.P.length / 3; m.P.push(x, y, z); m.weld.set(k, id); return id; }
+function addTri(m, a, b, c) { for (const k of [a, b, c]) { m.tris.push(addV(m, k[0], k[1], k[2])); m.UV.push(k[3], k[4]); m.N.push(k[5], k[6], k[7]); } }
+function sphere(r, segs, rings) {
+  const m = newMesh();
+  const c = (i, j) => { const u = i / segs, v = j / rings, th = u * 2 * Math.PI, ph = v * Math.PI; const nx = Math.sin(ph) * Math.cos(th), ny = Math.cos(ph), nz = Math.sin(ph) * Math.sin(th); return [nx * r, ny * r, nz * r, u, v, nx, ny, nz]; };
+  for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = c(i, j), b = c(i + 1, j), cc = c(i + 1, j + 1), d = c(i, j + 1); if (j > 0) addTri(m, a, cc, b); if (j < rings - 1) addTri(m, a, d, cc); }
+  return m;
+}
+function box(hx, hy, hz, n) {
+  const m = newMesh(), H = [hx, hy, hz], margin = 0.02;
+  const faces = [[[1, 0, 0], [0, 0, -1], [0, -1, 0], 0, 0], [[-1, 0, 0], [0, 0, 1], [0, -1, 0], 1, 0], [[0, 1, 0], [1, 0, 0], [0, 0, 1], 2, 0], [[0, -1, 0], [1, 0, 0], [0, 0, -1], 0, 1], [[0, 0, 1], [1, 0, 0], [0, -1, 0], 1, 1], [[0, 0, -1], [-1, 0, 0], [0, -1, 0], 2, 1]];
+  for (const [nr, ua, va, col, row] of faces) {
+    const c = (s, t) => { const p = [0, 1, 2].map(k => (nr[k] + ua[k] * s + va[k] * t) * H[k]); return [p[0], p[1], p[2], (col + margin + (s + 1) / 2 * (1 - 2 * margin)) / 3, (row + margin + (t + 1) / 2 * (1 - 2 * margin)) / 2, nr[0], nr[1], nr[2]]; };
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const s0 = -1 + 2 * i / n, s1 = -1 + 2 * (i + 1) / n, t0 = -1 + 2 * j / n, t1 = -1 + 2 * (j + 1) / n; const a = c(s0, t0), b = c(s1, t0), cc = c(s1, t1), d = c(s0, t1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  }
+  return m;
+}
+function torus(R, r, segs, sides) {
+  const m = newMesh();
+  const c = (i, j) => { const u = i / segs, v = j / sides, th = u * 2 * Math.PI, ph = v * 2 * Math.PI, cx = Math.cos(th), cz = Math.sin(th), nx = Math.cos(ph) * cx, ny = Math.sin(ph), nz = Math.cos(ph) * cz; return [cx * R + nx * r, ny * r, cz * R + nz * r, u, v, nx, ny, nz]; };
+  for (let j = 0; j < sides; j++) for (let i = 0; i < segs; i++) { const a = c(i, j), b = c(i + 1, j), cc = c(i + 1, j + 1), d = c(i, j + 1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  return m;
+}
+// A barrel: bulging side (one UV band) plus two lids as separate UV discs.
+function barrel(r, h, segs) {
+  const m = newMesh(), rings = 6;
+  const side = (i, j) => { const u = i / segs, th = u * 2 * Math.PI, t = j / rings, y = (t - 0.5) * h; const bulge = 1 + 0.12 * Math.sin(t * Math.PI); const nx = Math.cos(th), nz = Math.sin(th); return [nx * r * bulge, y, nz * r * bulge, u, 0.02 + t * 0.6, nx, 0, nz]; };
+  for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = side(i, j), b = side(i + 1, j), cc = side(i + 1, j + 1), d = side(i, j + 1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  for (const sgn of [1, -1]) {
+    const y = sgn * h / 2, cu = sgn > 0 ? 0.25 : 0.75;
+    for (let i = 0; i < segs; i++) {
+      const t0 = i / segs * 2 * Math.PI, t1 = (i + 1) / segs * 2 * Math.PI;
+      const ctr = [0, y, 0, cu, 0.81, 0, sgn, 0];
+      const p0 = [Math.cos(t0) * r, y, Math.sin(t0) * r, cu + Math.cos(t0) * 0.17, 0.81 + Math.sin(t0) * 0.17, 0, sgn, 0];
+      const p1 = [Math.cos(t1) * r, y, Math.sin(t1) * r, cu + Math.cos(t1) * 0.17, 0.81 + Math.sin(t1) * 0.17, 0, sgn, 0];
+      addTri(m, ctr, p0, p1);
+    }
+  }
+  return m;
+}
+
+// ---------------------------------------------------------------- bake (port of Raster/Surface/Recipe/Bake.luau)
+const norm = (x, y, z) => { const l = Math.hypot(x, y, z) || 1; return [x / l, y / l, z / l]; };
+function bake(m, recipe, S) {
+  const t0 = performance.now();
+  const n = S * S, cover = new Uint8Array(n), tri = new Int32Array(n), bar = new Float32Array(n * 3), pos = new Float32Array(n * 3), nrm = new Float32Array(n * 3), tan = new Float32Array(n * 3), bit = new Float32Array(n * 3);
+  const { P, tris, UV, N } = m, nt = tris.length / 3;
+  // per-triangle tangent (+u) and bitangent (+v)
+  const TB = new Float32Array(nt * 6);
+  for (let t = 0; t < nt; t++) {
+    const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+    const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+    const du1 = UV[t * 6 + 2] - UV[t * 6], dv1 = UV[t * 6 + 3] - UV[t * 6 + 1], du2 = UV[t * 6 + 4] - UV[t * 6], dv2 = UV[t * 6 + 5] - UV[t * 6 + 1];
+    const det = du1 * dv2 - du2 * dv1, r = Math.abs(det) < 1e-14 ? 0 : 1 / det;
+    const T = norm(...[0, 1, 2].map(k => (e1[k] * dv2 - e2[k] * dv1) * r)), B = norm(...[0, 1, 2].map(k => (e2[k] * du1 - e1[k] * du2) * r));
+    TB.set([...T, ...B], t * 6);
+  }
+  let covered = 0;
+  for (let t = 0; t < nt; t++) {
+    const ax = UV[t * 6] * S, ay = UV[t * 6 + 1] * S, bx = UV[t * 6 + 2] * S, by = UV[t * 6 + 3] * S, cx = UV[t * 6 + 4] * S, cy = UV[t * 6 + 5] * S;
+    const area = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay); if (Math.abs(area) < 1e-12) continue; const inv = 1 / area;
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx, cx) - 0.5)), x1 = Math.min(S - 1, Math.ceil(Math.max(ax, bx, cx) - 0.5));
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by, cy) - 0.5)), y1 = Math.min(S - 1, Math.ceil(Math.max(ay, by, cy) - 0.5));
+    const ia = tris[t * 3], ib = tris[t * 3 + 1], ic = tris[t * 3 + 2];
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const px = x + 0.5, py = y + 0.5;
+      const w0 = ((bx - px) * (cy - py) - (cx - px) * (by - py)) * inv, w1 = ((cx - px) * (ay - py) - (ax - px) * (cy - py)) * inv, w2 = 1 - w0 - w1;
+      if (w0 < -1e-7 || w1 < -1e-7 || w2 < -1e-7) continue;
+      const i = y * S + x; if (!cover[i]) covered++; cover[i] = 1; tri[i] = t + 1; bar.set([w0, w1, w2], i * 3);
+      for (let k = 0; k < 3; k++) pos[i * 3 + k] = w0 * P[ia * 3 + k] + w1 * P[ib * 3 + k] + w2 * P[ic * 3 + k];
+      const nn = norm(w0 * N[t * 9] + w1 * N[t * 9 + 3] + w2 * N[t * 9 + 6], w0 * N[t * 9 + 1] + w1 * N[t * 9 + 4] + w2 * N[t * 9 + 7], w0 * N[t * 9 + 2] + w1 * N[t * 9 + 5] + w2 * N[t * 9 + 8]);
+      let T = TB.subarray(t * 6, t * 6 + 3), d = T[0] * nn[0] + T[1] * nn[1] + T[2] * nn[2];
+      const q = norm(T[0] - nn[0] * d, T[1] - nn[1] * d, T[2] - nn[2] * d);
+      const V = TB.subarray(t * 6 + 3, t * 6 + 6), dn = V[0] * nn[0] + V[1] * nn[1] + V[2] * nn[2], dq = V[0] * q[0] + V[1] * q[1] + V[2] * q[2];
+      const w = norm(V[0] - nn[0] * dn - q[0] * dq, V[1] - nn[1] * dn - q[1] * dq, V[2] - nn[2] * dn - q[2] * dq);
+      nrm.set(nn, i * 3); tan.set(q, i * 3); bit.set(w, i * 3);
+    }
+  }
+  // dilate 4 texels
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+  for (let pass = 0; pass < 4; pass++) {
+    const fill = [];
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = y * S + x; if (cover[i]) continue; for (const [dx, dy] of dirs) { const X = x + dx, Y = y + dy; if (X >= 0 && X < S && Y >= 0 && Y < S && cover[Y * S + X]) { fill.push(i, Y * S + X); break; } } }
+    for (let k = 0; k < fill.length; k += 2) { const i = fill[k], j = fill[k + 1]; cover[i] = 2; tri[i] = tri[j]; for (const a of [bar, pos, nrm, tan, bit]) a.copyWithin(i * 3, j * 3, j * 3 + 3); }
+  }
+  const tRaster = performance.now();
+  // vertex normals (authored corners averaged), AO, sharp edges
+  const nv = P.length / 3, VN = new Float32Array(nv * 3);
+  for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) { const v = tris[t * 3 + k]; for (let c = 0; c < 3; c++) VN[v * 3 + c] += N[t * 9 + k * 3 + c]; }
+  for (let v = 0; v < nv; v++) VN.set(norm(VN[v * 3], VN[v * 3 + 1], VN[v * 3 + 2]), v * 3);
+  let cxm = 0, cym = 0, czm = 0; for (let v = 0; v < nv; v++) { cxm += P[v * 3]; cym += P[v * 3 + 1]; czm += P[v * 3 + 2]; } cxm /= nv; cym /= nv; czm /= nv;
+  let rad = 0; for (let v = 0; v < nv; v++) rad = Math.max(rad, Math.hypot(P[v * 3] - cxm, P[v * 3 + 1] - cym, P[v * 3 + 2] - czm));
+  const aoR = rad * 0.25, RAYS = 20, gold = Math.PI * (3 - Math.sqrt(5)), grid = new Map(), key = (a, b, c) => a + "," + b + "," + c;
+  for (let t = 0; t < nt; t++) {
+    const vs = [tris[t * 3], tris[t * 3 + 1], tris[t * 3 + 2]], mn = [0, 1, 2].map(k => Math.floor(Math.min(...vs.map(v => P[v * 3 + k])) / aoR)), mx = [0, 1, 2].map(k => Math.floor(Math.max(...vs.map(v => P[v * 3 + k])) / aoR));
+    for (let a = mn[0]; a <= mx[0]; a++) for (let b = mn[1]; b <= mx[1]; b++) for (let c = mn[2]; c <= mx[2]; c++) { const k = key(a, b, c); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(t); }
+  }
+  const AO = new Float32Array(nv);
+  for (let v = 0; v < nv; v++) {
+    const n0 = [VN[v * 3], VN[v * 3 + 1], VN[v * 3 + 2]], T = norm(...(Math.abs(n0[0]) < 0.9 ? [0, n0[2], -n0[1]] : [-n0[2], 0, n0[0]])), B = [n0[1] * T[2] - n0[2] * T[1], n0[2] * T[0] - n0[0] * T[2], n0[0] * T[1] - n0[1] * T[0]];
+    const o = [P[v * 3] + n0[0] * aoR * 0.01, P[v * 3 + 1] + n0[1] * aoR * 0.01, P[v * 3 + 2] + n0[2] * aoR * 0.01], c = o.map(q => Math.floor(q / aoR)), cand = new Set();
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let d = -1; d <= 1; d++) for (const t of grid.get(key(c[0] + a, c[1] + b, c[2] + d)) || []) cand.add(t);
+    let hits = 0;
+    for (let r = 0; r < RAYS; r++) {
+      const rr = Math.sqrt((r + 0.5) / RAYS), th = r * gold, l = [rr * Math.cos(th), rr * Math.sin(th), Math.sqrt(1 - rr * rr)];
+      const D = [0, 1, 2].map(k => T[k] * l[0] + B[k] * l[1] + n0[k] * l[2]);
+      for (const t of cand) {
+        const a = tris[t * 3], b = tris[t * 3 + 1], cc = tris[t * 3 + 2]; if (a === v || b === v || cc === v) continue;
+        const A = [P[a * 3], P[a * 3 + 1], P[a * 3 + 2]], e1 = [P[b * 3] - A[0], P[b * 3 + 1] - A[1], P[b * 3 + 2] - A[2]], e2 = [P[cc * 3] - A[0], P[cc * 3 + 1] - A[1], P[cc * 3 + 2] - A[2]];
+        const p = [D[1] * e2[2] - D[2] * e2[1], D[2] * e2[0] - D[0] * e2[2], D[0] * e2[1] - D[1] * e2[0]], det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2]; if (Math.abs(det) < 1e-12) continue;
+        const iv = 1 / det, s = [o[0] - A[0], o[1] - A[1], o[2] - A[2]], u = (s[0] * p[0] + s[1] * p[1] + s[2] * p[2]) * iv; if (u < 0 || u > 1) continue;
+        const qv = [s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]], w = (D[0] * qv[0] + D[1] * qv[1] + D[2] * qv[2]) * iv; if (w < 0 || u + w > 1) continue;
+        const tt = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) * iv; if (tt > 1e-4 && tt < aoR) { hits++; break; }
+      }
+    }
+    AO[v] = 1 - hits / RAYS;
+  }
+  const edgeMax = rad * 0.1, faceMap = new Map(), fn = [];
+  for (let t = 0; t < nt; t++) {
+    const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+    const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+    fn.push(norm(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]));
+    for (const [p, q] of [[a, b], [b, c], [c, a]]) { const k = Math.min(p, q) + ":" + Math.max(p, q); if (!faceMap.has(k)) faceMap.set(k, []); faceMap.get(k).push(t); }
+  }
+  const segs = [];
+  for (const [k, list] of faceMap) {
+    let sharp = list.length === 1;
+    for (let i = 1; i < list.length && !sharp; i++) { const p = fn[list[0]], q = fn[list[i]]; if (Math.abs(p[0] * q[0] + p[1] * q[1] + p[2] * q[2]) < Math.cos(Math.PI / 6)) sharp = true; }
+    if (sharp) { const [a, b] = k.split(":").map(Number); segs.push([P[a * 3], P[a * 3 + 1], P[a * 3 + 2], P[b * 3], P[b * 3 + 1], P[b * 3 + 2]]); }
+  }
+  const sgrid = new Map();
+  for (const s of segs) for (let a = Math.floor(Math.min(s[0], s[3]) / edgeMax); a <= Math.floor(Math.max(s[0], s[3]) / edgeMax); a++) for (let b = Math.floor(Math.min(s[1], s[4]) / edgeMax); b <= Math.floor(Math.max(s[1], s[4]) / edgeMax); b++) for (let c = Math.floor(Math.min(s[2], s[5]) / edgeMax); c <= Math.floor(Math.max(s[2], s[5]) / edgeMax); c++) { const k = key(a, b, c); if (!sgrid.has(k)) sgrid.set(k, []); sgrid.get(k).push(s); }
+  const tSurface = performance.now();
+  // shade
+  const maps = { albedo: new Uint8ClampedArray(n * 4), normal: new Uint8ClampedArray(n * 4), roughness: new Uint8ClampedArray(n * 4), metalness: new Uint8ClampedArray(n * 4), edge: new Uint8ClampedArray(n * 4), ao: new Uint8ClampedArray(n * 4) };
+  let area = 0; for (let t = 0; t < nt; t++) { const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2]; const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]]; area += Math.hypot(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]) / 2; }
+  const eps = Math.sqrt(area / Math.max(1, covered)), strength = recipe.normalStrength ?? 1;
+  const ctx = {};
+  for (let i = 0; i < n; i++) {
+    const q = i * 4;
+    if (!cover[i]) { maps.normal.set([128, 128, 255, 255], q); maps.roughness.set([128, 128, 128, 255], q); continue; }
+    const t = tri[i] - 1, b0 = bar[i * 3], b1 = bar[i * 3 + 1], b2 = bar[i * 3 + 2];
+    ctx.px = pos[i * 3]; ctx.py = pos[i * 3 + 1]; ctx.pz = pos[i * 3 + 2]; ctx.nx = nrm[i * 3]; ctx.ny = nrm[i * 3 + 1]; ctx.nz = nrm[i * 3 + 2];
+    ctx.ao = b0 * AO[tris[t * 3]] + b1 * AO[tris[t * 3 + 1]] + b2 * AO[tris[t * 3 + 2]];
+    let best = edgeMax; const cc = [ctx.px, ctx.py, ctx.pz].map(v => Math.floor(v / edgeMax));
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let d = -1; d <= 1; d++) for (const s of sgrid.get(key(cc[0] + a, cc[1] + b, cc[2] + d)) || []) {
+      const dx = s[3] - s[0], dy = s[4] - s[1], dz = s[5] - s[2], l2 = dx * dx + dy * dy + dz * dz, u = l2 > 0 ? Math.min(1, Math.max(0, ((ctx.px - s[0]) * dx + (ctx.py - s[1]) * dy + (ctx.pz - s[2]) * dz) / l2)) : 0;
+      best = Math.min(best, Math.hypot(s[0] + dx * u - ctx.px, s[1] + dy * u - ctx.py, s[2] + dz * u - ctx.pz));
+    }
+    ctx.edge = best;
+    const [r, g, bb, ro, me, h0] = shade(recipe, ctx);
+    const T = [tan[i * 3], tan[i * 3 + 1], tan[i * 3 + 2]], V = [bit[i * 3], bit[i * 3 + 1], bit[i * 3 + 2]];
+    const ht = height(recipe, ctx, ctx.px + T[0] * eps, ctx.py + T[1] * eps, ctx.pz + T[2] * eps), hu = height(recipe, ctx, ctx.px - V[0] * eps, ctx.py - V[1] * eps, ctx.pz - V[2] * eps);
+    const du = (ht - h0) / eps * strength, dv = (hu - h0) / eps * strength, l = Math.hypot(du, dv, 1);
+    maps.albedo.set([r * 255, g * 255, bb * 255, 255], q);
+    maps.normal.set([(-du / l * 0.5 + 0.5) * 255, (-dv / l * 0.5 + 0.5) * 255, (1 / l * 0.5 + 0.5) * 255, 255], q);
+    maps.roughness.set([ro * 255, ro * 255, ro * 255, 255], q); maps.metalness.set([me * 255, me * 255, me * 255, 255], q);
+    const ev = (1 - best / edgeMax) * 255; maps.edge.set([ev, ev, ev, 255], q); maps.ao.set([ctx.ao * 255, ctx.ao * 255, ctx.ao * 255, 255], q);
+  }
+  const tShade = performance.now();
+  return { S, maps, ms: { raster: tRaster - t0, surface: tSurface - tRaster, shade: tShade - tSurface } };
+}
+
+// ---------------------------------------------------------------- recipe evaluation (port of Recipe.luau)
+const smooth = (lo, hi, x) => { if (lo === hi) return x >= lo ? 1 : 0; const t = Math.min(1, Math.max(0, (x - lo) / (hi - lo))); return t * t * (3 - 2 * t); };
+function field(term, c, px, py, pz) {
+  const s = term.scale ?? 1, sx = px * s + (term.seed ?? 0) * 31.7, sy = py * s, sz = pz * s;
+  switch (term[0]) {
+    case "noise": return term.warp ? warped(sx, sy, sz, term.octaves ?? 4, term.warp) : fbm(sx, sy, sz, term.octaves ?? 4);
+    case "ridged": return ridged(sx, sy, sz, term.octaves ?? 4);
+    case "voronoi": { const [f1, f2, id] = voronoi(sx, sy, sz, term.jitter); return term.field === "f1" ? f1 : term.field === "id" ? id : f2 - f1; }
+    case "curvature": return 0.5;
+    case "ao": return c.ao;
+    case "edge": return c.edge;
+    case "up": return c.ny;
+    case "y": return py;
+    case "image": return triplanar(RD, px, py, pz, c.nx, c.ny, c.nz, s);
+  }
+  return 1;
+}
+function mask(terms, c, px, py, pz) { if (!terms) return 1; let m = 1; for (const t of terms) { let v = field(t, c, px, py, pz); if (t.lo !== undefined) v = smooth(t.lo, t.hi, v); m *= v; if (m <= 0) return 0; } return m; }
+function height(r, c, px, py, pz) {
+  let h = 0;
+  for (const t of r.detail ?? []) { let v = field(t, c, px, py, pz); if (t.lo !== undefined) v = smooth(t.lo, t.hi, v); h += v * (t.amp ?? 1); }
+  for (const L of r.layers ?? []) if (L.height) h += L.height * mask(L.mask, c, px, py, pz) * (L.opacity ?? 1);
+  return h;
+}
+function shade(r, c) {
+  const base = r.base ?? {}; let [cr, cg, cb] = base.color ?? [0.5, 0.5, 0.5], rough = base.rough ?? 0.5, metal = base.metal ?? 0;
+  if (base.vary) { const k = 1 + fbm(c.px * base.vary.scale, c.py * base.vary.scale, c.pz * base.vary.scale, 3) * base.vary.amount; cr *= k; cg *= k; cb *= k; }
+  for (const L of r.layers ?? []) {
+    const m = mask(L.mask, c, c.px, c.py, c.pz) * (L.opacity ?? 1); if (m <= 0) continue;
+    if (L.color) { let [lr, lg, lb] = L.color; if (L.vary) { const k = 1 + fbm(c.px * L.vary.scale + 7, c.py * L.vary.scale, c.pz * L.vary.scale, 3) * L.vary.amount; lr *= k; lg *= k; lb *= k; } cr += (lr - cr) * m; cg += (lg - cg) * m; cb += (lb - cb) * m; }
+    if (L.rough !== undefined) rough += (L.rough - rough) * m; if (L.metal !== undefined) metal += (L.metal - metal) * m;
+  }
+  const cl = v => Math.min(1, Math.max(0, v));
+  return [cl(cr), cl(cg), cl(cb), cl(rough), cl(metal), height(r, c, c.px, c.py, c.pz)];
+}
+const term = (kind, o) => Object.assign([kind], o);
+// Same numbers as lib/surfacebake/Presets.luau, plus a reaction-diffusion layer projected triplanar.
+const RECIPES = {
+  "Painted metal": { base: { color: [0.16, 0.36, 0.62], rough: 0.45, metal: 0, vary: { scale: 3, amount: 0.06 } }, detail: [term("noise", { scale: 14, octaves: 3, amp: 0.004 })], layers: [
+    { color: [0.62, 0.63, 0.66], rough: 0.25, metal: 1, height: -0.04, mask: [term("edge", { lo: 0.09, hi: 0.02 }), term("noise", { scale: 9, octaves: 4, lo: -0.25, hi: 0.15 })] },
+    { color: [0.12, 0.1, 0.08], rough: 0.9, opacity: 0.85, mask: [term("ao", { lo: 0.8, hi: 0.45 }), term("noise", { scale: 6, octaves: 3, lo: -0.4, hi: 0.3 })] },
+    { color: [0.55, 0.5, 0.42], rough: 0.95, opacity: 0.5, mask: [term("up", { lo: 0.55, hi: 0.9 }), term("noise", { scale: 5, octaves: 4, lo: -0.2, hi: 0.4 })] }], normalStrength: 1 },
+  "Rusted iron": { base: { color: [0.36, 0.36, 0.38], rough: 0.35, metal: 1, vary: { scale: 5, amount: 0.08 } }, detail: [term("noise", { scale: 30, octaves: 3, amp: 0.01 })], layers: [
+    { color: [0.45, 0.2, 0.08], rough: 0.92, metal: 0, height: 0.05, vary: { scale: 14, amount: 0.25 }, mask: [term("noise", { scale: 2.5, octaves: 5, warp: 1.2, lo: -0.05, hi: 0.2 })] },
+    { color: [0.28, 0.1, 0.04], rough: 1, height: -0.03, mask: [term("noise", { scale: 2.5, octaves: 5, warp: 1.2, lo: 0.2, hi: 0.35 }), term("voronoi", { scale: 22, lo: 0.12, hi: 0 })] },
+    { color: [0.62, 0.62, 0.64], rough: 0.2, metal: 1, mask: [term("edge", { lo: 0.05, hi: 0.01 }), term("noise", { scale: 12, octaves: 3, lo: -0.3, hi: 0.2 })] }], normalStrength: 1.2 },
+  "Mossy stone": { base: { color: [0.48, 0.47, 0.44], rough: 0.85, vary: { scale: 2, amount: 0.12 } }, detail: [term("voronoi", { scale: 3, lo: 0, hi: 0.18, amp: 0.12 }), term("noise", { scale: 12, octaves: 4, amp: 0.025 })], layers: [
+    { color: [0.4, 0.38, 0.36], opacity: 0.6, mask: [term("voronoi", { scale: 3, field: "id", lo: 0.4, hi: 0.8 })] },
+    { color: [0.25, 0.24, 0.22], rough: 1, mask: [term("voronoi", { scale: 3, lo: 0.08, hi: 0 })] },
+    { color: [0.22, 0.38, 0.12], rough: 0.95, height: 0.02, vary: { scale: 16, amount: 0.3 }, mask: [term("up", { lo: 0.2, hi: 0.75 }), term("noise", { scale: 3, octaves: 5, lo: -0.1, hi: 0.25 })] },
+    { color: [0.16, 0.3, 0.1], rough: 0.95, opacity: 0.8, mask: [term("ao", { lo: 0.85, hi: 0.55 })] }], normalStrength: 1.5 },
+  "Lava rock": { base: { color: [0.09, 0.08, 0.08], rough: 0.9, vary: { scale: 4, amount: 0.2 } }, detail: [term("ridged", { scale: 3, octaves: 4, amp: 0.08 })], layers: [
+    { color: [1, 0.42, 0.08], rough: 0.6, height: -0.06, mask: [term("voronoi", { scale: 4, lo: 0.09, hi: 0 }), term("noise", { scale: 2, octaves: 3, lo: -0.3, hi: 0.1 })] },
+    { color: [1, 0.75, 0.3], mask: [term("voronoi", { scale: 4, lo: 0.03, hi: 0 }), term("noise", { scale: 2, octaves: 3, lo: 0, hi: 0.3 })] }], normalStrength: 1.3, emissive: true },
+  "Ice": { base: { color: [0.78, 0.9, 0.97], rough: 0.12, vary: { scale: 3, amount: 0.05 } }, detail: [term("ridged", { scale: 5, octaves: 3, amp: 0.02 })], layers: [
+    { color: [0.35, 0.6, 0.85], opacity: 0.7, mask: [term("ao", { lo: 0.9, hi: 0.5 })] },
+    { color: [0.95, 0.98, 1], rough: 0.6, height: 0.01, mask: [term("voronoi", { scale: 6, lo: 0.05, hi: 0 })] }], normalStrength: 0.8 },
+  "Reaction-diffusion coral": { base: { color: [0.86, 0.42, 0.36], rough: 0.7, vary: { scale: 4, amount: 0.1 } }, detail: [term("image", { scale: 0.55, amp: 0.05 })], layers: [
+    { color: [0.98, 0.86, 0.7], rough: 0.5, height: 0.02, mask: [term("image", { scale: 0.55, lo: 0.25, hi: 0.6 })] },
+    { color: [0.35, 0.12, 0.12], rough: 0.9, opacity: 0.8, mask: [term("ao", { lo: 0.9, hi: 0.5 })] }], normalStrength: 1.4 },
+};
+const MESHES = { "Crate": () => box(1, 0.75, 0.85, 4), "Barrel": () => barrel(0.8, 1.9, 40), "Torus": () => torus(1, 0.42, 48, 24), "Sphere": () => sphere(1, 48, 24) };
+const SIZES = { "128": 128, "256": 256, "512": 512 };
+
+// ---------------------------------------------------------------- UI + maps
+const state = { recipe: "Painted metal", mesh: "Crate", size: 256 };
+let mesh = null, baked = null;
+const mapsEl = document.getElementById("maps"), MAPKEYS = ["albedo", "normal", "roughness", "metalness", "edge", "ao"];
+const mapCanvas = {};
+for (const k of MAPKEYS) { const f = document.createElement("figure"), c = document.createElement("canvas"), cap = document.createElement("figcaption"); cap.textContent = k; f.append(c, cap); mapsEl.append(f); mapCanvas[k] = c; }
+function chips(id, items, key, onPick) {
+  const el = document.getElementById(id);
+  for (const name of Object.keys(items)) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = name; b.setAttribute("aria-pressed", String(String(state[key]) === String(items[name]) || state[key] === name));
+    b.addEventListener("click", () => { for (const o of el.children) o.setAttribute("aria-pressed", "false"); b.setAttribute("aria-pressed", "true"); onPick(name); });
+    el.append(b);
+  }
+}
+chips("recipes", RECIPES, "recipe", n => { state.recipe = n; rebake(); });
+chips("meshes", MESHES, "mesh", n => { state.mesh = n; mesh = null; rebake(); });
+chips("sizes", SIZES, "size", n => { state.size = SIZES[n]; rebake(); });
+const readout = document.getElementById("readout");
+function rebake() {
+  readout.textContent = "baking…";
+  setTimeout(() => {
+    if (!mesh) mesh = MESHES[state.mesh]();
+    baked = bake(mesh, RECIPES[state.recipe], state.size);
+    for (const k of MAPKEYS) { const c = mapCanvas[k]; c.width = c.height = baked.S; c.getContext("2d").putImageData(new ImageData(baked.maps[k], baked.S, baked.S), 0, 0); }
+    const ms = baked.ms;
+    readout.textContent = `${baked.S}² · ${mesh.tris.length / 3} tris · raster ${ms.raster.toFixed(0)} ms · surface ${ms.surface.toFixed(0)} ms · shade ${ms.shade.toFixed(0)} ms`;
+    draw();
+  }, 20);
+}
+
+// ---------------------------------------------------------------- software renderer: lit, normal-mapped, z-buffered
+const view = document.getElementById("view"), vctx = view.getContext("2d");
+let yaw = 0.7, pitch = -0.45, drag = null;
+const RES = 420; view.width = view.height = RES;
+const frame = vctx.createImageData(RES, RES), zbuf = new Float32Array(RES * RES);
+view.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw, pitch }; view.setPointerCapture(e.pointerId); view.style.cursor = "grabbing"; });
+view.addEventListener("pointermove", e => { if (!drag) return; yaw = drag.yaw + (e.clientX - drag.x) * 0.01; pitch = Math.max(-1.4, Math.min(1.4, drag.pitch + (e.clientY - drag.y) * 0.01)); draw(); });
+view.addEventListener("pointerup", () => { drag = null; view.style.cursor = "grab"; });
+const spinEl = document.getElementById("spin"), nmapEl = document.getElementById("nmap");
+nmapEl.addEventListener("change", () => draw());
+function sample(map, S, u, v) { const x = Math.min(S - 1, Math.max(0, (u * S) | 0)), y = Math.min(S - 1, Math.max(0, (v * S) | 0)); return (y * S + x) * 4; }
+function draw() {
+  if (!baked || !mesh) return;
+  const { P, tris, UV, N } = mesh, S = baked.S, A = baked.maps.albedo, NM = baked.maps.normal, RO = baked.maps.roughness, ME = baked.maps.metalness, AOm = baked.maps.ao;
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const rot = (x, y, z) => { const x1 = x * cy - z * sy, z1 = x * sy + z * cy; return [x1, y * cp - z1 * sp, y * sp + z1 * cp]; };
+  const camZ = 4.2, f = RES * 0.95;
+  const d = frame.data; for (let i = 0; i < d.length; i += 4) { const g = 11 + ((i / 4 / RES) | 0) * 0.02; d[i] = g; d[i + 1] = g + 2; d[i + 2] = g + 5; d[i + 3] = 255; }
+  zbuf.fill(Infinity);
+  const L = norm(-0.5, 0.75, -0.6), useN = nmapEl.checked, nt = tris.length / 3;
+  for (let t = 0; t < nt; t++) {
+    const vs = [], ws = [];
+    for (let k = 0; k < 3; k++) { const v = tris[t * 3 + k], p = rot(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]), z = camZ + p[2]; vs.push([RES / 2 + p[0] * f / z, RES / 2 - p[1] * f / z, z]); ws.push(rot(N[t * 9 + k * 3], N[t * 9 + k * 3 + 1], N[t * 9 + k * 3 + 2])); }
+    // per-triangle tangent/bitangent in view space, from the same UV derivatives the baker used
+    const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+    const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+    const du1 = UV[t * 6 + 2] - UV[t * 6], dv1 = UV[t * 6 + 3] - UV[t * 6 + 1], du2 = UV[t * 6 + 4] - UV[t * 6], dv2 = UV[t * 6 + 5] - UV[t * 6 + 1], det = du1 * dv2 - du2 * dv1, r = Math.abs(det) < 1e-14 ? 0 : 1 / det;
+    const T = rot(...norm(...[0, 1, 2].map(k => (e1[k] * dv2 - e2[k] * dv1) * r))), Bv = rot(...norm(...[0, 1, 2].map(k => (e2[k] * du1 - e1[k] * du2) * r)));
+    const [p0, p1, p2] = vs, area = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]); if (Math.abs(area) < 1e-9) continue;
+    const x0 = Math.max(0, Math.floor(Math.min(p0[0], p1[0], p2[0]))), x1 = Math.min(RES - 1, Math.ceil(Math.max(p0[0], p1[0], p2[0])));
+    const y0 = Math.max(0, Math.floor(Math.min(p0[1], p1[1], p2[1]))), y1 = Math.min(RES - 1, Math.ceil(Math.max(p0[1], p1[1], p2[1])));
+    const inv = 1 / area;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const px = x + 0.5, py = y + 0.5;
+      let w0 = ((p1[0] - px) * (p2[1] - py) - (p2[0] - px) * (p1[1] - py)) * inv, w1 = ((p2[0] - px) * (p0[1] - py) - (p0[0] - px) * (p2[1] - py)) * inv, w2 = 1 - w0 - w1;
+      if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+      // perspective-correct weights
+      const iz = w0 / p0[2] + w1 / p1[2] + w2 / p2[2], z = 1 / iz, i = y * RES + x; if (z >= zbuf[i]) continue; zbuf[i] = z;
+      const q0 = w0 / p0[2] * z, q1 = w1 / p1[2] * z, q2 = w2 / p2[2] * z;
+      const u = q0 * UV[t * 6] + q1 * UV[t * 6 + 2] + q2 * UV[t * 6 + 4], v = q0 * UV[t * 6 + 1] + q1 * UV[t * 6 + 3] + q2 * UV[t * 6 + 5];
+      let n = norm(q0 * ws[0][0] + q1 * ws[1][0] + q2 * ws[2][0], q0 * ws[0][1] + q1 * ws[1][1] + q2 * ws[2][1], q0 * ws[0][2] + q1 * ws[1][2] + q2 * ws[2][2]);
+      const o = sample(A, S, u, v);
+      if (useN) {
+        const tx = NM[o] / 127.5 - 1, ty = NM[o + 1] / 127.5 - 1, tz = NM[o + 2] / 127.5 - 1;
+        // OpenGL map: green points to image-up = -bitangent(+v)
+        n = norm(T[0] * tx - Bv[0] * ty + n[0] * tz, T[1] * tx - Bv[1] * ty + n[1] * tz, T[2] * tx - Bv[2] * ty + n[2] * tz);
+      }
+      // view vector toward the camera (camera at z = -camZ in view space, looking +z)
+      const pv = [(px - RES / 2) * z / f, -(py - RES / 2) * z / f, z - camZ], V = norm(-pv[0], -pv[1], -camZ - pv[2]);
+      if (n[0] * V[0] + n[1] * V[1] + n[2] * V[2] < 0) n = [-n[0], -n[1], -n[2]];
+      const rough = RO[o] / 255, metal = ME[o] / 255, ao = AOm[o] / 255;
+      const alb = [A[o] / 255, A[o + 1] / 255, A[o + 2] / 255].map(c2 => c2 * c2); // to linear (approx)
+      const nl = Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]);
+      const H = norm(L[0] + V[0], L[1] + V[1], L[2] + V[2]), nh = Math.max(0, n[0] * H[0] + n[1] * H[1] + n[2] * H[2]);
+      const shin = 2 / Math.max(0.002, rough ** 4) - 2, spec = (shin + 8) / 25 * Math.pow(nh, shin) * nl;
+      const F0 = alb.map(c2 => 0.04 * (1 - metal) + c2 * metal), sky = 0.35 + 0.25 * n[1];
+      const out = [0, 1, 2].map(k => {
+        let c2 = alb[k] * (1 - metal) * (nl * 1.6 + sky * ao * 0.9) + F0[k] * (spec * 1.4 + sky * ao * (0.45 + 0.8 * (1 - rough)));
+        if (RECIPES[state.recipe].emissive) c2 += alb[k] * (k === 0 ? 1.2 : 0.5) * Math.max(0, (alb[0] - 0.5) * 2);
+        return Math.sqrt(c2 / (1 + c2)) * 255 * 1.08;
+      });
+      const di = i * 4; d[di] = out[0]; d[di + 1] = out[1]; d[di + 2] = out[2];
+    }
+  }
+  vctx.putImageData(frame, 0, 0);
+}
+let last = 0;
+function tick(ts) {
+  if (spinEl.checked && !drag && baked && ts - last > 40) { yaw += 0.012; last = ts; draw(); }
+  requestAnimationFrame(tick);
+}
+rebake();
+requestAnimationFrame(tick);
+</script>

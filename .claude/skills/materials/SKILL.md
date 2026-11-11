@@ -42,6 +42,10 @@ Materials are tier 5 (HIERARCHY.md §2). They make an item look like what it is 
 
 **Web.** Canvas gradients plus `globalCompositeOperation` (`overlay`, `lighter`) for 2D, and GLSL with Fresnel `pow(1 - dot(n, v), 5)` for 3D.
 
+## Process
+
+Put a material on a real mesh by baking it: [procedural textures playbook](../../../docs/playbooks/procedural-textures.md) and [`lib/surfacebake`](../../../lib/surfacebake/README.md). Recipes (painted metal, rusted iron, mossy stone, lava rock, ice) bake colour, normal, roughness and metalness onto the mesh's own UVs, with wear keyed to real edges and AO.
+
 ## Example
 
 `examples/RarityStyle.luau` holds the seven-tier ladder as data (each tier names the one behaviour it adds) and an applier that styles a Roblox frame with `UIStroke` and `UIGradient` plus tweens. `examples/RarityStyle.test.luau` enforces "adds at most one behaviour per tier" and "no rarity uses danger red". [effects-gallery.html](../../../examples/web/effects-gallery.html) shows the holographic foil and rarity frames live.
