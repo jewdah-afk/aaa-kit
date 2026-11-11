@@ -1,6 +1,6 @@
 # Lexicon
 
-444 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
+464 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
 
 ## Starter pack (40 terms)
 
@@ -51,7 +51,7 @@ The highest-leverage terms. Know these and most briefs write themselves.
 
 ## Domains
 
-[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (41) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
+[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (41) · [Shaders & SDF](#shaders---sdf) (39) · [Algorithms](#algorithms) (42) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (21) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (13) · [Process](#process) (13)
 
 ## Hierarchy
 
@@ -2070,6 +2070,94 @@ Two textures alternating as input and output across simulation steps. **Use when
 
 Tier: T6 engines · Pairs with: [reaction-diffusion](#reaction-diffusion) · Source: industry
 
+### tesseract
+
+The 4-cube: 16 vertices, 32 edges, 24 squares and 8 cubes; in the usual picture its inner cube is the far side in w. **Use when:** 4D showpieces, alien tech, menu centrepieces.
+
+> rotate a tesseract in the XW and YW planes and colour its edges by w-depth
+
+Tier: T6 engines · Pairs with: [rotation plane](#rotation-plane), [cross-section slicing](#cross-section-slicing) · Source: aaa-kit/examples/web/showcase.html
+
+### penteract
+
+The 5-cube: 32 vertices and 80 edges, reaching the screen through three perspective projections. **Use when:** Going one dimension past the tesseract.
+
+> project a penteract 5D to 4D to 3D to 2D and colour each edge by its axis
+
+Tier: T6 engines · Pairs with: [tesseract](#tesseract), [rotation plane](#rotation-plane) · Source: aaa-kit/examples/web/showcase.html
+
+### rotation plane
+
+In n dimensions rotation happens in planes, not around axes: n(n-1)/2 of them, so 6 in 4D and 10 in 5D. **Use when:** Animating any higher-dimensional object.
+
+> animate all six 4D rotation planes at different slow speeds
+
+Tier: T6 engines · Pairs with: [tesseract](#tesseract), [penteract](#penteract) · Source: aaa-kit/examples/web/showcase.html
+
+### stereographic projection
+
+Maps a sphere into flat space from one pole and keeps circles as circles. **Use when:** Bringing S3 objects (Hopf fibres) or globe data into 3D or 2D.
+
+> project the 3-sphere stereographically so its fibres stay circles
+
+Tier: T6 engines · Pairs with: [Hopf fibration](#hopf-fibration) · Source: standard
+
+### Hopf fibration
+
+The 3-sphere is a family of circles, one per point of an ordinary sphere; projected to 3D, any two of them link once. **Use when:** Hypnotic linked-ring centrepieces, portals, alien tech.
+
+> draw Hopf fibres from latitude rings so they nest into linked tori
+
+Tier: T6 engines · Pairs with: [stereographic projection](#stereographic-projection), [tesseract](#tesseract) · Source: Hopf 1931; Zamboj 2020 (arXiv 2003.09236)
+
+### quaternion Julia set
+
+The 4D Julia set of q <- q^2 + c over quaternions, raymarched as 3D slices with Hart's distance estimate. **Use when:** An alien, organic hero object on the GPU, or baked to a flipbook.
+
+> raymarch a quaternion Julia slice with Hart's distance estimate and drift the slice through w
+
+Tier: T6 engines · Pairs with: [raymarching](#raymarching), [orbit trap](#orbit-trap), [cross-section slicing](#cross-section-slicing) · Source: Hart, Sandin & Kauffman 1989; Quilez
+
+### cross-section slicing
+
+Seeing an n-D object through its (n-1)-D slices; moving the slice makes shapes appear, merge and vanish. **Use when:** Morphing shapes without keyframes.
+
+> drift the 4D slice slowly so the shape turns inside out over 20 seconds
+
+Tier: T6 engines · Pairs with: [quaternion Julia set](#quaternion-julia-set), [tesseract](#tesseract) · Source: standard
+
+### orbit trap
+
+Colouring a fractal by how close each point's orbit comes to a chosen shape. **Use when:** Giving a fractal colour bands that follow its form.
+
+> tint the fractal from frost core to heat rim with an orbit trap
+
+Tier: T6 engines · Pairs with: [quaternion Julia set](#quaternion-julia-set) · Source: Pickover; Quilez
+
+### superformula
+
+Gielis's single radius function that makes stars, petals and polygons from six numbers. **Use when:** Glyphs, runes, alien insignia, procedural icons.
+
+> cut the hull glyphs from superformula outlines with m = 5
+
+Tier: T5 materials · Pairs with: [sdf](#sdf) · Source: Gielis 2003
+
+### greebles
+
+Small surface detail (panels, seams, vents) that gives a big object its scale. **Use when:** Ships, machines, sci-fi walls.
+
+> add panel seams every 30 degrees and every 0.2 of radius so the hull reads huge
+
+Tier: T5 materials · Pairs with: [edge wear](#edge-wear) · Source: industry
+
+### volumetric beam
+
+Light gathered along the view ray through a soft cone, so a beam has body instead of being a flat sprite. **Use when:** Tractor beams, spotlights, summon beams.
+
+> march 24 samples through the beam cone and fade it with height
+
+Tier: T2 combat · Pairs with: [volumetric light](#volumetric-light), [gacha beam](#gacha-beam) · Source: standard
+
 
 ## Algorithms
 
@@ -2376,6 +2464,38 @@ Filling a connected region from a seed. **Use when:** Region detection and paint
 > flood fill from the spawn to find reachable cells
 
 Tier: T6 engines · Pairs with: [cellular automaton](#cellular-automaton) · Source: industry
+
+### wavefunction
+
+A complex field whose squared size |psi|^2 is the chance of finding the particle there; its phase makes a natural colour channel. **Use when:** Quantum-flavoured visuals that really are physics.
+
+> colour the field by phase and its brightness by psi squared
+
+Tier: T6 engines · Pairs with: [superposition](#superposition), [measurement](#measurement) · Source: standard
+
+### superposition
+
+One wave packet taking both paths at once and interfering with itself. **Use when:** Double-slit set pieces, splitting effects.
+
+> let the packet split through both slits and keep both branches visible
+
+Tier: T6 engines · Pairs with: [wavefunction](#wavefunction), [measurement](#measurement) · Source: standard
+
+### measurement
+
+Sampling one position from |psi|^2; each hit is a single point, but many hits draw the interference fringes. **Use when:** Building a pattern out of single random events.
+
+> drop detection dots from psi squared so the fringes build up over a minute
+
+Tier: T6 engines · Pairs with: [wavefunction](#wavefunction), [superposition](#superposition) · Source: standard
+
+### absorbing boundary
+
+A damping band at the edges of a wave simulation so waves leave instead of bouncing back. **Use when:** Any wave, ripple or Schrodinger grid.
+
+> add a 10-cell absorbing border so the packet does not reflect off the walls
+
+Tier: T6 engines · Pairs with: [wavefunction](#wavefunction) · Source: standard
 
 
 ## World
@@ -3376,6 +3496,38 @@ The ratio between two luminances; for text ≥ 4.5:1. **Use when:** Text and UI 
 
 Tier: all · Pairs with: [figure-ground gate](#figure-ground-gate) · Source: industry
 
+### chromostereopsis
+
+On a dark ground, saturated red tends to read nearer than blue; some viewers see the reverse, so it is a nudge, never the only cue. **Use when:** Pushing threats forward or a backdrop back with hue alone.
+
+> push threat glyphs toward warm red and the backdrop toward blue so threats float forward
+
+Tier: all · Pairs with: [figure-ground gate](#figure-ground-gate), [aerial perspective](#aerial-perspective) · Source: Hartridge 1947; Thompson et al. 1993
+
+### aerial perspective
+
+Distant things lose contrast and drift toward the sky colour; the cheapest depth cue there is. **Use when:** Layered backdrops and long views.
+
+> fade each far layer toward the sky tint and halve its contrast
+
+Tier: T4 world · Pairs with: [parallax](#parallax), [motion parallax](#motion-parallax) · Source: industry
+
+### kinetic depth effect
+
+A flat silhouette reads as a solid 3D shape the moment it rotates (Wallach and O'Connell 1953). **Use when:** Making a reward or icon read as an object.
+
+> give the reward a slow turntable spin so its silhouette reads as a solid object
+
+Tier: T1 moments · Pairs with: [motion parallax](#motion-parallax) · Source: Wallach & O'Connell 1953
+
+### motion parallax
+
+Near things slide faster than far things as the view moves; one of the strongest depth cues. **Use when:** Backdrops, menus with depth, camera moves.
+
+> split the backdrop into five layers moving at 0.1 to 0.9 of camera speed
+
+Tier: T4 world · Pairs with: [parallax](#parallax), [aerial perspective](#aerial-perspective), [kinetic depth effect](#kinetic-depth-effect) · Source: Rogers & Graham 1979
+
 
 ## Audio & Feel
 
@@ -3541,6 +3693,14 @@ A setting or OS preference to tone down motion. **Use when:** Accessibility.
 > honour reduced motion: shake at 25 %, no flashes
 
 Tier: all · Pairs with: [screen shake](#screen-shake) · Source: industry
+
+### vection
+
+Illusory self-motion from optic flow; strongest in the periphery, slow to build, boosted by a little viewpoint oscillation. **Use when:** Dashes, speed boosts, falling.
+
+> sell the dash with peripheral streaks and a light camera bob, not by speeding up the world
+
+Tier: T2 combat · Pairs with: [motion parallax](#motion-parallax), [screen shake](#screen-shake) · Source: Palmisano et al. 2015
 
 
 ## Process

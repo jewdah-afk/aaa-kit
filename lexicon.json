@@ -1,7 +1,7 @@
 {
   "$schema": "./lexicon.schema.json",
   "version": 1,
-  "count": 444,
+  "count": 464,
   "terms": [
     {
       "term": "loudness tier",
@@ -3411,6 +3411,157 @@
       "starter": false
     },
     {
+      "term": "tesseract",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "The 4-cube: 16 vertices, 32 edges, 24 squares and 8 cubes; in the usual picture its inner cube is the far side in w.",
+      "use-when": "4D showpieces, alien tech, menu centrepieces.",
+      "pairs-with": [
+        "rotation plane",
+        "cross-section slicing"
+      ],
+      "prompt-phrase": "rotate a tesseract in the XW and YW planes and colour its edges by w-depth",
+      "source": "aaa-kit/examples/web/showcase.html",
+      "starter": false
+    },
+    {
+      "term": "penteract",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "The 5-cube: 32 vertices and 80 edges, reaching the screen through three perspective projections.",
+      "use-when": "Going one dimension past the tesseract.",
+      "pairs-with": [
+        "tesseract",
+        "rotation plane"
+      ],
+      "prompt-phrase": "project a penteract 5D to 4D to 3D to 2D and colour each edge by its axis",
+      "source": "aaa-kit/examples/web/showcase.html",
+      "starter": false
+    },
+    {
+      "term": "rotation plane",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "In n dimensions rotation happens in planes, not around axes: n(n-1)/2 of them, so 6 in 4D and 10 in 5D.",
+      "use-when": "Animating any higher-dimensional object.",
+      "pairs-with": [
+        "tesseract",
+        "penteract"
+      ],
+      "prompt-phrase": "animate all six 4D rotation planes at different slow speeds",
+      "source": "aaa-kit/examples/web/showcase.html",
+      "starter": false
+    },
+    {
+      "term": "stereographic projection",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Maps a sphere into flat space from one pole and keeps circles as circles.",
+      "use-when": "Bringing S3 objects (Hopf fibres) or globe data into 3D or 2D.",
+      "pairs-with": [
+        "Hopf fibration"
+      ],
+      "prompt-phrase": "project the 3-sphere stereographically so its fibres stay circles",
+      "source": "standard",
+      "starter": false
+    },
+    {
+      "term": "Hopf fibration",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "The 3-sphere is a family of circles, one per point of an ordinary sphere; projected to 3D, any two of them link once.",
+      "use-when": "Hypnotic linked-ring centrepieces, portals, alien tech.",
+      "pairs-with": [
+        "stereographic projection",
+        "tesseract"
+      ],
+      "prompt-phrase": "draw Hopf fibres from latitude rings so they nest into linked tori",
+      "source": "Hopf 1931; Zamboj 2020 (arXiv 2003.09236)",
+      "starter": false
+    },
+    {
+      "term": "quaternion Julia set",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "The 4D Julia set of q <- q^2 + c over quaternions, raymarched as 3D slices with Hart's distance estimate.",
+      "use-when": "An alien, organic hero object on the GPU, or baked to a flipbook.",
+      "pairs-with": [
+        "raymarching",
+        "orbit trap",
+        "cross-section slicing"
+      ],
+      "prompt-phrase": "raymarch a quaternion Julia slice with Hart's distance estimate and drift the slice through w",
+      "source": "Hart, Sandin & Kauffman 1989; Quilez",
+      "starter": false
+    },
+    {
+      "term": "cross-section slicing",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Seeing an n-D object through its (n-1)-D slices; moving the slice makes shapes appear, merge and vanish.",
+      "use-when": "Morphing shapes without keyframes.",
+      "pairs-with": [
+        "quaternion Julia set",
+        "tesseract"
+      ],
+      "prompt-phrase": "drift the 4D slice slowly so the shape turns inside out over 20 seconds",
+      "source": "standard",
+      "starter": false
+    },
+    {
+      "term": "orbit trap",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Colouring a fractal by how close each point's orbit comes to a chosen shape.",
+      "use-when": "Giving a fractal colour bands that follow its form.",
+      "pairs-with": [
+        "quaternion Julia set"
+      ],
+      "prompt-phrase": "tint the fractal from frost core to heat rim with an orbit trap",
+      "source": "Pickover; Quilez",
+      "starter": false
+    },
+    {
+      "term": "superformula",
+      "tier": "T5 materials",
+      "domain": "shaders",
+      "meaning": "Gielis's single radius function that makes stars, petals and polygons from six numbers.",
+      "use-when": "Glyphs, runes, alien insignia, procedural icons.",
+      "pairs-with": [
+        "sdf"
+      ],
+      "prompt-phrase": "cut the hull glyphs from superformula outlines with m = 5",
+      "source": "Gielis 2003",
+      "starter": false
+    },
+    {
+      "term": "greebles",
+      "tier": "T5 materials",
+      "domain": "shaders",
+      "meaning": "Small surface detail (panels, seams, vents) that gives a big object its scale.",
+      "use-when": "Ships, machines, sci-fi walls.",
+      "pairs-with": [
+        "edge wear"
+      ],
+      "prompt-phrase": "add panel seams every 30 degrees and every 0.2 of radius so the hull reads huge",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "volumetric beam",
+      "tier": "T2 combat",
+      "domain": "shaders",
+      "meaning": "Light gathered along the view ray through a soft cone, so a beam has body instead of being a flat sprite.",
+      "use-when": "Tractor beams, spotlights, summon beams.",
+      "pairs-with": [
+        "volumetric light",
+        "gacha beam"
+      ],
+      "prompt-phrase": "march 24 samples through the beam cone and fade it with height",
+      "source": "standard",
+      "starter": false
+    },
+    {
       "term": "godrithm",
       "tier": "T6 engines",
       "domain": "algorithms",
@@ -3916,6 +4067,61 @@
       ],
       "prompt-phrase": "flood fill from the spawn to find reachable cells",
       "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "wavefunction",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A complex field whose squared size |psi|^2 is the chance of finding the particle there; its phase makes a natural colour channel.",
+      "use-when": "Quantum-flavoured visuals that really are physics.",
+      "pairs-with": [
+        "superposition",
+        "measurement"
+      ],
+      "prompt-phrase": "colour the field by phase and its brightness by psi squared",
+      "source": "standard",
+      "starter": false
+    },
+    {
+      "term": "superposition",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "One wave packet taking both paths at once and interfering with itself.",
+      "use-when": "Double-slit set pieces, splitting effects.",
+      "pairs-with": [
+        "wavefunction",
+        "measurement"
+      ],
+      "prompt-phrase": "let the packet split through both slits and keep both branches visible",
+      "source": "standard",
+      "starter": false
+    },
+    {
+      "term": "measurement",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Sampling one position from |psi|^2; each hit is a single point, but many hits draw the interference fringes.",
+      "use-when": "Building a pattern out of single random events.",
+      "pairs-with": [
+        "wavefunction",
+        "superposition"
+      ],
+      "prompt-phrase": "drop detection dots from psi squared so the fringes build up over a minute",
+      "source": "standard",
+      "starter": false
+    },
+    {
+      "term": "absorbing boundary",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A damping band at the edges of a wave simulation so waves leave instead of bouncing back.",
+      "use-when": "Any wave, ripple or Schrodinger grid.",
+      "pairs-with": [
+        "wavefunction"
+      ],
+      "prompt-phrase": "add a 10-cell absorbing border so the packet does not reflect off the walls",
+      "source": "standard",
       "starter": false
     },
     {
@@ -5541,6 +5747,62 @@
       "starter": false
     },
     {
+      "term": "chromostereopsis",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "On a dark ground, saturated red tends to read nearer than blue; some viewers see the reverse, so it is a nudge, never the only cue.",
+      "use-when": "Pushing threats forward or a backdrop back with hue alone.",
+      "pairs-with": [
+        "figure-ground gate",
+        "aerial perspective"
+      ],
+      "prompt-phrase": "push threat glyphs toward warm red and the backdrop toward blue so threats float forward",
+      "source": "Hartridge 1947; Thompson et al. 1993",
+      "starter": false
+    },
+    {
+      "term": "aerial perspective",
+      "tier": "T4 world",
+      "domain": "art",
+      "meaning": "Distant things lose contrast and drift toward the sky colour; the cheapest depth cue there is.",
+      "use-when": "Layered backdrops and long views.",
+      "pairs-with": [
+        "parallax",
+        "motion parallax"
+      ],
+      "prompt-phrase": "fade each far layer toward the sky tint and halve its contrast",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "kinetic depth effect",
+      "tier": "T1 moments",
+      "domain": "art",
+      "meaning": "A flat silhouette reads as a solid 3D shape the moment it rotates (Wallach and O'Connell 1953).",
+      "use-when": "Making a reward or icon read as an object.",
+      "pairs-with": [
+        "motion parallax"
+      ],
+      "prompt-phrase": "give the reward a slow turntable spin so its silhouette reads as a solid object",
+      "source": "Wallach & O'Connell 1953",
+      "starter": false
+    },
+    {
+      "term": "motion parallax",
+      "tier": "T4 world",
+      "domain": "art",
+      "meaning": "Near things slide faster than far things as the view moves; one of the strongest depth cues.",
+      "use-when": "Backdrops, menus with depth, camera moves.",
+      "pairs-with": [
+        "parallax",
+        "aerial perspective",
+        "kinetic depth effect"
+      ],
+      "prompt-phrase": "split the backdrop into five layers moving at 0.1 to 0.9 of camera speed",
+      "source": "Rogers & Graham 1979",
+      "starter": false
+    },
+    {
       "term": "audio cue",
       "tier": "all",
       "domain": "audio-feel",
@@ -5801,6 +6063,20 @@
       ],
       "prompt-phrase": "honour reduced motion: shake at 25 %, no flashes",
       "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "vection",
+      "tier": "T2 combat",
+      "domain": "game-feel",
+      "meaning": "Illusory self-motion from optic flow; strongest in the periphery, slow to build, boosted by a little viewpoint oscillation.",
+      "use-when": "Dashes, speed boosts, falling.",
+      "pairs-with": [
+        "motion parallax",
+        "screen shake"
+      ],
+      "prompt-phrase": "sell the dash with peripheral streaks and a light camera bob, not by speeding up the world",
+      "source": "Palmisano et al. 2015",
       "starter": false
     },
     {

@@ -15,7 +15,7 @@ Five messages, ready to paste. Each block between the `---` lines fits in one Di
 > 🧠 **15 Claude skills:** HUD, rewards, VFX, materials, shaders, worlds, economy, Luau…
 > 📚 **30 research chapters + 10 playbooks:** what works and *how we actually did it*
 > 🧪 **3 tested Luau libraries:** pixels, meshes, and textures baked onto models
-> 🗣️ **444-term lexicon:** design words with ready-to-paste prompt phrases
+> 🗣️ **464-term lexicon:** design words with ready-to-paste prompt phrases
 > 🔧 **Tools:** kit doctor, hierarchy auditor, Figma pipeline, GIF recorder, one-command checks
 > 🎞️ **Labs + 36 GIFs:** every effect running live
 

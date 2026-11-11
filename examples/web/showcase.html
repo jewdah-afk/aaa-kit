@@ -4,14 +4,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a tech-art bench between heat and frost. Left-aligned 12-column grid, live specimens set into slabs, real numbers as structure. */
+/* Layout: a hyperdimensional bench. A full-bleed GPU fractal sits behind the thesis, then a ladder ordered by the dimension each specimen lives in, then the surface lab, the lexicon and the kit. Heat vs frost is the only colour. */
 :root {
-  --ground: #111317;
-  --slab: #181b20;
-  --slab-2: #1e2228;
-  --rule: #2a2f37;
+  --ground: #0e1014;
+  --slab: #161920;
+  --slab-2: #1d2128;
+  --rule: #272c35;
   --ink: #eceae5;
-  --mute: #9aa0a8;
+  --mute: #959ba4;
   --heat: #ff9a3c;
   --frost: #8fd8ff;
   --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
@@ -27,103 +27,115 @@ html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
 a { color: inherit; }
-.wrap { max-width: 1200px; margin: 0 auto; padding-left: var(--gut); padding-right: var(--gut-r); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: var(--gut); padding-right: var(--gut-r); }
 .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--mute); }
 .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; }
-h1 { font-size: clamp(44px, 8.4vw, 112px); line-height: 0.92; letter-spacing: -0.035em; font-variation-settings: "wdth" 82, "opsz" 96; }
-h2 { font-size: clamp(30px, 4.6vw, 56px); line-height: 1; letter-spacing: -0.025em; font-variation-settings: "wdth" 86, "opsz" 72; }
-h3 { font-size: 22px; line-height: 1.15; letter-spacing: -0.01em; font-variation-settings: "wdth" 92; }
+h1 { font-size: clamp(46px, 9vw, 128px); line-height: 0.9; letter-spacing: -0.04em; font-variation-settings: "wdth" 80, "opsz" 96; }
+h2 { font-size: clamp(30px, 4.8vw, 60px); line-height: 0.98; letter-spacing: -0.03em; font-variation-settings: "wdth" 84, "opsz" 72; }
+h3 { font-size: 21px; line-height: 1.15; letter-spacing: -0.01em; font-variation-settings: "wdth" 92; }
 p { margin: 0; max-width: 62ch; color: var(--mute); }
 p strong { color: var(--ink); font-weight: 600; }
 code, pre { font-family: var(--mono); }
 .heat { color: var(--heat); }
 .frost { color: var(--frost); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--frost); outline-offset: 3px; border-radius: 4px; }
 
-/* top bar */
-header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--ground) 80%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--rule); }
 header.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
-.mark { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; text-decoration: none; display: flex; align-items: baseline; gap: 2px; }
+.mark { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; text-decoration: none; }
 .mark i { font-style: normal; color: var(--heat); }
-.mark b { color: var(--frost); font-weight: 800; }
+.mark b { color: var(--frost); }
 nav { display: flex; gap: 18px; flex-wrap: wrap; }
 nav a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-decoration: none; color: var(--mute); padding: 6px 0; }
 nav a:hover, nav a:focus-visible { color: var(--ink); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--frost); outline-offset: 3px; border-radius: 4px; }
-@media (max-width: 560px) { nav { display: none; } }
+@media (max-width: 640px) { nav { display: none; } }
 
-/* hero */
-.hero { padding-block: 44px 28px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: center; }
-@media (max-width: 880px) { .hero { grid-template-columns: minmax(0, 1fr); } }
-.hero .lede { display: grid; gap: 22px; align-content: center; }
-.hero .lede p { font-size: 18px; }
+/* hero: the fractal is the background and the thesis sits on it */
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--rule); }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero .shade { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ground) 0%, color-mix(in srgb, var(--ground) 70%, transparent) 36%, transparent 66%), linear-gradient(0deg, var(--ground) 0%, transparent 32%); pointer-events: none; }
+@media (max-width: 720px) { .hero .shade { background: linear-gradient(0deg, var(--ground) 8%, color-mix(in srgb, var(--ground) 72%, transparent) 50%, color-mix(in srgb, var(--ground) 55%, transparent) 100%); } }
+.hero .wrap { position: relative; padding-block: clamp(72px, 14vw, 170px) 48px; display: grid; gap: 22px; pointer-events: none; }
+.hero .wrap > * { pointer-events: auto; }
+.hero p { font-size: 18px; max-width: 46ch; color: #c9cbd0; }
 .split { display: block; }
 .split em { font-style: normal; background: linear-gradient(90deg, var(--heat), #ffd29a 45%, var(--frost)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.relic { position: relative; display: grid; gap: 8px; }
-.relic canvas { width: 100%; max-width: 520px; aspect-ratio: 1; display: block; margin-left: auto; cursor: grab; touch-action: none; border-radius: 50%; background: radial-gradient(circle at 50% 55%, #1c2027 0, var(--ground) 68%); }
-.relic .legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 520px; margin-left: auto; width: 100%; }
-.thermo { display: flex; align-items: center; gap: 10px; }
-.thermo span { height: 4px; width: 120px; border-radius: 2px; background: linear-gradient(90deg, var(--frost), #3a4350 50%, var(--heat)); }
 .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.btn { font: 600 15px var(--body); color: #14100b; background: var(--heat); border: 0; border-radius: 999px; padding: 12px 20px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.btn { font: 600 15px var(--body); color: #14100b; background: var(--heat); border: 0; border-radius: 999px; padding: 12px 20px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; cursor: pointer; }
+.btn.ghost { background: color-mix(in srgb, var(--ground) 50%, transparent); color: var(--ink); border: 1px solid var(--rule); }
+.readout { overflow-wrap: anywhere; }
+.nogl { position: absolute; right: var(--gut-r); bottom: 16px; left: var(--gut); text-align: right; }
 
-/* numbers */
-.numbers { border-block: 1px solid var(--rule); }
+.numbers { border-bottom: 1px solid var(--rule); }
 .numbers .wrap { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .numbers .wrap > div { padding: 18px 14px 18px 0; display: grid; gap: 2px; }
 .numbers b { font-family: var(--display); font-size: 34px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 85; }
 @media (max-width: 880px) { .numbers .wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 440px) { .numbers .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-section.block { padding-block: 72px 8px; display: grid; gap: 28px; }
+section.block { padding-block: 80px 8px; display: grid; gap: 28px; }
 .head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px; align-items: end; }
 @media (max-width: 880px) { .head { grid-template-columns: minmax(0, 1fr); } }
 
-/* specimens */
-.specimens { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
-.spec { grid-column: span 4; background: var(--slab); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
-.spec.wide { grid-column: span 8; }
-.spec.half { grid-column: span 6; }
-@media (max-width: 980px) { .spec, .spec.wide, .spec.half { grid-column: span 6; } }
-@media (max-width: 640px) { .spec, .spec.wide, .spec.half { grid-column: span 12; } }
-.spec canvas { width: 100%; aspect-ratio: 1; display: block; background: #0d0f12; touch-action: none; cursor: crosshair; }
-.spec.wide canvas { aspect-ratio: 2 / 1; }
-.spec .cap { padding: 14px 16px 16px; display: grid; gap: 8px; align-content: start; }
-.spec .cap p { font-size: 14.5px; }
+/* dimension ladder: each card is keyed by the dimension its object lives in */
+.ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 980px) { .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .ladder { grid-template-columns: minmax(0, 1fr); } }
+.dim { position: relative; background: var(--slab); border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.dim canvas { width: 100%; max-width: 100%; aspect-ratio: 1; display: block; background: #0a0c0f; touch-action: none; }
+.dim .n { position: absolute; top: 10px; left: 14px; font-family: var(--display); font-weight: 800; font-size: 56px; line-height: 1; letter-spacing: -0.04em; color: var(--ink); mix-blend-mode: difference; pointer-events: none; font-variation-settings: "wdth" 78; }
+.dim .n small { font-size: 13px; font-family: var(--mono); font-weight: 500; letter-spacing: 0.04em; margin-left: 4px; }
+.cap { padding: 14px 16px 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cap p { font-size: 14.5px; }
 .recipe { display: flex; flex-wrap: wrap; gap: 6px; }
 .recipe span { font-family: var(--mono); font-size: 11px; color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 7px; background: var(--slab-2); }
-.spec .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
 .toggle { font: 500 12px var(--mono); color: var(--ink); background: var(--slab-2); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; cursor: pointer; min-height: 32px; }
 .toggle[aria-pressed="true"] { border-color: var(--frost); color: var(--frost); }
 
-/* hierarchy ladder */
-.ladder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-@media (max-width: 880px) { .ladder { grid-template-columns: minmax(0, 1fr); } }
+/* surface lab */
+.specimens { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.spec { grid-column: span 6; background: var(--slab); border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+@media (max-width: 640px) { .spec { grid-column: span 12; } }
+.spec canvas { width: 100%; max-width: 100%; aspect-ratio: 1; display: block; background: #0a0c0f; touch-action: none; cursor: crosshair; }
+
+/* lexicon */
+.lex-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+.lexicon { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; border-top: 1px solid var(--rule); }
+@media (max-width: 980px) { .lexicon { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .lexicon { grid-template-columns: minmax(0, 1fr); } }
+.term { padding: 18px 0 20px; border-bottom: 1px solid var(--rule); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.term h3 { font-size: 19px; }
+.term .k { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+.term p { font-size: 14px; }
+.term code { font-size: 12px; color: var(--ink); background: var(--slab-2); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; display: block; white-space: normal; }
+
+/* hierarchy */
+.hier { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 880px) { .hier { grid-template-columns: minmax(0, 1fr); } }
 .tiers { display: grid; border-top: 1px solid var(--rule); }
 .tier { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
-.tier b { font-family: var(--display); font-size: 38px; line-height: 0.9; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tier b { font-family: var(--display); font-size: 38px; line-height: 0.9; font-weight: 700; }
 .tier h3 { font-size: 18px; }
 .tier p { font-size: 14px; }
 .rules { display: grid; gap: 10px; align-content: start; }
 .rule { background: var(--slab); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; align-items: center; }
-.rule b { font-family: var(--display); font-size: 26px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 85; }
+.rule b { font-family: var(--display); font-size: 26px; letter-spacing: -0.02em; font-variation-settings: "wdth" 85; }
 .rule p { font-size: 14px; }
 
-/* kit index */
-.index { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+.index { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
 @media (max-width: 880px) { .index { grid-template-columns: minmax(0, 1fr); } }
 .index > div { padding: 22px 22px 26px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 10px; align-content: start; min-width: 0; }
 .index ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .index li { font-size: 14.5px; color: var(--mute); }
 .index li b { color: var(--ink); font-weight: 600; }
-
-/* start */
 .start { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 24px; align-items: start; }
+.start > * { min-width: 0; }
 @media (max-width: 880px) { .start { grid-template-columns: minmax(0, 1fr); } }
-pre.term { margin: 0; background: #0b0d10; border: 1px solid var(--rule); border-radius: 12px; padding: 18px; font-size: 13.5px; line-height: 1.7; overflow-x: auto; color: var(--ink); }
-pre.term .c { color: #5e6672; }
-pre.term .p { color: var(--frost); }
+pre.term-box { margin: 0; background: #090b0e; border: 1px solid var(--rule); border-radius: 12px; padding: 18px; font-size: 13.5px; line-height: 1.7; overflow-x: auto; color: var(--ink); }
+pre.term-box .c { color: #5a626e; }
+pre.term-box .p { color: var(--frost); }
 footer { margin-top: 80px; border-top: 1px solid var(--rule); }
 footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 </style>
@@ -132,38 +144,36 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
   <div class="wrap">
     <a class="mark" href="#top" aria-label="aaa-kit, back to top"><i>aaa</i>-kit<b>.</b></a>
     <nav aria-label="Sections">
-      <a href="#specimens">Specimens</a>
+      <a href="#ladder">Dimensions</a>
+      <a href="#lab">Surface lab</a>
+      <a href="#lexicon">Hyperlexicon</a>
       <a href="#hierarchy">Hierarchy</a>
-      <a href="#kit">The kit</a>
       <a href="#start">Start</a>
     </nav>
   </div>
 </header>
 
 <main id="top">
-  <div class="wrap hero">
-    <div class="lede">
+  <div class="hero">
+    <canvas id="hyper" aria-label="A quaternion Julia set: a four-dimensional fractal, sliced and raymarched live. Move the pointer to turn it."></canvas>
+    <div class="shade" aria-hidden="true"></div>
+    <div class="wrap">
       <div class="eyebrow">Roblox game-dev super repo · Luau · tested headless</div>
       <h1><span class="split">Every surface</span><span class="split"><em>remembers.</em></span></h1>
-      <p>aaa-kit is the hub behind our games: a hierarchy that decides what owns each pixel, <strong>15 Claude skills</strong>, tested Luau libraries, and textures that are <strong>baked onto real models, move in realtime and react when they're hit</strong>. Everything on this page is running live.</p>
+      <p>Even in four dimensions. aaa-kit is the hub behind our games: a hierarchy that decides what owns each pixel, <strong>15 Claude skills</strong>, tested Luau libraries, and surfaces that are <strong>baked onto real models, move in realtime and react when they're hit</strong>.</p>
       <div class="cta-row">
         <a class="btn" href="#start">Get the kit</a>
-        <a class="btn ghost" href="#specimens">See the specimens</a>
+        <a class="btn ghost" href="#ladder">Climb the dimensions</a>
       </div>
+      <div class="readout mono" id="hyperReadout">quaternion Julia · q ← q² + c · slice w = 0.00</div>
     </div>
-    <div class="relic">
-      <canvas id="relic" width="320" height="320" aria-label="A relic that dissolves from one baked material into the next. Drag to turn it, tap to strike it."></canvas>
-      <div class="legend">
-        <span class="mono" id="relicName">Metamorph · baking…</span>
-        <span class="thermo mono"><span aria-hidden="true"></span>tap to strike</span>
-      </div>
-    </div>
+    <span class="nogl mono" id="nogl" hidden>No WebGL in this browser, so the 4D hero is off. Everything below still runs.</span>
   </div>
 
   <div class="numbers" aria-label="The kit in numbers">
     <div class="wrap">
       <div><b>15</b><span class="mono">Claude skills</span></div>
-      <div><b>444</b><span class="mono">lexicon terms</span></div>
+      <div><b>464</b><span class="mono">lexicon terms</span></div>
       <div><b>30</b><span class="mono">research chapters</span></div>
       <div><b>10</b><span class="mono">playbooks</span></div>
       <div><b>15</b><span class="mono">baked materials</span></div>
@@ -171,44 +181,113 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
     </div>
   </div>
 
-  <section class="wrap block" id="specimens">
+  <section class="wrap block" id="ladder">
     <div class="head">
-      <h2>New specimens, built from <span class="heat">every</span> discovery</h2>
-      <p>Each one stacks techniques from the library: UV-space bakes, pre-baked fields, reactive state, parallax occlusion, shell fur, infinite zoom and the hierarchy auditor. Every frame is computed on the CPU, the way a Roblox client draws into an <strong>EditableImage</strong>.</p>
+      <h2>The dimension ladder</h2>
+      <p>Each specimen is filed under the dimension its object actually lives in, and all of them are computed live. The CPU ones write pixels the way a Roblox client writes an <strong>EditableImage</strong>. The GPU ones are shader studies that we port down to it.</p>
+    </div>
+    <div class="ladder">
+      <article class="dim">
+        <canvas id="relic" width="320" height="320" aria-label="A sphere dissolving from one baked material into the next. Tap to strike it."></canvas>
+        <div class="n" aria-hidden="true">3<small>D</small></div>
+        <div class="cap">
+          <h3>Metamorph</h3>
+          <p>Seven materials are baked onto one mesh through its own UVs, and each dissolves into the next along a 3D noise field with a molten front. Tap it to strike it: the hit leaves heat and a ripple.</p>
+          <div class="recipe"><span>UV-space bake</span><span>dissolve</span><span>React.hit</span></div>
+          <div class="foot"><span class="mono" id="relicName">baking…</span></div>
+        </div>
+      </article>
+      <article class="dim">
+        <canvas id="tess" width="320" height="320" aria-label="A tesseract rotating through all six planes of four-dimensional space."></canvas>
+        <div class="n" aria-hidden="true">4<small>D</small></div>
+        <div class="cap">
+          <h3>Tesseract</h3>
+          <p>16 vertices and 32 edges rotate in all six planes of 4D space, then are projected twice (4D → 3D → 2D). The inner cube is the far side in w. Colour shows w-depth, from frost (near) to heat (far).</p>
+          <div class="recipe"><span>6 rotation planes</span><span>double perspective</span><span>w-depth cue</span></div>
+          <div class="foot"><span class="mono">drag to turn the XW and YW planes</span></div>
+        </div>
+      </article>
+      <article class="dim">
+        <canvas id="hopf" width="320" height="320" aria-label="The Hopf fibration: nested tori of linked circles."></canvas>
+        <div class="n" aria-hidden="true">S³<small>in 4D</small></div>
+        <div class="cap">
+          <h3>Hopf fibration</h3>
+          <p>The 3-sphere in 4D space is made of circles, one for each point on an ordinary sphere. Stereographic projection brings them into 3D, and any two of them are linked exactly once.</p>
+          <div class="recipe"><span>S³ → S²</span><span>stereographic projection</span><span>Villarceau circles</span></div>
+          <div class="foot"><span class="mono" id="hopfN">–</span></div>
+        </div>
+      </article>
+      <article class="dim">
+        <canvas id="pent" width="320" height="320" aria-label="A five-dimensional hypercube rotating through ten planes."></canvas>
+        <div class="n" aria-hidden="true">5<small>D</small></div>
+        <div class="cap">
+          <h3>Penteract</h3>
+          <p>The 5-cube has 32 vertices and 80 edges. Here it rotates in ten planes at once and is projected three times (5D → 4D → 3D → 2D). Each edge is coloured by the axis it runs along.</p>
+          <div class="recipe"><span>10 rotation planes</span><span>triple projection</span><span>axis colour</span></div>
+          <div class="foot"><span class="mono">drag to turn the planes into the fifth axis</span></div>
+        </div>
+      </article>
+      <article class="dim">
+        <canvas id="quant" width="256" height="256" aria-label="A quantum wave packet passing through two slits; single detections build an interference pattern on the right."></canvas>
+        <div class="n" aria-hidden="true">ψ<small>Hilbert space</small></div>
+        <div class="cap">
+          <h3>Quantum tide</h3>
+          <p>The Schrödinger equation is solved live with Visscher's staggered scheme as a wave packet goes through two slits. Its phase shows as frost↔heat. Every detection lands at one point, yet together the dots build interference fringes.</p>
+          <div class="recipe"><span>Schrödinger</span><span>double slit</span><span>|ψ|² sampling</span></div>
+          <div class="foot"><button class="toggle" id="quantFire" type="button">Fire a packet</button><span class="mono" id="quantN">0 detections</span></div>
+        </div>
+      </article>
+      <article class="dim">
+        <canvas id="xeno" aria-label="An alien craft with a glyph-lit hull bending the starlight around it, under a pulsing beam. Tap to fire the beam."></canvas>
+        <div class="n" aria-hidden="true">3+1<small>D</small></div>
+        <div class="cap">
+          <h3>Xenocraft</h3>
+          <p>A raymarched hull of smooth-unioned shells, with glyph bands cut from the superformula and a thin-film iridescent skin. Gravitational lensing bends the starfield around its mass. Tap it to fire the beam.</p>
+          <div class="recipe"><span>raymarch SDF</span><span>lensing</span><span>superformula</span><span>thin film</span></div>
+          <div class="foot"><span class="mono" id="xenoNote">GPU study · bake to a 128² flipbook for Roblox</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap block" id="lab">
+    <div class="head">
+      <h2>The surface lab</h2>
+      <p>This is the Roblox-ready half. Every frame is computed on the CPU from baked fields and per-texel state, at sizes a phone can afford.</p>
     </div>
     <div class="specimens">
-      <article class="spec half">
+      <article class="spec">
         <canvas id="shock" width="240" height="240" aria-label="A painted steel crate struck by alternating heat and frost; where they meet, steam rings and cracks."></canvas>
         <div class="cap">
           <h3>Thermal shock</h3>
-          <p>Heat and frost hits land on a painted steel crate. Frost grows from a moving front, heat melts it, and where they meet the metal throws a steam ring and keeps a crack scar.</p>
-          <div class="recipe"><span>bake</span><span>React heat</span><span>React frost</span><span>ripple</span><span>crystal field</span></div>
+          <p>Heat and frost hits land on a painted steel crate. Frost grows from a moving front and heat melts it. Where the two meet, the metal throws off a steam ring and keeps a crack scar.</p>
+          <div class="recipe"><span>React heat</span><span>React frost</span><span>ripple</span><span>crystal field</span></div>
           <div class="foot"><span class="mono">tap: <span class="heat">heat</span> · shift-tap (every 2nd tap on touch): <span class="frost">frost</span></span><span class="mono" id="shockMs">–</span></div>
         </div>
       </article>
-      <article class="spec half">
+      <article class="spec">
         <canvas id="portal" width="240" height="240" aria-label="A stone ring with deep parallax, its centre an endless zoom into a reaction-diffusion tunnel."></canvas>
         <div class="cap">
           <h3>Abyss portal</h3>
-          <p>A flat square marched as a height field gives a stone ring real depth. Where the ray falls into the hole, it lands in an infinite zoom of a reaction-diffusion render, offset by the same view, so the tunnel sits behind the stone.</p>
-          <div class="recipe"><span>Parallax.pom</span><span>Parallax.zoom</span><span>reaction-diffusion</span><span>rune pulse</span></div>
+          <p>Parallax occlusion gives a flat square a deep stone ring. Rays that fall into the hole land in an infinite zoom of a reaction-diffusion render, so the tunnel sits behind the stone.</p>
+          <div class="recipe"><span>Parallax.pom</span><span>Parallax.zoom</span><span>reaction-diffusion</span></div>
           <div class="foot"><span class="mono">move the pointer to look in</span><span class="mono" id="portalMs">–</span></div>
         </div>
       </article>
-      <article class="spec half">
+      <article class="spec">
         <canvas id="pelt" width="240" height="240" aria-label="A fur ball with embers flowing at the roots; the fur lags when it lurches."></canvas>
         <div class="cap">
           <h3>Ember pelt</h3>
-          <p>Sixteen offset shells make fur with real depth. A looping lava table flows through the roots, so embers glow under the ash-grey tips, and a spring makes the fur lag whenever the body lurches.</p>
+          <p>Sixteen shells give the fur real depth. A looping lava table flows through the roots under ash-grey tips, and a spring makes the fur lag whenever the body lurches.</p>
           <div class="recipe"><span>Parallax.shells</span><span>Animate flow</span><span>React.spring</span></div>
           <div class="foot"><span class="mono">drag it hard and let go</span><span class="mono" id="peltMs">–</span></div>
         </div>
       </article>
-      <article class="spec half">
+      <article class="spec">
         <canvas id="lens" width="240" height="240" aria-label="A mock game shop screen with the predicted scanpath drawn over it."></canvas>
         <div class="cap">
           <h3>Hierarchy lens</h3>
-          <p>The auditor's salience model on a shop screen: centre-surround contrast, few-peaks weighting, then a scanpath with inhibition of return. With three loud panels the eye goes to the HUD first. Fix it, and the path runs item, then buy button. The caption is measured live.</p>
+          <p>The auditor's salience model and scanpath, run on a shop screen. With three loud panels, the eye goes to the HUD first. Fix the hierarchy and the path runs to the item, then its buy button. The caption is measured live.</p>
           <div class="recipe"><span>tools/hierarchy</span><span>salience</span><span>inhibition of return</span></div>
           <div class="foot"><button class="toggle" id="lensFix" type="button" aria-pressed="false">Fix the hierarchy</button><button class="toggle" id="lensHeat" type="button" aria-pressed="true">Heatmap</button></div>
         </div>
@@ -216,12 +295,21 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
     </div>
   </section>
 
+  <section class="wrap block" id="lexicon">
+    <div class="head">
+      <h2>Hyperlexicon</h2>
+      <p>The real terms behind these effects and the hierarchy, each with a phrase you can paste into a prompt. Every one is also in the kit's <strong>lexicon.json</strong>.</p>
+    </div>
+    <div class="lex-filter" id="lexFilter" role="group" aria-label="Filter terms"></div>
+    <div class="lexicon" id="lexGrid"></div>
+  </section>
+
   <section class="wrap block" id="hierarchy">
     <div class="head">
       <h2>One rule above all: <span class="frost">one thing</span> is loud</h2>
       <p>HIERARCHY.md ranks every visual on six loudness tiers, and each rule now has research and a number behind it. The checks run on every change.</p>
     </div>
-    <div class="ladder">
+    <div class="hier">
       <div class="tiers" aria-label="Loudness tiers, loudest first">
         <div class="tier"><b class="heat">1</b><div><h3>Moments and rewards</h3><p>Owns the screen for a beat, one at a time, skippable. The world dims behind it.</p></div></div>
         <div class="tier"><b>2</b><div><h3>Combat and impact</h3><p>Bright on the onset frame and back to baseline within twelve frames. Threats outrank loot.</p></div></div>
@@ -233,9 +321,9 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
       <div class="rules">
         <div class="rule"><b>Lc 75+</b><p><strong>Text contrast</strong> for numbers read in play (APCA), 60 for labels, 30 for anything disabled.</p></div>
         <div class="rule"><b>≤ 3 / s</b><p><strong>Flashes</strong> over 2.78% of the screen (WCAG 2.3.1). It caught our own parallax window flickering, and soft edges with bilinear sampling fixed it.</p></div>
-        <div class="rule"><b>600 ms</b><p><strong>Minimum wind-up</strong> for a familiar attack: notice, decide, act, plus network latency. New attacks get 1 s or more.</p></div>
+        <div class="rule"><b>600 ms</b><p><strong>Minimum wind-up</strong> for a familiar attack: notice, decide, act, plus network latency.</p></div>
         <div class="rule"><b>500 ms</b><p><strong>Gap between reward beats</strong>, so the second one doesn't vanish in the attentional blink.</p></div>
-        <div class="rule"><b>ΔE 0.04</b><p><strong>Colour-blind safe ladders.</strong> It caught Rare and Epic collapsing under deuteranopia, and Rare moved to a lighter blue.</p></div>
+        <div class="rule"><b>ΔE 0.04</b><p><strong>Colour-blind safe ladders.</strong> It caught Rare and Epic collapsing under deuteranopia.</p></div>
       </div>
     </div>
   </section>
@@ -246,61 +334,26 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
       <p>One clone. Type <strong>hi</strong> and the kit doctor checks your machine. Ask for something vague and the prompt amplifier turns it into a brief with three ambition levels.</p>
     </div>
     <div class="index">
-      <div>
-        <div class="eyebrow">Claude skills · 15</div>
-        <ul>
-          <li><b>ui-hud</b>, <b>reward-moments</b>, <b>vfx</b></li>
-          <li><b>materials</b>, <b>shaders-and-sdf</b>, <b>algorithms</b></li>
-          <li><b>editable-image</b>, <b>editable-mesh</b>, <b>procedural-world</b></li>
-          <li><b>game-economy</b>, <b>roblox-luau-standards</b>, <b>art-direction</b></li>
-          <li><b>hierarchy-audit</b>, <b>prompt-amplifier</b>, <b>kit-doctor</b></li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">Luau libraries · 3</div>
-        <ul>
-          <li><b>surfacebake</b>: textures baked onto your meshes; 15 materials; realtime and reactive surfaces; depth without shaders</li>
-          <li><b>frontier</b>: EditableImage and EditableMesh at the limits: falling sand, 2D GI, voxel terrain, lightmaps, fracture</li>
-          <li><b>pixelfx</b>: 15 pixel effects, up to a 1,000-enemy crowd</li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">Playbooks · 10</div>
-        <ul>
-          <li>Figma → Roblox UI, rebuilt node for node</li>
-          <li>UI motion and sound · icon pipeline</li>
-          <li>World hierarchy · VFX craft · look-dev loop</li>
-          <li>Studio workflow · working with Claude</li>
-          <li>Parity and porting · procedural textures</li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">Research · 30 chapters</div>
-        <ul>
-          <li>EditableImage and EditableMesh APIs with cookbooks</li>
-          <li>Luau performance, architecture, security</li>
-          <li>Procgen, NPC AI, live ops, QA</li>
-          <li>Hierarchy science: attention, contrast, timing, audio</li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">Tools</div>
-        <ul>
-          <li><b>doctor.py</b>: toolchain and repo health</li>
-          <li><b>hierarchy.py</b>: scanpath, APCA, colour blindness, flash safety</li>
-          <li><b>Figma kit</b>, <b>icon pipeline</b>, <b>GIF recorders</b></li>
-          <li><b>check_all.sh</b>: one command, everything green</li>
-        </ul>
-      </div>
-      <div>
-        <div class="eyebrow">Review agents · 4</div>
-        <ul>
-          <li><b>ui-qa</b>: zoomed-in visual QA</li>
-          <li><b>style-guard</b>: the locked style rules</li>
-          <li><b>visual-hierarchy</b>: reading order</li>
-          <li><b>roblox-feasibility</b>: can Roblox actually render it?</li>
-        </ul>
-      </div>
+      <div><div class="eyebrow">Claude skills · 15</div><ul>
+        <li><b>ui-hud</b>, <b>reward-moments</b>, <b>vfx</b></li><li><b>materials</b>, <b>shaders-and-sdf</b>, <b>algorithms</b></li>
+        <li><b>editable-image</b>, <b>editable-mesh</b>, <b>procedural-world</b></li><li><b>game-economy</b>, <b>roblox-luau-standards</b>, <b>art-direction</b></li>
+        <li><b>hierarchy-audit</b>, <b>prompt-amplifier</b>, <b>kit-doctor</b></li></ul></div>
+      <div><div class="eyebrow">Luau libraries · 3</div><ul>
+        <li><b>surfacebake</b>: textures baked onto your meshes; 15 materials; realtime and reactive surfaces; depth without shaders</li>
+        <li><b>frontier</b>: EditableImage and EditableMesh at the limits: falling sand, 2D GI, voxel terrain, lightmaps, fracture</li>
+        <li><b>pixelfx</b>: 15 pixel effects, up to a 1,000-enemy crowd</li></ul></div>
+      <div><div class="eyebrow">Playbooks · 10</div><ul>
+        <li>Figma → Roblox UI, rebuilt node for node</li><li>UI motion and sound · icon pipeline</li><li>World hierarchy · VFX craft · look-dev loop</li>
+        <li>Studio workflow · working with Claude</li><li>Parity and porting · procedural textures</li></ul></div>
+      <div><div class="eyebrow">Research · 30 chapters</div><ul>
+        <li>EditableImage and EditableMesh APIs with cookbooks</li><li>Luau performance, architecture, security</li><li>Procgen, NPC AI, live ops, QA</li>
+        <li>Hierarchy science: attention, contrast, timing, audio</li></ul></div>
+      <div><div class="eyebrow">Tools</div><ul>
+        <li><b>doctor.py</b>: toolchain and repo health</li><li><b>hierarchy.py</b>: scanpath, APCA, colour blindness, flash safety</li>
+        <li><b>Figma kit</b>, <b>icon pipeline</b>, <b>GIF recorders</b></li><li><b>check_all.sh</b>: one command, everything green</li></ul></div>
+      <div><div class="eyebrow">Review agents · 4</div><ul>
+        <li><b>ui-qa</b>: zoomed-in visual QA</li><li><b>style-guard</b>: the locked style rules</li><li><b>visual-hierarchy</b>: reading order</li>
+        <li><b>roblox-feasibility</b>: can Roblox actually render it?</li></ul></div>
     </div>
   </section>
 
@@ -311,7 +364,7 @@ footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-b
         <p>Clone it, open it in Claude Code and say hi. Everything is checked headless: Luau compiles and tests, links, skill routing, the lexicon, flash safety, and every web page at phone and desktop size.</p>
         <p class="mono">Code MIT · docs CC BY-ND 4.0 · Roblox / Luau · phone first</p>
       </div>
-      <pre class="term"><span class="c"># get it</span>
+      <pre class="term-box"><span class="c"># get it</span>
 <span class="p">$</span> git clone https://github.com/jewdah-afk/aaa-kit
 <span class="c"># ask it</span>
 <span class="p">&gt;</span> hi
@@ -669,7 +722,6 @@ const MESHES = { "Crate": () => box(1, 0.75, 0.85, 4), "Barrel": () => barrel(0.
 function lut() { const t = []; for (let k = 0; k < 256; k++) { const a = k / 256 * 2 * Math.PI; t.push(Math.min(1, Math.max(0, fbm(Math.cos(a) * 2, Math.sin(a) * 2, 0.5, 4) * 0.6 + 0.5))); } return t; }
 const LUT = lut();
 
-
 // ================================================================= shared: scheduler, renderer
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const loops = [];
@@ -752,6 +804,327 @@ function makeRenderer(canvas, R, zoom) {
   return { draw, pick, R, ctx };
 }
 function vignetteBG(top, bottom) { return (d, R) => { for (let y = 0; y < R; y++) { const g = y / R; for (let x = 0; x < R; x++) { const q = (y * R + x) * 4, rx = x / R - 0.5, ry = g - 0.55, v = 1 - Math.min(1, (rx * rx + ry * ry) * 2.2); d[q] = (top[0] + (bottom[0] - top[0]) * g) * v; d[q + 1] = (top[1] + (bottom[1] - top[1]) * g) * v; d[q + 2] = (top[2] + (bottom[2] - top[2]) * g) * v; d[q + 3] = 255; } } }; }
+
+
+// ================================================================= GPU helper (WebGL1, one full-screen fragment shader)
+function glStudy(canvas, frag, scale) {
+  let gl = null;
+  try { gl = canvas.getContext("webgl", { antialias: false, powerPreference: "high-performance" }); } catch (e) { gl = null; }
+  if (!gl) return null;
+  const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; };
+  const v = mk(gl.VERTEX_SHADER, "attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}"), f = mk(gl.FRAGMENT_SHADER, frag);
+  if (!v || !f) return null;
+  const pr = gl.createProgram(); gl.attachShader(pr, v); gl.attachShader(pr, f); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+  gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "a"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = {}, u = n => (n in U ? U[n] : (U[n] = gl.getUniformLocation(pr, n)));
+  let q = scale;
+  return {
+    get scale() { return q; }, set scale(v2) { q = v2; },
+    draw(uniforms) {
+      const w = Math.max(1, Math.round(canvas.clientWidth * q)), h = Math.max(1, Math.round(canvas.clientHeight * q));
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(u("R"), w, h);
+      for (const k in uniforms) {
+        const val = uniforms[k];
+        if (typeof val === "number") gl.uniform1f(u(k), val);
+        else if (val.length === 2) gl.uniform2f(u(k), val[0], val[1]);
+        else if (val.length === 3) gl.uniform3f(u(k), val[0], val[1], val[2]);
+        else gl.uniform4f(u(k), val[0], val[1], val[2], val[3]);
+      }
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+  };
+}
+// keep a GPU study near its frame budget: drop resolution when slow, raise it when there's room
+function adapt(st, ms, lo, hi) { if (ms > 22 && st.scale > lo) st.scale = Math.max(lo, st.scale * 0.85); else if (ms < 10 && st.scale < hi) st.scale = Math.min(hi, st.scale * 1.05); }
+// frost (k = 0) to heat (k = 1), as an rgb triple
+const thermal = k => [143 + (255 - 143) * k, 216 + (154 - 216) * k, 255 + (60 - 255) * k];
+const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+// ================================================================= hero: quaternion Julia set (a 4D fractal), sliced and raymarched
+const hyper = (function () {
+  const canvas = document.getElementById("hyper"), readout = document.getElementById("hyperReadout");
+  const FRAG = `precision highp float;
+uniform vec2 R; uniform float T; uniform vec4 C; uniform float W; uniform vec2 M; uniform float S;
+vec4 qsq(vec4 a){ return vec4(a.x*a.x - dot(a.yzw,a.yzw), 2.0*a.x*a.yzw); }
+// Hart (1989) distance estimate in Quilez's form: 0.25*sqrt(|z|^2/|dz|^2)*log|z|^2
+float de(vec3 p, out float trap){
+  vec4 z = vec4(p, W); float md2 = 1.0, mz2 = dot(z,z); trap = 1e10;
+  for(int i=0;i<11;i++){ md2 *= 4.0*mz2; z = qsq(z) + C; trap = min(trap, dot(z.xy,z.xy)); mz2 = dot(z,z); if(mz2>256.0) break; }
+  return 0.25*sqrt(mz2/md2)*log(mz2);
+}
+vec3 thermal(float k){ return mix(vec3(0.56,0.85,1.0), vec3(1.0,0.6,0.24), smoothstep(0.0,1.0,k)); }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3,289.1)))*43758.5); }
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5*R) / R.y;
+  uv.x -= S;                                   // push the object to the right of the headline on wide screens
+  float a = T*0.11 + M.x*0.9, b = 0.35 + M.y*0.4;
+  vec3 ro = vec3(3.0*cos(a)*cos(b), 3.0*sin(b), 3.0*sin(a)*cos(b));
+  vec3 fw = normalize(-ro), rt = normalize(cross(fw, vec3(0,1,0))), up = cross(rt, fw);
+  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.5*fw);
+  vec3 bg = vec3(0.055,0.063,0.078);
+  vec3 col = bg + 0.018*hash(floor(gl_FragCoord.xy*0.5));
+  float bb = dot(ro,rd), cc = dot(ro,ro) - 1.44, hh = bb*bb - cc;   // bounding sphere, r = 1.2
+  if(hh > 0.0){
+    float t = max(0.0, -bb - sqrt(hh)), tmax = -bb + sqrt(hh), trap = 0.0; bool hit = false;
+    for(int i=0;i<160;i++){ float d = de(ro + rd*t, trap); if(d < 0.00025*t){ hit = true; break; } t += d; if(t > tmax) break; }
+    if(hit){
+      vec3 p = ro + rd*t; float tr; vec2 e = vec2(0.0008, -0.0008);
+      vec3 n = normalize(e.xyy*de(p+e.xyy,tr) + e.yyx*de(p+e.yyx,tr) + e.yxy*de(p+e.yxy,tr) + e.xxx*de(p+e.xxx,tr));
+      float t2; de(p, t2);
+      vec3 L = normalize(vec3(-0.5,0.8,-0.4));
+      float dif = clamp(dot(n,L),0.0,1.0), fre = pow(1.0 - clamp(dot(n,-rd),0.0,1.0), 3.0);
+      // thin-film sheen at the rim, orbit-trap tint from frost core to heat rim
+      vec3 film = 0.5 + 0.5*cos(6.2831*(fre*1.3 + t2*0.8 + vec3(0.0,0.33,0.67)));
+      vec3 base = thermal(clamp(sqrt(t2)*0.9,0.0,1.0));
+      float spec = pow(clamp(dot(n, normalize(L - rd)),0.0,1.0), 48.0);
+      float ao = clamp(0.5 + 0.8*sqrt(t2), 0.0, 1.0);
+      col = base*(0.22 + 1.05*dif)*ao + film*fre*0.45 + spec*0.55*vec3(1.0,0.9,0.8);
+    }
+  }
+  gl_FragColor = vec4(pow(col, vec3(0.92)), 1.0);
+}`;
+  const st = glStudy(canvas, FRAG, 0.5);
+  if (!st) { document.getElementById("nogl").hidden = false; return null; }
+  const p = pointerOn(canvas); let mx = 0, my = 0, ms = 0, frames = 0;
+  function draw(t) {
+    const t0 = performance.now();
+    mx += ((p.over ? p.x : Math.sin(t * 0.07) * 0.25) - mx) * 0.05; my += ((p.over ? -p.y * 0.6 : 0) - my) * 0.05;
+    // c wanders a 4D path and the slice w drifts, so the 3D cross-section keeps turning inside out
+    const c = [-0.291 + 0.07 * Math.sin(t * 0.13), -0.399 + 0.07 * Math.cos(t * 0.17), 0.339 + 0.06 * Math.sin(t * 0.11), 0.437 + 0.06 * Math.cos(t * 0.09)], w = 0.1 * Math.sin(t * 0.21);
+    const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+    st.draw({ T: t, C: c, W: w, M: [mx, my], S: aspect > 1.2 ? Math.min(0.55, (aspect - 1) * 0.35) : 0 });
+    ms = ms * 0.9 + (performance.now() - t0) * 0.1; if (++frames % 15 === 0) adapt(st, ms, 0.25, window.devicePixelRatio > 1 ? 0.8 : 0.65);
+    readout.textContent = `quaternion Julia · q ← q² + c · c = (${c.map(v => v.toFixed(2)).join(", ")}) · slice w = ${w.toFixed(2)}`;
+  }
+  every(canvas, draw);
+  return { draw };
+})();
+
+// ================================================================= 4D and 5D hypercubes (every rotation plane, repeated perspective)
+function hyperCube(n) {
+  const V = [], E = [];
+  for (let i = 0; i < 1 << n; i++) V.push(Array.from({ length: n }, (_, k) => (i >> k & 1) ? 1 : -1));
+  for (let i = 0; i < V.length; i++) for (let k = 0; k < n; k++) { const j = i ^ (1 << k); if (j > i) E.push([i, j, k]); }
+  return { V, E };
+}
+function rotatePlane(v, a, b, ang) { const c = Math.cos(ang), s = Math.sin(ang), x = v[a], y = v[b]; v[a] = x * c - y * s; v[b] = x * s + y * c; }
+function wireStudy(id, n, speeds) {
+  const canvas = document.getElementById(id), R = 320, ctx = (canvas.width = canvas.height = R, canvas.getContext("2d")), cube = hyperCube(n), p = pointerOn(canvas);
+  const planes = []; for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) planes.push([a, b]);
+  const axisCol = [[143, 216, 255], [190, 230, 248], [236, 234, 229], [255, 201, 138], [255, 154, 60]];
+  let drag = [0, 0];
+  function draw(t) {
+    if (p.down) drag = [drag[0] + (p.x * 2.5 - drag[0]) * 0.2, drag[1] + (p.y * 2.5 - drag[1]) * 0.2];
+    ctx.fillStyle = "#0a0c0f"; ctx.fillRect(0, 0, R, R);
+    const pts = cube.V.map(v0 => {
+      const v = v0.slice();
+      planes.forEach(([a, b], k) => rotatePlane(v, a, b, t * speeds[k] + (b === n - 1 && a === 0 ? drag[0] : 0) + (b === n - 1 && a === 1 ? drag[1] : 0)));
+      const w = v[n - 1];
+      let q = v;
+      while (q.length > 2) { const dist = q.length === 3 ? 4.2 : 3.2, k = dist / (dist - q[q.length - 1]); q = q.slice(0, -1).map(x => x * k); }
+      const s = R * (n === 4 ? 0.155 : 0.085);
+      return { x: R / 2 + q[0] * s, y: R / 2 - q[1] * s, w };
+    });
+    ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+    for (const [i, j, axis] of cube.E) {
+      const a = pts[i], b = pts[j], wn = clamp01(((a.w + b.w) / 2 + 1.4) / 2.8);
+      const col = n === 4 ? thermal(wn) : axisCol[axis];
+      ctx.strokeStyle = rgba(col, 0.16); ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.strokeStyle = rgba(col, n === 4 ? 0.5 + 0.4 * Math.abs(wn - 0.5) * 2 : 0.6); ctx.lineWidth = 1.6; ctx.stroke();
+    }
+    for (const q of pts) { const g = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, 7); g.addColorStop(0, "rgba(236,234,229,0.85)"); g.addColorStop(1, "rgba(236,234,229,0)"); ctx.fillStyle = g; ctx.fillRect(q.x - 7, q.y - 7, 14, 14); }
+    ctx.globalCompositeOperation = "source-over";
+  }
+  every(canvas, draw);
+  return { draw, vertices: cube.V.length, edges: cube.E.length, planes: planes.length };
+}
+const tess = wireStudy("tess", 4, [0.21, 0.13, 0.31, 0.17, 0.27, 0.11]);
+const pent = wireStudy("pent", 5, [0.17, 0.11, 0.23, 0.13, 0.29, 0.07, 0.19, 0.09, 0.15, 0.25]);
+
+// ================================================================= Hopf fibration (S³ → S², stereographic to 3D)
+const hopf = (function () {
+  const canvas = document.getElementById("hopf"), R = 320, ctx = (canvas.width = canvas.height = R, canvas.getContext("2d")), nEl = document.getElementById("hopfN"), p = pointerOn(canvas);
+  // base points on S² in rings of latitude: each base point is one fibre (a circle), each ring one nested torus
+  const base = [], lats = [0.35, 0.65, 0.95, 1.25, 1.55, 1.85];
+  lats.forEach((a, li) => { const nb = 16; for (let k = 0; k < nb; k++) base.push([a, k / nb * Math.PI * 2 + li * 0.2, li / (lats.length - 1)]); });
+  nEl.textContent = `${base.length} fibres · each pair linked once`;
+  let yaw = 0.4;
+  function draw(t) {
+    yaw = p.down ? yaw + (p.x * 3 - yaw) * 0.2 : yaw + 0.004;
+    ctx.fillStyle = "#0a0c0f"; ctx.fillRect(0, 0, R, R);
+    ctx.globalCompositeOperation = "lighter"; ctx.lineWidth = 1.15;
+    const rot4 = 0.35 * Math.sin(t * 0.15), c4 = Math.cos(rot4), s4 = Math.sin(rot4); // an isometry of S³ (x1–x2 plane) morphs the picture
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(-0.5), sp = Math.sin(-0.5);
+    for (const [a, b, li] of base) {
+      ctx.beginPath(); let pen = false;
+      for (let s = 0; s <= 72; s++) {
+        const th = s / 72 * Math.PI * 2;
+        // fibre over (a, b): (z1, z2) = (cos(a/2) e^{i(th+b)}, sin(a/2) e^{i th})
+        let x1 = Math.cos(a / 2) * Math.cos(th + b), x2 = Math.sin(a / 2) * Math.cos(th);
+        const y1 = Math.cos(a / 2) * Math.sin(th + b), y2 = Math.sin(a / 2) * Math.sin(th);
+        const r1 = x1 * c4 - x2 * s4; x2 = x1 * s4 + x2 * c4; x1 = r1;
+        const k = 1 / (1.0001 - y2), X = x1 * k, Y = y1 * k, Z = x2 * k; // stereographic projection from the pole (0,0,0,1)
+        if (X * X + Y * Y + Z * Z > 40) { pen = false; continue; }
+        const X1 = X * cy - Z * sy, Z1 = X * sy + Z * cy, Y1 = Y * cp - Z1 * sp, Z2 = Y * sp + Z1 * cp, f = 3.4 / (3.4 + Z2 * 0.4);
+        const sx = R / 2 + X1 * R * 0.2 * f, syy = R / 2 - Y1 * R * 0.2 * f;
+        if (pen) ctx.lineTo(sx, syy); else { ctx.moveTo(sx, syy); pen = true; }
+      }
+      ctx.strokeStyle = rgba(thermal(li), 0.55); ctx.stroke();
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
+  every(canvas, draw);
+  return { draw, fibres: base.length };
+})();
+
+// ================================================================= Quantum tide (Schrödinger equation, Visscher staggered scheme, double slit)
+const quant = (function () {
+  const canvas = document.getElementById("quant"), N = 128, ctx = (canvas.width = canvas.height = N * 2, canvas.getContext("2d")), img = ctx.createImageData(N, N), nEl = document.getElementById("quantN");
+  const Re = new Float32Array(N * N), Im = new Float32Array(N * N), V = new Float32Array(N * N), absorb = new Float32Array(N * N);
+  const off = document.createElement("canvas"); off.width = off.height = N; const octx = off.getContext("2d");
+  const wallX = 46, slits = [[52, 58], [70, 76]], DET = 104;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const i = y * N + x;
+    if (x >= wallX && x < wallX + 3 && !slits.some(([s0, s1]) => y >= s0 && y < s1)) V[i] = 4;
+    const e = Math.min(x, y, N - 1 - x, N - 1 - y); absorb[i] = e < 10 ? 1 - 0.06 * (1 - e / 10) ** 2 : 1;
+  }
+  const hits = []; let detections = 0, age = 0, sampled = false;
+  function fire(y0) {
+    const cy = y0 ?? N / 2, k = 1.35; // a Gaussian packet moving along +x
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = y * N + x, g = Math.exp(-((x - 20) ** 2 + (y - cy) ** 2) / 72); Re[i] = g * Math.cos(k * x); Im[i] = g * Math.sin(k * x); }
+    age = 0; sampled = false;
+  }
+  const H = (a, i, x, y) => -0.5 * ((x > 0 ? a[i - 1] : 0) + (x < N - 1 ? a[i + 1] : 0) + (y > 0 ? a[i - N] : 0) + (y < N - 1 ? a[i + N] : 0) - 4 * a[i]) + V[i] * a[i];
+  function step(dt) {
+    // Visscher: Re advances with Im, then Im with the new Re (staggered half steps; stable for dt·E_max < 2)
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = y * N + x; Re[i] += dt * H(Im, i, x, y); }
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = y * N + x; Im[i] -= dt * H(Re, i, x, y); Re[i] *= absorb[i]; Im[i] *= absorb[i]; }
+  }
+  function measure(count) {
+    // a measurement draws positions from |ψ|² across the detector column
+    const band = new Float32Array(N); let tot = 0;
+    for (let y = 0; y < N; y++) { let s = 0; for (let x = DET; x < DET + 8; x++) { const i = y * N + x; s += Re[i] * Re[i] + Im[i] * Im[i]; } band[y] = s; tot += s; }
+    if (tot < 0.5) return false;
+    for (let c = 0; c < count; c++) {
+      let r = Math.random() * tot, y = 0; while (y < N - 1 && r > band[y]) { r -= band[y]; y++; }
+      hits.push(y + Math.random()); detections++;
+    }
+    if (hits.length > 1600) hits.splice(0, hits.length - 1600);
+    nEl.textContent = `${detections} detection${detections === 1 ? "" : "s"}`;
+    return true;
+  }
+  canvas.addEventListener("pointerdown", e => { const r = canvas.getBoundingClientRect(); fire(Math.max(24, Math.min(N - 24, (e.clientY - r.top) / r.height * N))); });
+  document.getElementById("quantFire").addEventListener("click", () => fire());
+  fire();
+  function draw() {
+    for (let k = 0; k < 10; k++) step(0.2);
+    age++;
+    // each run of the experiment is measured once when the wave reaches the screen, then a new packet fires
+    if (!sampled && age > 30 && measure(40)) sampled = true;
+    if (age > 95) fire(N / 2 + (Math.random() - 0.5) * 3);
+    const d = img.data;
+    for (let i = 0; i < N * N; i++) {
+      const q = i * 4;
+      if (V[i] > 0) { d[q] = 44; d[q + 1] = 48; d[q + 2] = 56; d[q + 3] = 255; continue; }
+      const br = Math.min(1, Math.sqrt(Re[i] * Re[i] + Im[i] * Im[i]) * 2.6), m = 0.5 + 0.5 * Math.cos(Math.atan2(Im[i], Re[i]));
+      d[q] = 10 + br * (143 + 112 * m); d[q + 1] = 12 + br * (216 - 62 * m); d[q + 2] = 15 + br * (255 - 195 * m); d[q + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(off, 0, 0, N * 2, N * 2);
+    // the detector screen: each dot is one measured arrival
+    ctx.fillStyle = "rgba(10,12,15,0.9)"; ctx.fillRect(226, 0, 30, 256);
+    ctx.fillStyle = "rgba(236,234,229,0.7)";
+    for (let k = 0; k < hits.length; k++) ctx.fillRect(229 + ((k * 7919) % 24), hits[k] * 2, 1.6, 1.6);
+    ctx.fillStyle = "#272c35"; ctx.fillRect(226, 0, 1, 256);
+  }
+  every(canvas, draw);
+  return { draw, fire, hits, step };
+})();
+
+// ================================================================= Xenocraft (raymarched hull, lensing, superformula glyphs, beam)
+const xeno = (function () {
+  const canvas = document.getElementById("xeno");
+  const FRAG = `precision highp float;
+uniform vec2 R; uniform float T; uniform float B; uniform vec2 M;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
+float sdEll(vec3 p, vec3 r){ float k0 = length(p/r), k1 = length(p/(r*r)); return k0*(k0-1.0)/k1; }
+float smin(float a, float b, float k){ float h = clamp(0.5+0.5*(b-a)/k,0.0,1.0); return mix(b,a,h) - k*h*(1.0-h); }
+// Gielis superformula (2003): one radius function for stars, petals and polygons
+float superf(float phi, float m, float n1, float n2, float n3){ return pow(pow(abs(cos(m*phi/4.0)), n2) + pow(abs(sin(m*phi/4.0)), n3), -1.0/n1); }
+vec3 P0;
+float map(vec3 p){
+  p.y -= 0.06*sin(T*1.3);
+  p.xz *= rot(T*0.35);
+  float hull = sdEll(p, vec3(1.25,0.24,1.25));
+  float dome = length(p - vec3(0.0,0.2,0.0)) - 0.42;
+  float ring = length(vec2(length(p.xz)-1.05, p.y+0.02)) - 0.06;
+  P0 = p; return smin(smin(hull, dome, 0.12), ring, 0.05);
+}
+vec3 stars(vec3 d){
+  vec2 uv = vec2(atan(d.z,d.x), asin(clamp(d.y,-1.0,1.0)))*24.0; vec2 g = floor(uv), f = fract(uv);
+  float h = hash(g), s = step(0.86,h)*smoothstep(0.12,0.0,length(f-0.5-0.3*(hash(g+3.1)-0.5)));
+  return vec3(0.8,0.9,1.0)*s*(0.4+0.6*hash(g+7.7)) + vec3(0.03,0.035,0.05) + vec3(0.06,0.04,0.02)*smoothstep(0.6,-0.4,d.y);
+}
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5*R)/R.y;
+  vec3 ro = vec3(0.0, 1.0 + M.y*0.6, -5.2);
+  ro.xz *= rot(M.x*0.8);
+  vec3 fw = normalize(vec3(0.0,-0.25,0.0)-ro), rt = normalize(cross(fw, vec3(0,1,0))), up = cross(rt,fw);
+  vec3 rd = normalize(uv.x*rt + uv.y*up + 1.6*fw);
+  // gravitational lensing: bend the background ray toward the craft by about k/b (b = closest approach)
+  float tb = dot(-ro, rd); vec3 cp = ro + rd*tb; float b = length(cp);
+  vec3 col = stars(normalize(rd - normalize(cp)*0.11/max(b,0.25)));
+  float t = 0.0; bool hit = false;
+  for(int i=0;i<90;i++){ float d = map(ro+rd*t); if(d<0.001){ hit = true; break; } t += d; if(t>8.0) break; }
+  // the beam: light gathered along the ray through a soft cone under the craft
+  float beam = 0.0, tend = hit ? t : 8.0;
+  for(int i=0;i<28;i++){ float s = 1.6 + float(i)*0.13; if(s > tend) break; vec3 q = ro + rd*s; float yy = -q.y - 0.12; if(yy>0.0){ float w = 0.22 + yy*0.42; beam += smoothstep(w, w*0.25, length(q.xz))*exp(-yy*0.8)*0.06; } }
+  col += vec3(0.56,0.85,1.0)*beam*(0.55 + 0.45*sin(T*3.0))*(1.0 + B*3.0);
+  if(hit){
+    vec3 p = ro+rd*t; vec2 e = vec2(0.001,-0.001);
+    vec3 n = normalize(e.xyy*map(p+e.xyy) + e.yyx*map(p+e.yyx) + e.yxy*map(p+e.yxy) + e.xxx*map(p+e.xxx));
+    map(p); vec3 lp = P0;
+    float fre = pow(1.0-clamp(dot(n,-rd),0.0,1.0), 3.0);
+    vec3 film = 0.5+0.5*cos(6.2831*(fre*1.1 + lp.y*1.5 + vec3(0.0,0.33,0.67)));
+    float ang = atan(lp.z, lp.x), rad = length(lp.xz);
+    float seams = smoothstep(0.02,0.0,abs(fract(ang*12.0/6.2831)-0.5)-0.47) + smoothstep(0.015,0.0,abs(fract(rad*5.0)-0.5)-0.48);
+    float cell = fract(ang*24.0/6.2831), sf = superf((cell-0.5)*6.2831, 5.0, 0.3, 0.3, 0.3);
+    float glyph = smoothstep(0.08,0.0,abs(sf*0.05 - abs(lp.y+0.02)))*step(0.95,rad)*step(rad,1.16);
+    float pulse = 0.5+0.5*sin(T*2.4 - ang*3.0);
+    vec3 L = normalize(vec3(-0.4,0.8,-0.5)); float dif = clamp(dot(n,L),0.0,1.0);
+    vec3 hull = vec3(0.16,0.17,0.2)*(0.25+0.9*dif) + mix(vec3(0.56,0.85,1.0), film, 0.45)*fre*0.4 - seams*0.06;
+    hull += vec3(1.0,0.6,0.24)*glyph*(0.6+1.6*pulse);
+    hull += pow(clamp(dot(n, normalize(L-rd)),0.0,1.0), 64.0)*0.7;
+    hull += vec3(0.56,0.85,1.0)*smoothstep(-0.05,-0.2,n.y)*0.25*(0.6+0.4*sin(T*3.0+ang*6.0))*(1.0+B*2.0);
+    col = hull;
+  }
+  col = col/(1.0+col*0.4);
+  gl_FragColor = vec4(pow(col, vec3(0.95)), 1.0);
+}`;
+  const st = glStudy(canvas, FRAG, 0.7);
+  if (!st) {
+    document.getElementById("xenoNote").textContent = "needs WebGL (the GPU study is off here)";
+    canvas.width = canvas.height = 320; const c2 = canvas.getContext("2d"); if (c2) { c2.fillStyle = "#0a0c0f"; c2.fillRect(0, 0, 320, 320); }
+    return null;
+  }
+  const p = pointerOn(canvas); let flare = 0, mx = 0, my = 0, ms = 0, frames = 0;
+  function draw(t, dt) {
+    const t0 = performance.now();
+    if (p.taps.length) { p.taps.length = 0; flare = 1; }
+    flare *= Math.exp(-2.2 * (dt || 1 / 30));
+    mx += ((p.over ? p.x : 0) - mx) * 0.06; my += ((p.over ? -p.y : 0) - my) * 0.06;
+    st.draw({ T: t, B: flare, M: [mx, my] });
+    ms = ms * 0.9 + (performance.now() - t0) * 0.1; if (++frames % 15 === 0) adapt(st, ms, 0.35, 1.0);
+  }
+  every(canvas, draw);
+  return { draw };
+})();
 
 // ================================================================= 1. Metamorph relic (hero)
 // Bakes several materials onto one mesh, then dissolves from each into the next along a baked
@@ -1069,11 +1442,73 @@ const lens = (function () {
   return { draw, setFixed: v => { fixed = v; draw(); }, verdict: () => lastVerdict };
 })();
 
+
+// ================================================================= Hyperlexicon (every term is also in lexicon.json)
+const LEX = [
+  ["Perception", "Chromostereopsis", "On a dark ground, saturated red tends to read nearer than blue. Some viewers see the reverse, so never rely on it alone.", "push threat glyphs toward warm red and the backdrop toward blue so threats float forward"],
+  ["Perception", "Vection", "Illusory self-motion from optic flow. It is strongest in the periphery, slow to build, and a little camera bob boosts it.", "sell the dash with peripheral streaks and a light camera bob, not by speeding up the world"],
+  ["Perception", "Kinetic depth effect", "A flat silhouette reads as a solid 3D shape the moment it rotates.", "give the reward a slow turntable spin so its silhouette reads as a solid object"],
+  ["Perception", "Motion parallax", "Near things slide faster than far things as the view moves. It is one of the strongest depth cues.", "split the backdrop into five layers moving at 0.1 to 0.9 of camera speed"],
+  ["Perception", "Pop-out", "One odd colour, size, motion or orientation is found at once, however crowded the screen.", "keep the cards grey so the one gold card pops out pre-attentively"],
+  ["Perception", "Attentional blink", "A second message 200–500 ms after the first is often missed.", "space reward beats at least 500 ms apart or merge them into one beat"],
+  ["Perception", "Inhibition of return", "Attention is slow to go back to a place it just left.", "move a repeated warning or add a sound instead of re-flashing the same spot"],
+  ["Perception", "Crowding", "In the periphery, items can't be identified when their neighbours are too close.", "signal peripheral HUD changes with colour or motion, not detail"],
+  ["Hierarchy", "Salience map", "A per-pixel estimate of how much each place differs from its surroundings: the eye's bottom-up shopping list.", "run the salience audit and show where fixation 1 lands"],
+  ["Hierarchy", "Focus lift", "The focus element's share of salience divided by its share of the area. Above 1.5, it wins.", "the buy button needs a focus lift of at least 1.5"],
+  ["Hierarchy", "Figure-ground gate", "Threats and pickups must sit outside the background's lightness band, so they survive a squint.", "keep enemies two value bands away from the floor at phone size"],
+  ["Hierarchy", "Aerial perspective", "Distant things lose contrast and drift toward the sky colour. It is the cheapest depth there is.", "fade each far layer toward the sky tint and halve its contrast"],
+  ["Hierarchy", "Loudness tier", "One of six ranks that set how loud an effect may be, from reward moments down to generative engines.", "put this in loudness tier 2: bright on the onset frame, back to baseline within 12 frames"],
+  ["Dimensions", "Tesseract", "The 4-cube: 16 vertices, 32 edges, 24 squares and 8 cubes. In the usual picture, its inner cube is the far side in w.", "rotate a tesseract in the XW and YW planes and colour edges by w-depth"],
+  ["Dimensions", "Rotation plane", "In n dimensions, rotation happens in planes, not around axes: n(n−1)/2 of them, so 6 in 4D and 10 in 5D.", "animate all six 4D rotation planes at different slow speeds"],
+  ["Dimensions", "Penteract", "The 5-cube: 32 vertices and 80 edges. It takes three perspective projections to reach the screen.", "project a penteract 5D → 4D → 3D → 2D and colour each edge by its axis"],
+  ["Dimensions", "Stereographic projection", "Maps a sphere into flat space from one pole, keeping circles as circles.", "project the 3-sphere stereographically so its fibres stay circles"],
+  ["Dimensions", "Hopf fibration", "The 3-sphere is a family of circles, one per point of an ordinary sphere. Projected into 3D, any two of them link.", "draw Hopf fibres from latitude rings so they nest into linked tori"],
+  ["Dimensions", "Quaternion Julia set", "The 4D cousin of the Julia set, iterating q ← q² + c on quaternions. We see it as 3D slices.", "raymarch a quaternion Julia slice with Hart's distance estimate and drift the slice through w"],
+  ["Dimensions", "Cross-section slicing", "Seeing an n-D object through its (n−1)-D slices. Moving the slice makes shapes appear, merge and vanish.", "drift the 4D slice slowly so the shape turns inside out over 20 seconds"],
+  ["Quantum", "Wavefunction", "A complex field: its squared size |ψ|² is the chance of finding the particle there, and its phase is the colour here.", "colour the field by phase and its brightness by |psi| squared"],
+  ["Quantum", "Superposition", "One packet passes through both slits at once and interferes with itself.", "let the packet split through both slits and keep both branches visible"],
+  ["Quantum", "Measurement", "Sampling a position from |ψ|². Each hit is one point, but many hits draw the fringes.", "drop detection dots from |psi| squared so the fringes build up over a minute"],
+  ["Quantum", "Absorbing boundary", "A damping band at the edges, so waves leave the simulation instead of bouncing back.", "add a 10-cell absorbing border so the packet doesn't reflect off the walls"],
+  ["Xeno", "Gravitational lens", "Mass bends light: a background ray is deflected by about k/b, where b is how close it passes.", "bend the starfield around the craft with a k/b deflection so it looks heavy"],
+  ["Xeno", "Superformula", "Gielis's single equation that makes stars, petals and polygons from six numbers.", "cut the hull glyphs from superformula outlines with m = 5"],
+  ["Xeno", "Thin-film interference", "Interference in a thin coat shifts the hue with view angle: oil, beetles, alien alloys.", "give the hull a thin-film sheen that shifts hue toward the rim"],
+  ["Xeno", "Smooth union", "Blends two distance fields with a soft minimum, so shapes melt together without seams.", "smooth-union the dome into the hull with k = 0.12"],
+  ["Xeno", "Greebles", "Small surface detail (panels, seams, vents) that gives a big object its scale.", "add panel seams every 30 degrees and every 0.2 of radius so the hull reads huge"],
+  ["Xeno", "Volumetric beam", "Light gathered along the ray through a soft cone, so the beam has body.", "march 24 samples through the beam cone and fade it with height"],
+  ["Xeno", "Orbit trap", "Colours a fractal by how close each point's orbit comes to a chosen shape.", "tint the fractal from frost core to heat rim with an orbit trap"],
+  ["Xeno", "Infinite zoom", "Octaves of one tile at doubling scales, blended so the zoom never visibly loops.", "infinite-zoom the reaction-diffusion tile with five octaves and a slight spiral"],
+];
+(function () {
+  const grid = document.getElementById("lexGrid"), filt = document.getElementById("lexFilter"), cats = ["All", "Perception", "Hierarchy", "Dimensions", "Quantum", "Xeno"];
+  const colour = { Perception: "var(--frost)", Hierarchy: "var(--ink)", Dimensions: "var(--heat)", Quantum: "var(--frost)", Xeno: "var(--heat)" };
+  function render(cat) {
+    grid.replaceChildren();
+    for (const [c, name, meaning, phrase] of LEX) {
+      if (cat !== "All" && c !== cat) continue;
+      const el = document.createElement("div"); el.className = "term";
+      el.innerHTML = `<span class="k" style="color:${colour[c]}">${c}</span><h3></h3><p></p><code></code>`;
+      el.querySelector("h3").textContent = name; el.querySelector("p").textContent = meaning; el.querySelector("code").textContent = phrase;
+      grid.append(el);
+    }
+  }
+  for (const c of cats) {
+    const b = document.createElement("button"); b.className = "toggle"; b.type = "button"; b.textContent = c; b.setAttribute("aria-pressed", String(c === "All"));
+    b.addEventListener("click", () => { for (const o of filt.children) o.setAttribute("aria-pressed", "false"); b.setAttribute("aria-pressed", "true"); render(c); });
+    filt.append(b);
+  }
+  render("All");
+})();
+
 // ================================================================= boot
 for (const l of loops) io.observe(l.canvas);
 relic.bakeNext();
-// draw one still frame of everything so the page is complete at rest (and under reduced motion)
-setTimeout(() => { shock.draw(0.5, 1 / 30); portal.draw(1.2, 1 / 30); pelt.draw(0.2, 1 / 30); }, 60);
+// one still frame of everything, so the page is complete at rest (and under reduced motion)
+setTimeout(() => {
+  shock.draw(0.5, 1 / 30); portal.draw(1.2, 1 / 30); pelt.draw(0.2, 1 / 30);
+  tess.draw(1.3); pent.draw(1.3); hopf.draw(0.6);
+  for (let k = 0; k < 4; k++) quant.draw();
+  if (hyper) hyper.draw(2); if (xeno) xeno.draw(1.5, 1 / 30);
+}, 60);
 requestAnimationFrame(frame);
-window.__show = { relic, shock, portal, pelt, lens };
+window.__show = { relic, shock, portal, pelt, lens, hyper, tess, pent, hopf, quant, xeno };
 </script>
