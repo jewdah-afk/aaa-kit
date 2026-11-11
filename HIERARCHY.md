@@ -22,6 +22,7 @@ The rules come from two places: the visual-hierarchy work in the Cursed Survivor
 14. [Reward sequencing](#14-reward-sequencing)
 15. [Framework layers mirror the hierarchy](#15-framework-layers-mirror-the-hierarchy)
 16. [Quick audit](#16-quick-audit)
+17. [Evidence and measurable thresholds](#17-evidence-and-measurable-thresholds)
 
 ---
 
@@ -150,7 +151,7 @@ Rising is immediate. Falling steps down one rung every 1.5 s, and each trigger h
 |---|---|---|---|---|
 | Common | grey `#9aa4b2` | Static border | Flat | No ceremony; drops into the slot |
 | Uncommon | green `#4fd17a` | Static border + 1 px inner highlight | Satin | Short pop (120 ms scale overshoot) |
-| Rare | blue `#3f9bff` | A shine band sweeps every 2–3 s | Brushed metal | Pop + one ring |
+| Rare | blue `#5ab4ff` | A shine band sweeps every 2–3 s | Brushed metal | Pop + one ring |
 | Epic | purple `#b25cff` | Rotating conic edge | Glass or gem | Pop, ring, a brief backdrop dim |
 | Legendary | gold-orange `#ffb02e` | Rotating edge + sparks running along it + outer glow | Chrome or molten | Rays behind the item, camera nudge, sting |
 | Mythic | pink-magenta `#ff3d7f` | Rainbow conic edge, stronger glow | Holo foil | Full tier-1 moment: charge-up, beam, burst |
@@ -160,6 +161,8 @@ Rising is immediate. Falling steps down one rung every 1.5 s, and each trigger h
 
 **Do.** Make Epic the first tier that moves.
 **Don't.** Give Common items a shimmer "so they look nice"; that spends the motion Rare needs.
+
+**Colour-blind check.** Every adjacent step must stay ≥ 0.04 OKLab ΔE apart under deutan and protan simulation (`Perceptual.ladder` in the [hierarchy-audit skill](.claude/skills/hierarchy-audit/SKILL.md)). Rare was `#3f9bff` until the audit found it only 0.035 from Epic under deuteranopia, the most common type (about 5% of men). The lighter `#5ab4ff` separates them by lightness (0.11 apart) and reads better on dark panels (APCA Lc 58 vs 47). The weakest pair in the ladder is now Uncommon–Legendary at 0.07. Uncommon and Rare are close in grey (ΔL 0.02), which is accepted because their frame behaviour differs (static versus a sweeping shine band). A regression test in `Perceptual.test.luau` keeps this ladder safe. Evidence: [research ch. 81](docs/research/81-contrast-colour-and-colour-blindness.md).
 
 Mythic uses the rarity pink, so it never borrows danger red. Gold-orange for Legendary is a rarity colour, kept apart from currency gold `#ffd24a` by hue and by always appearing inside a frame.
 
@@ -289,3 +292,31 @@ Run this on any frame, screen or effect before calling it done.
 - [ ] Does every silhouette pass the 2-band figure-ground gate at phone size?
 - [ ] Do dense regions simplify, with hysteresis?
 - [ ] Does the screen return to baseline within 12 frames?
+- [ ] Does `tools/hierarchy/hierarchy.py audit` put fixation 1 on the intended focus (§17)?
+- [ ] Do all text pairs meet their APCA floor, and does every effect GIF pass `flash`?
+
+---
+
+## 17. Evidence and measurable thresholds
+
+Each rule above, the research behind it, and the number that checks it. Research chapters are in [docs/research Part V](docs/research/README.md#part-v--hierarchy-science); the checks run with [`tools/hierarchy`](tools/hierarchy/README.md) and `Perceptual.luau` ([hierarchy-audit skill](.claude/skills/hierarchy-audit/SKILL.md)). A threshold marked *house* is our starting value, to be tuned with playtests. Unmarked thresholds come from the cited source.
+
+| Rule | Why it works (evidence) | Measure | Threshold |
+|---|---|---|---|
+| §1 one question, §13 one loud element | Attention is serial after pre-attentive guidance; one odd item pops, a texture doesn't (Treisman 1980, Wolfe GS6 2021, Itti 1998 normalisation) — [ch. 80 §1–2](docs/research/80-attention-and-salience.md) | `audit` first fixation, lift, competitor | fixation 1 in the focus; lift ≥ 1.5; competitor < 0.9 (*house*) |
+| §2 loudness tiers | Abrupt onsets and looming capture attention involuntarily; gradual changes don't (Yantis & Jonides 1984, Franconeri & Simons 2003) — [ch. 80 §3](docs/research/80-attention-and-salience.md#3-what-captures-attention-involuntarily-onsets-and-looming) | onset type per tier; motion per tier ([ch. 82 §3](docs/research/82-time-motion-and-cue-timing.md#3-motion-as-a-loudness-channel)) | only tiers 1–3 may pop in; tier 3 still at rest; tier 4–6 cycles ≥ 2 s (*house*) |
+| §5 colour has jobs | About 8% of men have a CVD; hue alone fails them (Machado 2009 model) — [ch. 81 §3](docs/research/81-contrast-colour-and-colour-blindness.md#3-colour-blindness) | `audit` deutan/protan re-check; `Perceptual.ladder` | focus survives both; adjacent codes ΔE ≥ 0.04 under simulation (*house*) |
+| §6 calm frames stay calm, §12 density | Clutter predicts search difficulty (Rosenholtz 2007) — [ch. 84 §4](docs/research/84-grouping-density-and-choice.md#4-clutter) | `clutter.edge_density` against the calm frame | combat ≤ 2× calm (*house*) |
+| §7 rarity ladder | Pop-out needs a feature difference that every viewer can see — [ch. 81 §2–3](docs/research/81-contrast-colour-and-colour-blindness.md) | `Perceptual.ladder` regression test | no CVD collapse; grey-close steps need another channel |
+| §8 urgency beats rarity | Approaching objects get priority (behavioural urgency); incoming threats outrank outgoing impacts in the mix — [ch. 80 §3](docs/research/80-attention-and-salience.md#3-what-captures-attention-involuntarily-onsets-and-looming), [ch. 83](docs/research/83-audio-hierarchy.md) | bus priority | Threat bus priority 2 > Impact 3 (*house*) |
+| §9 time | Saccade ~200 ms, choice RT ~500 ms, attentional blink 200–500 ms, IOR from ~300 ms — [ch. 80 §4](docs/research/80-attention-and-salience.md#4-after-capture-inhibition-of-return-and-the-attentional-blink), [ch. 82](docs/research/82-time-motion-and-cue-timing.md) | telegraph budget; message spacing | wind-up ≥ 600 ms familiar / ≥ 1 s new; messages ≥ 500 ms apart or merged within 100 ms |
+| §9 time (safety) | WCAG 2.3.1: ≤ 3 general or red flashes per second beyond 25% of a 10° field — [ch. 81 §4](docs/research/81-contrast-colour-and-colour-blindness.md#4-flashing-the-hard-safety-limit) | `flash` on captures (in `check_all.sh`) | ≤ 3/s over 2.78% of the screen |
+| §10 protected regions | Change blindness and inattentional blindness: unattended changes are missed — [ch. 80 §6](docs/research/80-attention-and-salience.md#6-blindness-to-the-unattended) | no state change during transitions | change after the transition settles |
+| §11 figure-ground gate | Value carries hierarchy when hue and detail are lost; the periphery has low resolution — [ch. 80 §5](docs/research/80-attention-and-salience.md#5-peripheral-vision-and-crowding), [ch. 81 §2](docs/research/81-contrast-colour-and-colour-blindness.md#2-perceptual-colour-oklab) | `audit` `squint_gap` | ≥ 0.08 OKLab L (*house*) |
+| Text everywhere | APCA models perceived lightness contrast by polarity and size — [ch. 81 §1](docs/research/81-contrast-colour-and-colour-blindness.md#1-text-and-icon-contrast-apca-lc) | `apca`, `Perceptual.audit` | abs(Lc) ≥ 75 play-critical, ≥ 60 labels, ≥ 30 disabled |
+| HUD layout | About 4 chunks at a glance (Cowan 2001); crowding at 0.4–0.5 × eccentricity (Bouma) — [ch. 84 §2](docs/research/84-grouping-density-and-choice.md#2-how-much-fits-in-one-glance), [ch. 80 §5](docs/research/80-attention-and-salience.md#5-peripheral-vision-and-crowding) | count groups; spacing vs distance from the character | ≤ 4 groups; peripheral items signal by colour, motion or shape, not detail |
+| Choices and taps | Hick log2(n+1), Fitts log2(D/W+1), 44 pt / 48 dp targets — [ch. 84 §3](docs/research/84-grouping-density-and-choice.md#3-choices-and-targets) | option count; target size | ≤ 8 options per level; ≥ 44 × 44 targets, ≥ 8 apart |
+| §14 reward sequencing, sound | The attentional blink spaces visual beats; ducking and priority space audio — [ch. 83](docs/research/83-audio-hierarchy.md) | beat spacing; loudness | beats ≥ 500 ms; ceremony ≥ 4 LU above calm (*house*) |
+
+**Measured on the kit itself (this branch):** all 15 effect GIFs pass the flash check. The audit caught the shipped rarity ladder collapsing Rare and Epic under deuteranopia (ΔE 0.035), which was fixed by lightening Rare to `#5ab4ff` (§7).
+

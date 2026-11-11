@@ -1,6 +1,6 @@
 # Lexicon
 
-407 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
+428 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
 
 ## Starter pack (40 terms)
 
@@ -51,7 +51,7 @@ The highest-leverage terms. Know these and most briefs write themselves.
 
 ## Domains
 
-[Hierarchy](#hierarchy) (40) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (25) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
+[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (25) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
 
 ## Hierarchy
 
@@ -374,6 +374,174 @@ A computed map of where the eye is likely to go first. **Use when:** Finding ele
 > compare the saliency map with the tier view and fix decor that outranks pickups
 
 Tier: all · Pairs with: [tier view](#tier-view), [squint test](#squint-test) · Source: vault/Notes/16 Hierarchy Codex
+
+### salience map
+
+A per-pixel estimate of how strongly each place differs from its surroundings and so pulls the eye bottom-up. **Use when:** Checking what a screen shouts before anyone reads it.
+
+> run the salience audit and show me where fixation 1 lands
+
+Tier: all · Pairs with: [predicted scanpath](#predicted-scanpath), [focus lift](#focus-lift), [squint test](#squint-test) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### predicted scanpath
+
+The order a salience model visits a screen: take the peak, suppress it (inhibition of return), repeat. **Use when:** Checking that the eye reaches the CTA first and the reward second.
+
+> predict the first five fixations and number them on the overlay
+
+Tier: all · Pairs with: [salience map](#salience-map), [inhibition of return](#inhibition-of-return) · Source: aaa-kit/tools/hierarchy
+
+### focus lift
+
+Share of salience inside the focus element divided by its share of the screen area. **Use when:** Scoring whether the intended focus actually wins.
+
+> the buy button needs a focus lift of at least 1.5
+
+Tier: all · Pairs with: [salience map](#salience-map), [one loud element per panel](#one-loud-element-per-panel) · Source: aaa-kit/docs/research/85-measuring-hierarchy.md
+
+### pre-attentive feature
+
+A basic attribute (colour, size, motion, orientation) that guides attention without item-by-item search. **Use when:** Choosing how a hierarchy level is coded.
+
+> code the urgent state with one pre-attentive feature, not a conjunction
+
+Tier: all · Pairs with: [pop-out](#pop-out), [colour job](#colour-job) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### pop-out
+
+A single item differing in one feature from a uniform field is found instantly regardless of crowd size. **Use when:** Making one element unmissable.
+
+> keep the cards grey so the one gold card pops out
+
+Tier: all · Pairs with: [pre-attentive feature](#pre-attentive-feature), [one loud element per panel](#one-loud-element-per-panel) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### onset capture
+
+A new object appearing abruptly grabs attention involuntarily; gradual reveals do not. **Use when:** Deciding which tiers may pop in.
+
+> let only tier 1-3 elements pop in; fade tier 4-6 content over 300 ms
+
+Tier: T1 moments · Pairs with: [loudness tier](#loudness-tier), [onset frame](#onset-frame) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### looming
+
+Motion toward the viewer, which gets attentional priority as behaviourally urgent. **Use when:** Telegraphs and incoming threats.
+
+> make the boss lunge loom toward camera so it reads as urgent
+
+Tier: T2 combat · Pairs with: [telegraph](#telegraph), [urgency beats rarity](#urgency-beats-rarity) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### inhibition of return
+
+After attention leaves a place, it is slower to come back there (from about 300 ms). **Use when:** Repeating a warning.
+
+> do not re-flash the same spot; move it, grow it or add sound
+
+Tier: all · Pairs with: [predicted scanpath](#predicted-scanpath), [critical cue](#critical-cue) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### attentional blink
+
+A second message 200-500 ms after a first is often missed. **Use when:** Timing reward beats and popups.
+
+> space reward beats at least 500 ms apart or merge them into one beat
+
+Tier: T1 moments · Pairs with: [reward sequencing](#reward-sequencing) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### change blindness
+
+Large changes go unnoticed when a flash, cut or transition masks them. **Use when:** Deciding when to update state.
+
+> change the price after the window transition settles, never during it
+
+Tier: all · Pairs with: [protected region](#protected-region), [calm frame](#calm-frame) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### crowding
+
+Peripheral items can't be identified when neighbours are closer than about half their distance from gaze (Bouma). **Use when:** Placing corner HUD elements.
+
+> peripheral HUD items signal by colour or motion, not detail
+
+Tier: T3 HUD · Pairs with: [touch target](#touch-target), [safe area](#safe-area) · Source: aaa-kit/docs/research/80-attention-and-salience.md
+
+### APCA contrast
+
+Signed lightness contrast (Lc) for text on a background that accounts for polarity and size. **Use when:** Checking any text colour pair.
+
+> keep play-critical numbers at APCA Lc 75 or more on their worst background
+
+Tier: T3 HUD · Pairs with: [OKLab](#oklab), [squint test](#squint-test) · Source: aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md
+
+### colour-blind check
+
+Re-running a colour code through protan and deutan simulation (Machado 2009) to see if it survives. **Use when:** Any hue-coded state, team or rarity.
+
+> run Perceptual.ladder on the rarity colours under deutan and protan
+
+Tier: all · Pairs with: [colour job](#colour-job), [rarity ladder](#rarity-ladder) · Source: aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md
+
+### flash limit
+
+No more than 3 general or red flashes per second over more than 25% of a 10-degree field (WCAG 2.3.1). **Use when:** Any impact flash, lightning or strobe.
+
+> throttle impact flashes to 3 per second when they cover more than 2.8% of the screen
+
+Tier: T1 moments · Pairs with: [impact flash](#impact-flash), [hit-stop](#hit-stop) · Source: aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md
+
+### telegraph budget
+
+Wind-up time sized from notice + decide + act + latency (about 600 ms familiar, 1 s or more new). **Use when:** Tuning enemy wind-ups.
+
+> give the new boss slam a 1.2 s wind-up and shorten it after first sight
+
+Tier: T2 combat · Pairs with: [telegraph](#telegraph), [looming](#looming) · Source: aaa-kit/docs/research/82-time-motion-and-cue-timing.md
+
+### sidechain duck
+
+Lowering one audio bus automatically while another plays, keyed by the louder bus. **Use when:** Making the important sound audible.
+
+> sidechain the music bus to the ceremony bus and duck it 10 dB
+
+Tier: all · Pairs with: [ducking](#ducking), [critical cue](#critical-cue) · Source: aaa-kit/docs/research/83-audio-hierarchy.md
+
+### four chunks
+
+Working memory holds about four chunks at once (Cowan 2001). **Use when:** Deciding how many HUD groups or stats to show.
+
+> keep the HUD to four groups and the reward card to four stats
+
+Tier: T3 HUD · Pairs with: [one loud element per panel](#one-loud-element-per-panel), [call to action](#call-to-action) · Source: aaa-kit/docs/research/84-grouping-density-and-choice.md
+
+### common region
+
+Elements inside one bounded panel are seen as one group, more strongly than proximity. **Use when:** Laying out cards and panels.
+
+> put price, icon and buy button inside one card; never straddle two
+
+Tier: T3 HUD · Pairs with: [four chunks](#four-chunks) · Source: aaa-kit/docs/research/84-grouping-density-and-choice.md
+
+### Hick's law
+
+Decision time grows with log2(n+1) of the number of equal options. **Use when:** Menus, shops, upgrade choices.
+
+> split the 12 upgrades into three tabs of four
+
+Tier: T3 HUD · Pairs with: [Fitts's law](#fitts-s-law), [call to action](#call-to-action) · Source: aaa-kit/docs/research/84-grouping-density-and-choice.md
+
+### Fitts's law
+
+Pointing time grows with log2(distance/width + 1). **Use when:** Sizing and placing buttons.
+
+> make the main CTA the biggest button nearest the thumb
+
+Tier: T3 HUD · Pairs with: [Hick's law](#hick-s-law), [touch target](#touch-target) · Source: aaa-kit/docs/research/84-grouping-density-and-choice.md
+
+### visual clutter
+
+How crowded a scene is in features (edge density, colour variety); the denominator of salience. **Use when:** Backgrounds behind important UI or cues.
+
+> lower the clutter behind the menu before making the button brighter
+
+Tier: all · Pairs with: [calm frame](#calm-frame), [salience map](#salience-map) · Source: aaa-kit/docs/research/84-grouping-density-and-choice.md
 
 
 ## UI & HUD

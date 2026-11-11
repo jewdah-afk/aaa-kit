@@ -1,7 +1,7 @@
 {
   "$schema": "./lexicon.schema.json",
   "version": 1,
-  "count": 407,
+  "count": 428,
   "terms": [
     {
       "term": "loudness tier",
@@ -568,6 +568,299 @@
       ],
       "prompt-phrase": "compare the saliency map with the tier view and fix decor that outranks pickups",
       "source": "vault/Notes/16 Hierarchy Codex",
+      "starter": false
+    },
+    {
+      "term": "salience map",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A per-pixel estimate of how strongly each place differs from its surroundings and so pulls the eye bottom-up.",
+      "use-when": "Checking what a screen shouts before anyone reads it.",
+      "pairs-with": [
+        "predicted scanpath",
+        "focus lift",
+        "squint test"
+      ],
+      "prompt-phrase": "run the salience audit and show me where fixation 1 lands",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "predicted scanpath",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "The order a salience model visits a screen: take the peak, suppress it (inhibition of return), repeat.",
+      "use-when": "Checking that the eye reaches the CTA first and the reward second.",
+      "pairs-with": [
+        "salience map",
+        "inhibition of return"
+      ],
+      "prompt-phrase": "predict the first five fixations and number them on the overlay",
+      "source": "aaa-kit/tools/hierarchy",
+      "starter": false
+    },
+    {
+      "term": "focus lift",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Share of salience inside the focus element divided by its share of the screen area.",
+      "use-when": "Scoring whether the intended focus actually wins.",
+      "pairs-with": [
+        "salience map",
+        "one loud element per panel"
+      ],
+      "prompt-phrase": "the buy button needs a focus lift of at least 1.5",
+      "source": "aaa-kit/docs/research/85-measuring-hierarchy.md",
+      "starter": false
+    },
+    {
+      "term": "pre-attentive feature",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A basic attribute (colour, size, motion, orientation) that guides attention without item-by-item search.",
+      "use-when": "Choosing how a hierarchy level is coded.",
+      "pairs-with": [
+        "pop-out",
+        "colour job"
+      ],
+      "prompt-phrase": "code the urgent state with one pre-attentive feature, not a conjunction",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "pop-out",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A single item differing in one feature from a uniform field is found instantly regardless of crowd size.",
+      "use-when": "Making one element unmissable.",
+      "pairs-with": [
+        "pre-attentive feature",
+        "one loud element per panel"
+      ],
+      "prompt-phrase": "keep the cards grey so the one gold card pops out",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "onset capture",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "A new object appearing abruptly grabs attention involuntarily; gradual reveals do not.",
+      "use-when": "Deciding which tiers may pop in.",
+      "pairs-with": [
+        "loudness tier",
+        "onset frame"
+      ],
+      "prompt-phrase": "let only tier 1-3 elements pop in; fade tier 4-6 content over 300 ms",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "looming",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "Motion toward the viewer, which gets attentional priority as behaviourally urgent.",
+      "use-when": "Telegraphs and incoming threats.",
+      "pairs-with": [
+        "telegraph",
+        "urgency beats rarity"
+      ],
+      "prompt-phrase": "make the boss lunge loom toward camera so it reads as urgent",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "inhibition of return",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "After attention leaves a place, it is slower to come back there (from about 300 ms).",
+      "use-when": "Repeating a warning.",
+      "pairs-with": [
+        "predicted scanpath",
+        "critical cue"
+      ],
+      "prompt-phrase": "do not re-flash the same spot; move it, grow it or add sound",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "attentional blink",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "A second message 200-500 ms after a first is often missed.",
+      "use-when": "Timing reward beats and popups.",
+      "pairs-with": [
+        "reward sequencing"
+      ],
+      "prompt-phrase": "space reward beats at least 500 ms apart or merge them into one beat",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "change blindness",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Large changes go unnoticed when a flash, cut or transition masks them.",
+      "use-when": "Deciding when to update state.",
+      "pairs-with": [
+        "protected region",
+        "calm frame"
+      ],
+      "prompt-phrase": "change the price after the window transition settles, never during it",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "crowding",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Peripheral items can't be identified when neighbours are closer than about half their distance from gaze (Bouma).",
+      "use-when": "Placing corner HUD elements.",
+      "pairs-with": [
+        "touch target",
+        "safe area"
+      ],
+      "prompt-phrase": "peripheral HUD items signal by colour or motion, not detail",
+      "source": "aaa-kit/docs/research/80-attention-and-salience.md",
+      "starter": false
+    },
+    {
+      "term": "APCA contrast",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Signed lightness contrast (Lc) for text on a background that accounts for polarity and size.",
+      "use-when": "Checking any text colour pair.",
+      "pairs-with": [
+        "OKLab",
+        "squint test"
+      ],
+      "prompt-phrase": "keep play-critical numbers at APCA Lc 75 or more on their worst background",
+      "source": "aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md",
+      "starter": false
+    },
+    {
+      "term": "colour-blind check",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Re-running a colour code through protan and deutan simulation (Machado 2009) to see if it survives.",
+      "use-when": "Any hue-coded state, team or rarity.",
+      "pairs-with": [
+        "colour job",
+        "rarity ladder"
+      ],
+      "prompt-phrase": "run Perceptual.ladder on the rarity colours under deutan and protan",
+      "source": "aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md",
+      "starter": false
+    },
+    {
+      "term": "flash limit",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "No more than 3 general or red flashes per second over more than 25% of a 10-degree field (WCAG 2.3.1).",
+      "use-when": "Any impact flash, lightning or strobe.",
+      "pairs-with": [
+        "impact flash",
+        "hit-stop"
+      ],
+      "prompt-phrase": "throttle impact flashes to 3 per second when they cover more than 2.8% of the screen",
+      "source": "aaa-kit/docs/research/81-contrast-colour-and-colour-blindness.md",
+      "starter": false
+    },
+    {
+      "term": "telegraph budget",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "Wind-up time sized from notice + decide + act + latency (about 600 ms familiar, 1 s or more new).",
+      "use-when": "Tuning enemy wind-ups.",
+      "pairs-with": [
+        "telegraph",
+        "looming"
+      ],
+      "prompt-phrase": "give the new boss slam a 1.2 s wind-up and shorten it after first sight",
+      "source": "aaa-kit/docs/research/82-time-motion-and-cue-timing.md",
+      "starter": false
+    },
+    {
+      "term": "sidechain duck",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Lowering one audio bus automatically while another plays, keyed by the louder bus.",
+      "use-when": "Making the important sound audible.",
+      "pairs-with": [
+        "ducking",
+        "critical cue"
+      ],
+      "prompt-phrase": "sidechain the music bus to the ceremony bus and duck it 10 dB",
+      "source": "aaa-kit/docs/research/83-audio-hierarchy.md",
+      "starter": false
+    },
+    {
+      "term": "four chunks",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Working memory holds about four chunks at once (Cowan 2001).",
+      "use-when": "Deciding how many HUD groups or stats to show.",
+      "pairs-with": [
+        "one loud element per panel",
+        "call to action"
+      ],
+      "prompt-phrase": "keep the HUD to four groups and the reward card to four stats",
+      "source": "aaa-kit/docs/research/84-grouping-density-and-choice.md",
+      "starter": false
+    },
+    {
+      "term": "common region",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Elements inside one bounded panel are seen as one group, more strongly than proximity.",
+      "use-when": "Laying out cards and panels.",
+      "pairs-with": [
+        "four chunks"
+      ],
+      "prompt-phrase": "put price, icon and buy button inside one card; never straddle two",
+      "source": "aaa-kit/docs/research/84-grouping-density-and-choice.md",
+      "starter": false
+    },
+    {
+      "term": "Hick's law",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Decision time grows with log2(n+1) of the number of equal options.",
+      "use-when": "Menus, shops, upgrade choices.",
+      "pairs-with": [
+        "Fitts's law",
+        "call to action"
+      ],
+      "prompt-phrase": "split the 12 upgrades into three tabs of four",
+      "source": "aaa-kit/docs/research/84-grouping-density-and-choice.md",
+      "starter": false
+    },
+    {
+      "term": "Fitts's law",
+      "tier": "T3 HUD",
+      "domain": "hierarchy",
+      "meaning": "Pointing time grows with log2(distance/width + 1).",
+      "use-when": "Sizing and placing buttons.",
+      "pairs-with": [
+        "Hick's law",
+        "touch target"
+      ],
+      "prompt-phrase": "make the main CTA the biggest button nearest the thumb",
+      "source": "aaa-kit/docs/research/84-grouping-density-and-choice.md",
+      "starter": false
+    },
+    {
+      "term": "visual clutter",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "How crowded a scene is in features (edge density, colour variety); the denominator of salience.",
+      "use-when": "Backgrounds behind important UI or cues.",
+      "pairs-with": [
+        "calm frame",
+        "salience map"
+      ],
+      "prompt-phrase": "lower the clutter behind the menu before making the button brighter",
+      "source": "aaa-kit/docs/research/84-grouping-density-and-choice.md",
       "starter": false
     },
     {

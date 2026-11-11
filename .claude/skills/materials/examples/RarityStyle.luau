@@ -21,7 +21,7 @@ export type Style = {
 RarityStyle.TIERS = table.freeze({
 	{ name = "Common", color = { 154, 164, 178 }, stroke = 2, sweep = false, spin = false, sparks = false, rainbow = false, glitch = false, material = "flat", adds = "static border" },
 	{ name = "Uncommon", color = { 79, 209, 122 }, stroke = 2, sweep = false, spin = false, sparks = false, rainbow = false, glitch = false, material = "satin", adds = "inner highlight" },
-	{ name = "Rare", color = { 63, 155, 255 }, stroke = 3, sweep = true, spin = false, sparks = false, rainbow = false, glitch = false, material = "brushed", adds = "shine sweep" },
+	{ name = "Rare", color = { 90, 180, 255 }, stroke = 3, sweep = true, spin = false, sparks = false, rainbow = false, glitch = false, material = "brushed", adds = "shine sweep" },
 	{ name = "Epic", color = { 178, 92, 255 }, stroke = 3, sweep = true, spin = true, sparks = false, rainbow = false, glitch = false, material = "glass", adds = "rotating edge" },
 	{ name = "Legendary", color = { 255, 176, 46 }, stroke = 3, sweep = true, spin = true, sparks = true, rainbow = false, glitch = false, material = "chrome", adds = "edge sparks + glow" },
 	{ name = "Mythic", color = { 255, 61, 127 }, stroke = 4, sweep = true, spin = true, sparks = true, rainbow = true, glitch = false, material = "holo", adds = "rainbow edge" },
@@ -64,7 +64,7 @@ function RarityStyle.apply(frame: GuiObject, tier: number): () -> ()
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 61, 127)),
 				ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 176, 46)),
 				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(79, 209, 122)),
-				ColorSequenceKeypoint.new(0.75, Color3.fromRGB(63, 155, 255)),
+				ColorSequenceKeypoint.new(0.75, Color3.fromRGB(90, 180, 255)),
 				ColorSequenceKeypoint.new(1, Color3.fromRGB(178, 92, 255)),
 			})
 		else

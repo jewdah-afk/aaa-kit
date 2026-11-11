@@ -863,11 +863,11 @@ void main() {
 
 /* ========================= REWARD MOMENTS ========================= */
 
-const RARITY = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#3f9bff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
+const RARITY = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#5ab4ff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
 
 D("roulette", "RNG Roulette Reel", "Moments", "A weighted item reel eases onto the winner, then flashes its rarity. Tap to spin again.",
 function (g, W, H, t, dt, S, P) {
-  const R = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#3f9bff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
+  const R = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#5ab4ff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
   const pick = () => { let r = Math.random() * 100; for (const x of R) if ((r -= x[2]) < 0) return x; return R[0]; };
   const iw = Math.min(W * .2, H * .38), step = iw * 1.14, cy = H * .5;
   if (!S.items || P.tap || (S.done && t - S.done > 2.4)) {
@@ -909,7 +909,7 @@ function (g, W, H, t, dt, S, P) {
 
 D("gacha", "Gacha Pull Beam", "Moments", "A charge-up, then a beam that climbs rarity tiers before it settles. Built for suspense.",
 function (g, W, H, t, dt, S, P) {
-  const tiers = [["#9aa4b2", "COMMON"], ["#3f9bff", "RARE"], ["#b25cff", "EPIC"], ["#ffb02e", "LEGENDARY"], ["#ff3d7f", "MYTHIC"]];
+  const tiers = [["#9aa4b2", "COMMON"], ["#5ab4ff", "RARE"], ["#b25cff", "EPIC"], ["#ffb02e", "LEGENDARY"], ["#ff3d7f", "MYTHIC"]];
   const cyc = 5.4, ci = Math.floor(t / cyc), ph = t % cyc;
   if (S.ci !== ci || P.tap) { S.ci = ci; S.final = 1 + ((Math.random() * 4) | 0); S.p = []; if (P.tap) S.shift = t - ci * cyc; }
   const p2 = ph - (S.shift || 0) < 0 ? ph : ph - (S.shift || 0);
@@ -1092,7 +1092,7 @@ function (g, W, H, t, dt, S, P) {
 
 D("frames", "Rarity Frames", "HUD", "Inventory slot borders that get louder with rarity: static, shimmer, spin, sparks, rainbow, glitch.",
 function (g, W, H, t, dt, S, P) {
-  const rs = [["Common", "#9aa4b2"], ["Rare", "#3f9bff"], ["Epic", "#b25cff"], ["Legendary", "#ffb02e"], ["Mythic", "#ff3d7f"], ["Secret", "#ffffff"]];
+  const rs = [["Common", "#9aa4b2"], ["Rare", "#5ab4ff"], ["Epic", "#b25cff"], ["Legendary", "#ffb02e"], ["Mythic", "#ff3d7f"], ["Secret", "#ffffff"]];
   g.fillStyle = "#0d0b13"; g.fillRect(0, 0, W, H);
   const cols = 3, sz = Math.min(W / 3.6, H / 2.6), gx = (W - cols * sz) / (cols + 1), gy = (H - 2 * sz) / 3;
   rs.forEach(([name, col], i) => {
@@ -1105,7 +1105,7 @@ function (g, W, H, t, dt, S, P) {
     g.fillStyle = i === 4 ? `hsl(${(t * 120) % 360},90%,65%)` : col; g.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; g.lineTo(Math.cos(a) * sz * (k % 2 ? .16 : .26), Math.sin(a) * sz * (k % 2 ? .16 : .26)); } g.fill(); g.restore();
     let stroke = col, lw = 2;
     if (i === 1) { lw = 3; const p = (t * .6) % 1.6 - .3, sh = g.createLinearGradient(x + p * sz * 2 - sz, y, x + p * sz * 2, y + sz); sh.addColorStop(0, col); sh.addColorStop(.5, "#ffffff"); sh.addColorStop(1, col); stroke = sh; }
-    if (i === 2 || i === 4) { lw = i === 4 ? 4 : 3; if (g.createConicGradient) { const cg = g.createConicGradient(t * (i === 4 ? 3 : 1.6), cx, cy); const stops = i === 4 ? ["#ff3d7f", "#ffb02e", "#4fd17a", "#3f9bff", "#b25cff", "#ff3d7f"] : [col, "#ffffff", col, "#5a2a8a", col]; stops.forEach((s2, k) => cg.addColorStop(k / (stops.length - 1), s2)); stroke = cg; } }
+    if (i === 2 || i === 4) { lw = i === 4 ? 4 : 3; if (g.createConicGradient) { const cg = g.createConicGradient(t * (i === 4 ? 3 : 1.6), cx, cy); const stops = i === 4 ? ["#ff3d7f", "#ffb02e", "#4fd17a", "#5ab4ff", "#b25cff", "#ff3d7f"] : [col, "#ffffff", col, "#5a2a8a", col]; stops.forEach((s2, k) => cg.addColorStop(k / (stops.length - 1), s2)); stroke = cg; } }
     if (i === 3) lw = 3;
     if (i === 5) { lw = 2; stroke = Math.random() < .08 ? "#ff3d7f" : "#ffffff"; }
     path(); g.strokeStyle = stroke; g.lineWidth = lw; g.stroke();
@@ -1117,7 +1117,7 @@ function (g, W, H, t, dt, S, P) {
 
 D("feed", "Reward Feed", "HUD", "Toasts slide in, stack, and fade, each tinted by what you got.",
 function (g, W, H, t, dt, S, P) {
-  const pool = [["+250 Coins", "#ffd34d"], ["Rare Snowflake!", "#3f9bff"], ["+1 Gem", "#4fd17a"], ["Epic Mitten!", "#b25cff"], ["+12% Luck", "#ff8f3a"], ["LEGENDARY Sled!", "#ffb02e"], ["+5,000 XP", "#7fe6ff"]];
+  const pool = [["+250 Coins", "#ffd34d"], ["Rare Snowflake!", "#5ab4ff"], ["+1 Gem", "#4fd17a"], ["Epic Mitten!", "#b25cff"], ["+12% Luck", "#ff8f3a"], ["LEGENDARY Sled!", "#ffb02e"], ["+5,000 XP", "#7fe6ff"]];
   S.list ??= []; S.next ??= 0;
   if (t > S.next || P.tap) { S.list.unshift({ it: pool[(Math.random() * pool.length) | 0], t0: t }); S.next = t + .7 + Math.random() * .6; if (S.list.length > 6) S.list.pop(); }
   g.fillStyle = "#11141c"; g.fillRect(0, 0, W, H);
