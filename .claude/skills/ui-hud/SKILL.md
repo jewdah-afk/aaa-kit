@@ -45,6 +45,10 @@ The HUD is tier 3 (HIERARCHY.md §2). It's always on screen, so it stays still u
 
 **Web.** Canvas 2D for juice, DOM for text-heavy menus. Use `font-variant-numeric: tabular-nums` and honour `prefers-reduced-motion`.
 
+## Process
+
+Designing screens in Figma and bringing them into Roblox follows the [Figma → Roblox UI playbook](../../../docs/playbooks/figma-to-roblox-ui.md) (inventory, hero design, kit-built frames, export → layouts → render, zoomed QA). Motion and sound follow [UI motion and sound](../../../docs/playbooks/ui-motion-and-sound.md). Run the `ui-qa` and `visual-hierarchy` agents before showing the owner.
+
 ## Example
 
 `examples/Odometer.luau` is a pure rolling-digit model used by both a Roblox TextLabel row and an EditableImage HUD (test: `examples/Odometer.test.luau`). The framework starter's `CoinCounter` component shows the Roblox side, and [effects-gallery.html](../../../examples/web/effects-gallery.html) has the odometer, rarity frames and XP bar running live.

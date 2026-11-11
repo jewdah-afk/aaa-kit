@@ -42,6 +42,10 @@ Combat effects are tier 2 (HIERARCHY.md §2): they read instantly, then get out 
 
 **Web.** Canvas 2D with `globalCompositeOperation = "lighter"` for additive glow; WebGL for dissolves and distortion. Clamp `dt` to [0, 1/20].
 
+## Process
+
+The craft behind these rules (one hero + two supports, ZOffset order, toon flipbooks, mesh templates, camera priorities, engine limits) is in the [VFX craft playbook](../../../docs/playbooks/vfx-craft.md); stress-test new effects with the [look-dev loop](../../../docs/playbooks/look-dev-loop.md#stress-testing-vfx).
+
 ## Example
 
 `examples/Impact.luau` covers hit-stop, the trauma shake with smooth noise and a reduced-motion option, and the flash timer (tested in `examples/Impact.test.luau`). [effects-gallery.html](../../../examples/web/effects-gallery.html) runs shockwave, branching lightning and ember dissolve live.

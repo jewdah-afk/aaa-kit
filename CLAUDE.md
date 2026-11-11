@@ -25,6 +25,7 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 | [LEXICON.md](LEXICON.md) / [lexicon.json](lexicon.json) | 400+ design terms, each with a ready-to-paste prompt phrase |
 | [.claude/skills/](.claude/skills/) | Procedures for HUD, rewards, VFX, EditableImage/Mesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, prompt amplification and the kit doctor |
 | [lib/](lib/README.md) | Tested Luau libraries: frontier (EditableImage/EditableMesh at the limits) and pixelfx (15 pixel effects) |
+| [docs/playbooks/](docs/playbooks/README.md) | How we did everything: Figma UI pipeline, motion + sound, icons, world hierarchy, VFX, look-dev loop, Studio, handouts. Follow these before inventing a process |
 | [docs/research/](docs/research/README.md) | 25 research chapters: EditableImage/Mesh APIs and cookbooks, Luau performance, VFX, architecture, security, procgen, AI, live ops, QA |
 | `tools/doctor.py` | Checks this PC's toolchain and a game repo against the kit's standards |
 | [docs/STYLE.md](docs/STYLE.md) | Writing, naming and code style |

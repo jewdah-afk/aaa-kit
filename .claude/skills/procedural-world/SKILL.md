@@ -47,6 +47,10 @@ A generated world has to be readable before it's beautiful. The player must see 
 
 **Web.** Canvas for 2D maps, typed arrays for fields, three.js for 3D.
 
+## Process
+
+For 3D worlds, follow the [world hierarchy playbook](../../../docs/playbooks/world-hierarchy.md): seven tiers, foreground/midground/background composition, the squint value check, and one Explorer tree owned by a single module.
+
 ## Example
 
 `examples/Poisson.luau` is Bridson's Poisson-disk sampling with a mask callback and an injectable RNG. It's tested in `examples/Poisson.test.luau` for spacing, determinism and the mask.
