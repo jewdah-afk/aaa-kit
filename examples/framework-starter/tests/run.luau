@@ -1,4 +1,5 @@
 --!strict
+--# selene: allow(multiple_statements)
 -- Headless tests for every pure module. Run from the repo root:
 --   lune run examples/framework-starter/tests/run.luau
 -- Exits non-zero on the first failing check.

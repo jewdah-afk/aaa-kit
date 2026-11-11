@@ -1,4 +1,5 @@
 --!strict
+--# selene: allow(multiple_statements)
 local Chain = require("./Chain")
 local t = require("../../../../tools/lib/t")
 

@@ -1,4 +1,5 @@
 --!strict
+--# selene: allow(multiple_statements)
 -- lune run examples/bignum/test.luau
 local process = require("@lune/process")
 local EN = require("./EternityNum")

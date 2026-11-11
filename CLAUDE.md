@@ -48,10 +48,11 @@ If the request is short, vague or missing a target ("make it cool", "fix the ui"
 ## Checks
 
 ```sh
+sh tools/check_all.sh                                 # everything below, in order
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
 python3 tools/check_links.py                          # every relative link resolves
-python3 tools/check_skills.py                         # skill frontmatter + required sections
+python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
 python3 tools/check_lexicon.py                        # schema, duplicates, pairs-with resolve
-node tools/check_examples.mjs                         # web examples load with zero errors
-lune run examples/framework-starter/tests/run.luau    # framework starter tests
+python3 tools/hooks/test_amplify.py                   # the prompt-amplifier hook
+node tools/check_examples.mjs                         # web examples: zero errors at phone + desktop
 ```

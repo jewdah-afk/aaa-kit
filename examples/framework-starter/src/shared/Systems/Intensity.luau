@@ -5,6 +5,7 @@
 
 local Intensity = {}
 
+-- selene: allow(mixed_table)
 Intensity.NAMES = table.freeze({ [0] = "calm", "build", "surge", "ceremony", "boss", "finale" })
 Intensity.CROWD_ON, Intensity.CROWD_OFF = 40, 30 -- entities on screen
 Intensity.NEAR_ON, Intensity.NEAR_OFF = 12, 8 -- entities within reach of the player

@@ -30,7 +30,7 @@ Every Roblox game in this kit uses the five-layer framework in [docs/FRAMEWORK.m
 | Something on screen reacting to data | A tagged Component |
 | A shared helper | `shared/Kit/*` |
 
-2. **Copy the closest template** (service, component or content row) from `examples/framework-starter`, then grep the copy for the old name.
+2. **Copy the closest template** (service, component or content row) from the [framework starter](../../../examples/framework-starter/README.md), then grep the copy for the old name.
 3. **Validate every remote argument** on the server, in this order: shape (type, whitelist key, whole-number count with a cap, reject NaN/∞) → rate (`Kit.Guard.rate`) → state (ownership, cost, distance, cooldown) from the server's own data.
 4. **Clean up.** Per-player tables are cleared in `playerRemoving`. Connections go in `self._maid` (lower case).
 5. **Keep hot paths quiet.** No `print`, no table allocation per frame and no `FindFirstChild` chains in loops. Cache references in `init`.

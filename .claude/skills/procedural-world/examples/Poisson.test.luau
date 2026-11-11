@@ -1,4 +1,5 @@
 --!strict
+--# selene: allow(multiple_statements)
 local Poisson = require("./Poisson")
 local t = require("../../../../tools/lib/t")
 

@@ -1,3 +1,4 @@
+--# selene: allow(multiple_statements)
 --[[
 	EternityNum (Luau) — arbitrary-size numbers for incremental games.
 

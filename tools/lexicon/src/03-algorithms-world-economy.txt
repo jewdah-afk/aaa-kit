@@ -1,0 +1,123 @@
+@domain algorithms
+godrithm | T6 engines | A chain of small typed algorithm passes that together make one look. | Building a reusable procedural look. | pass chain, typed pass | build the look as a godrithm: noise → warp → threshold → distance → bands | vault/Notes/21 Godrithms
+pass chain | T6 engines | An ordered list of passes where each output feeds the next. | Composing procedural effects. | godrithm, typed pass | run the passes as a chain and cache every static intermediate | aaa-kit/.claude/skills/algorithms
+typed pass | T6 engines | A pass with a declared input and output type (field, mask, points, palette). | Making passes swappable. | pass chain | declare each pass as field → field so they can be reordered | aaa-kit/.claude/skills/algorithms
+algorithm factory | T6 engines | A planner that assembles a pass chain backwards from a requested output. | Generating looks on demand. | godrithm | let a planner pick the cheapest chain that produces a glow mask | vault/Artifacts/Godrithms/algorithm-factory
+distance transform | T6 engines | Computing each cell's distance to the nearest feature. | Outlines, glows, bevels, fields. | jump flooding, signed distance field | compute a chamfer distance transform from the mask for a 6 px glow | industry
+jump flooding | T6 engines | A GPU algorithm computing Voronoi and distance fields in log₂(n) passes. | Fast distance fields on the GPU. | distance transform, Voronoi | build the distance field with jump flooding in 9 passes for 512² | industry
+Voronoi | T6 engines | Partitioning space into cells around seed points. | Stained glass, cracks, biomes. | Worley noise, jump flooding | partition the map into Voronoi cells for biomes | industry
+Worley noise | T6 engines | Noise based on distance to the nearest random feature points. | Cells, scales, caustics. | Voronoi | use Worley F2 − F1 for crisp cell edges | industry
+cellular automaton | T6 engines | A grid where each cell updates from local rules. | Caves, fire spread, life patterns. | Game of Life | carve caves with 5 steps of the 4-5 cellular automaton rule | industry
+Game of Life | T6 engines | Conway's cellular automaton with birth on 3 and survival on 2–3 neighbours. | Living patterns. | cellular automaton | seed a Game of Life aura that breathes around the hero | industry
+reaction-diffusion | T6 engines | Two simulated chemicals (Gray–Scott) forming spots and stripes. | Coral, infection, skin patterns. | Gray–Scott, ping-pong buffer | grow corruption as Gray–Scott reaction-diffusion with f 0.037, k 0.06 | Living Effects Lab
+Gray–Scott | T6 engines | The reaction-diffusion model with feed and kill rates. | Tuning reaction-diffusion. | reaction-diffusion | Gray–Scott with feed 0.055 and kill 0.062 for mitosis spots | industry
+flow field | T6 engines | A grid of directions that particles or agents follow. | Crowds, wind, silk backgrounds. | boids, Dijkstra map | steer the crowd with a flow field toward the player, updated at 10 Hz | Living Effects Lab
+boids | T6 engines | Flocking from separation, alignment and cohesion. | Birds, fish, bats. | flow field, spatial hash | flock 200 boids with a spatial hash for neighbours | Living Effects Lab
+spatial hash | T6 engines | Bucketing objects by grid cell for fast neighbour queries. | Collision and separation at scale. | boids | hash enemies into 32 px cells and only test neighbouring cells | industry
+quadtree | T6 engines | A tree that splits 2D space into four children as it fills. | Uneven densities, culling. | spatial hash | use a quadtree when entities cluster unevenly | industry
+A* | T6 engines | Pathfinding with a heuristic toward the goal. | Single-agent paths. | Dijkstra map | path single units with A* on the nav grid | industry
+Dijkstra map | T6 engines | A distance-to-goal value for every cell, shared by all agents. | Many agents chasing one target. | flow field, A* | build one Dijkstra map from the player and let every enemy descend it | industry
+L-system | T6 engines | A grammar that rewrites strings into branching structures. | Trees, lightning, coral. | turtle graphics | grow trees with an L-system: F → F[+F]F[−F]F, 4 iterations | Living Effects Lab
+turtle graphics | T6 engines | Drawing by moving and turning a pen from instructions. | Rendering L-systems. | L-system | interpret the L-system string with turtle graphics, 25° turns | industry
+midpoint displacement | T6 engines | Recursively offsetting segment midpoints for fractal lines. | Lightning, coastlines, cracks. | branching lightning | displace midpoints 5 times, halving the offset each time | industry
+Verlet integration | T6 engines | Physics from current and previous positions; stable for ropes and cloth. | Whips, cloth, chains. | Verlet cloth | simulate the rope with Verlet integration and 8 constraint passes | Living Effects Lab
+Verlet cloth | T4 world | A pinned grid of Verlet points shaded by its folds. | Flags, banners, capes. | Verlet integration | flap the banner as a pinned Verlet cloth in gusting wind | Living Effects Lab
+Poisson disk | T6 engines | Random points no closer than a minimum distance. | Even, natural-looking scatter. | Bridson sampling, scatter mask | scatter trees with Poisson disk at 12 stud spacing | aaa-kit/.claude/skills/procedural-world
+Bridson sampling | T6 engines | The O(n) Poisson-disk algorithm using a background grid. | Fast Poisson scatter. | Poisson disk | sample with Bridson's algorithm, 30 tries per active point | industry
+marching squares | T6 engines | Turning a scalar field into contour lines. | Outlining blobs and terrain. | metaball | extract the island outline with marching squares at 0.5 | industry
+wave function collapse | T6 engines | Tile placement by propagating adjacency constraints. | Tile-based levels. | tileset | generate rooms with wave function collapse over a 12-tile set | industry
+seeded RNG | T6 engines | A random generator started from a seed so results repeat. | Deterministic generation. | determinism | pass a seeded RNG into every generator; never call the global one | industry
+determinism | all | Same inputs always give the same outputs. | Replays, tests, shared worlds. | seeded RNG, golden frame | make the generator deterministic so one seed rebuilds the world | industry
+glyph ramp | T6 engines | Characters ordered by visual density used to shade with text. | ASCII renderers. | glyph density, ASCII renderer | shade with the glyph ramp " .:-=+*#%@" by luminance | Living Effects Lab
+ASCII renderer | T6 engines | Rendering a scene as characters chosen by luminance and edge direction. | Retro modes and crowd LOD. | glyph ramp | render the sphere per character cell with edge glyphs slash, pipe, backslash and dash | Living Effects Lab
+palette quantisation | T6 engines | Snapping colours to a fixed palette. | Consistent pixel-art looks. | luminance band, dithering | quantise to an 8-band OKLab palette with dithered edges | cursed-survivors/docs/decisions.md
+kuwahara filter | T6 engines | An edge-preserving smoothing filter that looks painterly. | Painterly post effects. | pass chain | apply an anisotropic Kuwahara filter for a painted look | vault/Artifacts/Godrithms
+@domain world
+landmark | T4 world | A unique silhouette at a decision point that players navigate by. | Map readability. | lane, set piece | place 1–3 landmarks per screen-width at junctions | aaa-kit/.claude/skills/procedural-world
+lane | T4 world | A clear path the player moves along. | Arena and level layout. | landmark, choke point | keep lanes 3 tiles wide and clear of props | aaa-kit/.claude/skills/procedural-world
+choke point | T4 world | A narrow passage that concentrates movement and fights. | Level pacing. | lane | add one choke point between open fields for pacing | industry
+safe pocket | T4 world | A small protected area for recovery. | Survival arenas. | lane | leave a safe pocket every 40 tiles with no spawns | industry
+biome | T4 world | A region with its own palette, props and rules. | Big maps. | Voronoi | assign each Voronoi region a biome with one palette ramp | industry
+scatter mask | T4 world | A function that forbids scatter in some areas (lanes, water). | Prop placement. | Poisson disk | mask Poisson scatter so nothing spawns on lanes or water | aaa-kit/.claude/skills/procedural-world
+prop size class | T4 world | Grouping props into large, medium and small and placing large first. | Natural-looking scatter. | Poisson disk | place large props first, then medium at half spacing, then small | industry
+set piece | T4 world | A handcrafted or scripted moment placed in a generated world. | Memorable beats. | landmark | place a collapsing-bridge set piece where the route crosses the river | vault/Notes/26 Map Set Pieces
+decal | T4 world | A flat mark projected on a surface (scorch, footprint, crack). | Showing history and direction. | battle history | stamp low-contrast decals that never outshine pickups | industry
+battle history | T4 world | Persistent marks of what happened (scorch, blood, footprints). | Making the world remember. | decal | write scorch marks into 16×16 history blocks only where fights happened | cursed-survivors/docs/budgets.md
+parallax | T4 world | Background layers moving slower than the foreground for depth. | 2D depth. | depth fog | three parallax layers at 0.2, 0.5 and 0.8 of camera speed | industry
+depth fog | T4 world | Fading distant things toward a fog colour. | Depth and readability. | parallax | fog distant layers toward the sky colour by 40 % | industry
+god rays | T4 world | Visible light shafts through gaps. | Forests and temples. | volumetric light | march god rays back toward the sun through foliage gaps | Living Effects Lab
+volumetric light | T4 world | Light scattering through air, fog or dust. | Atmosphere. | god rays | add faint volumetric light in the temple, ≤ 15 % brightness | industry
+aurora | T4 world | Layered light curtains in a night sky. | Night and winter maps. | parallax | layer aurora curtains with slow ray streaks over the mountains | Living Effects Lab
+fireflies | T4 world | Wandering glows blinking on independent clocks. | Night ambience. | additive blending | 30 fireflies on independent blink clocks, drawn additively | Living Effects Lab
+parallax snowfall | T4 world | Snow in depth layers that piles into drifts. | Winter maps. | parallax | three layers of snow that pile into drifts along edges | Living Effects Lab
+curl noise | T4 world | Divergence-free noise for swirling particle motion. | Smoke and ink. | flow field | advect particles through curl noise for ink trails | Living Effects Lab
+day-night cycle | T4 world | Lighting and palette changing over time. | Open worlds. | colour grading | shift the grade over a 20-minute day-night cycle | industry
+colour grading | all | Adjusting the final image's colours for mood. | Setting tone per area. | tone mapping | grade the cave cooler and darker by one band | industry
+heightfield | T4 world | Terrain stored as a height per grid point. | Terrain generation. | fBm | build the island as an fBm heightfield with an edge falloff | industry
+edge falloff | T4 world | Lowering height toward the map edge to form islands. | Island maps. | heightfield | multiply height by a radial falloff so the map becomes an island | industry
+hydraulic erosion | T4 world | Simulating water carving terrain. | Realistic terrain. | heightfield | run 50k droplets of hydraulic erosion for natural valleys | industry
+tileset | T4 world | A set of tiles that fit together. | Tile-based maps. | wave function collapse | build the dungeon from a 16-tile tileset with matching edges | industry
+streaming | T4 world | Loading world parts near the player only. | Large Roblox worlds. | LOD | enable StreamingEnabled and keep generated models atomic | industry
+LOD | all | Level of detail: simpler versions far away. | Performance at distance. | crowd LOD, mesh LOD | use three LODs: full under 50 studs, half to 150, quarter beyond | industry
+mesh LOD | T4 world | Fewer triangles for distant meshes. | EditableMesh terrain. | LOD, skirt | halve the cells per chunk beyond 50 studs | aaa-kit/.claude/skills/editable-mesh
+skirt | T4 world | A vertical strip under a mesh edge hiding LOD cracks. | Chunked terrain. | mesh LOD | add a 2-stud skirt to every chunk edge to hide cracks | industry
+chunk | T4 world | A fixed-size piece of a large surface built and updated on its own. | Big terrain and maps. | mesh LOD | split terrain into 32×32 chunks and rebuild only dirty ones | industry
+@domain economy
+faucet | economy | A source of currency (taps, passive income, rewards). | Economy design. | sink | list every faucet and its rate per minute | industry
+sink | economy | A way currency leaves the economy (upgrades, consumables). | Preventing inflation. | faucet | give every faucet a matching sink | industry
+geometric cost curve | economy | Cost = base × growth^level. | Upgrade prices. | closed-form buy-max | cost = 10 × 1.15^level | aaa-kit/.claude/skills/game-economy
+polynomial curve | economy | Value = base × (level + 1)^power. | XP to next level. | geometric cost curve | XP needed = 100 × (level + 1)² | industry
+soft cap | economy | Linear growth up to a cap, then diminishing returns. | Stats that shouldn't explode. | diminishing returns | soft-cap crit chance at 50 % with logarithmic growth beyond | aaa-kit/.claude/skills/game-economy
+diminishing returns | economy | Each extra unit gives less than the last. | Stacking bonuses. | soft cap | stack speed bonuses with diminishing returns | industry
+closed-form buy-max | economy | Computing the most levels affordable with a formula, not a loop. | Buy-max buttons. | geometric cost curve | compute buy-max with the geometric series closed form, then check the boundary | aaa-kit/examples/framework-starter
+buy-max | economy | A button buying as many levels as affordable. | Incremental shops. | closed-form buy-max | add ×1, ×10 and Max buttons using closed-form maths | industry
+prestige | economy | Resetting progress for a permanent multiplier or currency. | Long-term incremental loops. | reset layer, prestige payout | first prestige at 15–30 min, each run 2–5× faster | industry
+reset layer | economy | A data row describing what a reset wipes, keeps and pays. | Implementing prestige. | prestige | define rebirth as a reset layer row: wipes coins and upgrades, pays gems | aaa-kit/examples/framework-starter
+prestige payout | economy | Currency from a reset, usually k × total^0.5. | Balancing prestige. | prestige | pay floor(1 × coinsEarned^0.5) gems on rebirth | aaa-kit/.claude/skills/game-economy
+payback time | economy | Seconds of income to recoup an upgrade's cost. | Judging upgrade value. | pacing | rank upgrades by payback time = cost / income gained | aaa-kit/.claude/skills/game-economy
+pacing | economy | How the wait between meaningful purchases evolves. | Avoiding walls and free rides. | pacing wall, payback time | simulate a player and keep each wait within 2× of the last | aaa-kit/.claude/skills/game-economy
+pacing wall | economy | A sudden jump in wait time between purchases. | Finding grind spikes. | pacing | flag any wait that jumps more than 2× as a pacing wall | aaa-kit/.claude/skills/game-economy
+offline earnings | economy | Income granted for time away, capped and reduced. | Idle games. | reward sequencing | grant offline earnings at 50 % rate, capped at 8 hours, shown as a reward | aaa-kit/.claude/skills/game-economy
+automation | economy | A per-second effect run by one central system. | Passive income, regen, timers. | central system | add passive income as an automation entry, not a new loop | aaa-kit/docs/FRAMEWORK.md
+unlock gate | economy | Content hidden until a stat condition is met. | Progression gating. | central system | gate the second zone behind an unlock row: coinsEarned ≥ 1e6 | aaa-kit/docs/FRAMEWORK.md
+multiplier stack | economy | How several multipliers combine (additive within a group, multiplicative across). | Balancing bonuses. | diminishing returns | add bonuses within a group, multiply across groups | industry
+big number | economy | A value past 1e308 stored as layered exponent. | Late incremental games. | EternityNum, big-number suffix | store values past 9e15 as EternityNum strings | aaa-kit/examples/bignum
+EternityNum | economy | A Luau big-number type {sign, layer, mag} with break_eternity maths. | Numbers past double range. | big number | use EternityNum for currency once it can pass 9e15 | aaa-kit/examples/bignum
+leaderboard encoding | economy | Mapping big numbers to order-preserving integers for OrderedDataStore. | Big-number leaderboards. | EternityNum | encode scores with lbencode before writing to OrderedDataStore | aaa-kit/examples/bignum
+balance in data | economy | Keeping every tunable number in content tables, never in logic. | Any balance work. | content module | move every price and rate into content rows; services hold none | aaa-kit/docs/FRAMEWORK.md
+gacha odds | economy | Published drop rates per tier. | Fair RNG. | pity timer, decide-then-animate | show exact odds per tier on the pull screen | industry
+@domain code
+Kit hub | framework | The one shared module every script requires, with no game logic. | Structuring a Roblox game. | service, component | require Kit for Format, Guard, Maid and Signal; never put game logic in it | aaa-kit/docs/FRAMEWORK.md
+service | framework | A server-authoritative module with init, start and per-player lifecycle. | Game rules and data. | Kit hub, registry | write it as a service with init, start, playerAdded and playerRemoving | aaa-kit/docs/FRAMEWORK.md
+registry | framework | The list that boots services in order: every init, then every start. | Service wiring. | service | register services in dependency order and boot once | aaa-kit/examples/framework-starter
+component | framework | Per-instance behaviour bound to a CollectionService tag with construct/start/stop. | Things on screen. | Maid, CollectionService tag | make it a tagged component with a Maid cleaned in stop | aaa-kit/docs/FRAMEWORK.md
+content module | framework | A module returning one frozen table of data rows. | Upgrades, unlocks, loot. | balance in data | add the item as a row in the content module, numbers only | aaa-kit/docs/FRAMEWORK.md
+central system | framework | A pure module owning one cross-cutting job (save, automations, unlocks, resets, intensity). | Avoiding ad-hoc loops and wipes. | automation, unlock gate | route it through the central system instead of a custom loop | aaa-kit/docs/FRAMEWORK.md
+where things go | framework | A table mapping each kind of change to its one home. | Deciding where code lives. | Kit hub | check the where-things-go table before adding a file | aaa-kit/docs/FRAMEWORK.md
+slip-ups as rules | framework | Turning each past bug into a written rule with its reason. | Team rules docs. | where things go | add the bug to the rules table: what happened, the rule that prevents it | aaa-kit/docs/FRAMEWORK.md
+Maid | framework | An object collecting connections and instances to clean in one call. | Component and service cleanup. | component | give every connection to self._maid and clean it in stop | aaa-kit/examples/framework-starter
+Signal | framework | A typed event with connect, once and fire. | Decoupled communication. | Maid | expose changes as a Signal and connect through the Maid | aaa-kit/examples/framework-starter
+server authority | framework | The server decides every outcome; clients only request. | Anything involving value. | remote validation | the client requests, the server validates and decides | industry
+remote validation | framework | Checking every remote argument on the server: shape, rate, state. | All RemoteEvents and RemoteFunctions. | server authority, rate limit | validate shape (type, whitelist, finite, capped), then rate, then state | aaa-kit/docs/FRAMEWORK.md
+whitelist key | framework | Accepting only string keys that exist in a known table. | Any string argument. | remote validation | accept the upgrade id only if Upgrades[id] exists | aaa-kit/examples/framework-starter
+NaN guard | framework | Rejecting NaN and infinity in numeric input. | Any number from a client. | remote validation | reject v ~= v and math.abs(v) == math.huge | aaa-kit/examples/framework-starter
+rate limit | framework | Refusing requests that come faster than a set interval per player. | Remotes and actions. | debounce | rate-limit taps to 12.5 per second per player on the server | aaa-kit/examples/framework-starter
+debounce | framework | Ignoring repeat triggers within a short window. | Touches, clicks, remotes. | rate limit | debounce the touch per player for 0.5 s on the server | industry
+session lock | framework | Marking a save as owned by one server so two can't write it. | DataStore saves. | save reconcile | lock the save with the job id and refuse to write if another server holds it | aaa-kit/examples/framework-starter
+save reconcile | framework | Filling missing fields from the template when loading an old save. | Adding save fields. | session lock, save template | add the field to the template; reconcile fills old saves on load | aaa-kit/examples/framework-starter
+save template | framework | The default shape of a new save. | Save design. | save reconcile | add new fields only to the save template | aaa-kit/examples/framework-starter
+read-only session | framework | After a failed load, never save, so a bad load can't wipe good data. | DataStore errors. | session lock | on load failure mark the session read-only and warn | aaa-kit/examples/framework-starter
+receipt dedupe | framework | Recording PurchaseIds so a retried receipt isn't granted twice. | Developer products. | server authority | store PurchaseId in the save and return PurchaseGranted for duplicates | aaa-kit/.claude/skills/roblox-luau-standards
+string require | framework | require("./X") paths that work in Roblox and in lune. | Testable shared modules. | lune test | use string requires so lune can run the module | aaa-kit/docs/STYLE.md
+lune test | framework | A headless Luau test run with lune. | Pure logic. | determinism | add a lune test for every pure module before shipping | aaa-kit/tools/lib/t.luau
+compile check | framework | Compiling every Luau file to catch syntax errors without running. | Before every commit. | lune test | run lune run tools/check_luau.luau and require 0 failed | aaa-kit/tools/check_luau.luau
+golden frame | framework | A stored reference render that tests compare against. | Catching unintended visual changes. | determinism | compare the render against the golden frame checksum | cursed-survivors/docs/budgets.md
+CollectionService tag | framework | A label on instances used to bind components. | Attaching behaviour to instances. | component | tag the label CoinCounter and let the component bind to it | industry
+EditableImage | T6 engines | A Roblox image whose pixels code can write. | Pixel renderers and procedural textures. | owner buffer, WritePixelsBuffer | draw the frame into an EditableImage and upload once per frame | aaa-kit/.claude/skills/editable-image
+WritePixelsBuffer | T6 engines | The EditableImage call that uploads an RGBA buffer. | Pixel renderers. | EditableImage | upload the whole frame with one WritePixelsBuffer call | aaa-kit/.claude/skills/editable-image
+EditableMesh | T6 engines | A Roblox mesh whose vertices and triangles code can write. | Procedural geometry. | mesh LOD | build terrain chunks as EditableMeshes from a pure builder | aaa-kit/.claude/skills/editable-mesh
+UIStroke | T3 hud | A Roblox outline on UI elements. | Frames and text outlines. | rarity frame | outline the slot with a UIStroke coloured by rarity | industry
+UIGradient | T3 hud | A Roblox colour/transparency gradient on UI, rotatable and offsettable. | Sweeps and spins on UI. | rarity frame | tween the UIGradient Offset for a shine sweep every 2.5 s | industry
+SurfaceAppearance | T5 materials | Roblox PBR maps on a MeshPart. | 3D materials. | PBR | apply a SurfaceAppearance with metalness and roughness maps | industry
+pixel snapping | T6 engines | Drawing only at whole-pixel coordinates. | Hard-pixel art. | EditableImage | snap every sprite to integer pixels; no sub-pixel drawing | aaa-kit/.claude/skills/editable-image
+object pooling | all | Reusing objects instead of creating and destroying them. | Particles, projectiles, UI rows. | particle budget | pool projectiles: 200 preallocated, recycled on hit | industry

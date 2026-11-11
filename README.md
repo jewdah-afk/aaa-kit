@@ -37,11 +37,10 @@ See [docs/REPO-MAP.md](docs/REPO-MAP.md).
 ## Checks
 
 ```sh
-lune run tools/check_luau.luau .
-python3 tools/check_links.py && python3 tools/check_skills.py && python3 tools/check_lexicon.py
-node tools/check_examples.mjs
-lune run examples/framework-starter/tests/run.luau
+sh tools/check_all.sh
 ```
+
+That runs the Luau compile check, 14 lune test files, Selene, the link, skill, lexicon and hook checkers, and the web examples in headless Chromium.
 
 Lune 0.10.5 and Selene come from [rokit](https://github.com/rojo-rbx/rokit) (`rokit install`) or `cargo install lune --version 0.10.5 --locked`. Python 3 and Node 18+ cover the rest.
 

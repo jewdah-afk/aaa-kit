@@ -44,7 +44,7 @@ Tier key: **Hub** = shared knowledge, front door · **Game** = a shippable game 
 | Look archive | `cursed-survivors/docs/look/**` (before/after GIFs, render-stack notes) | `vfx`, `art-direction`, `editable-image` |
 | EditableImage renderer + tests | `cursed-survivors/src/client`, `tests/render`, `tests/fx` | `editable-image` (the reference implementation) |
 | Budgets, naming, decisions | `cursed-survivors/docs/budgets.md`, `naming.md`, `decisions.md` | `roblox-luau-standards`, `STYLE.md` |
-| Economy formulas, big numbers | `research-calculator/birb-data/` (formulas, EternityNum) | `game-economy` (rewritten generically) |
+| Economy formulas, big numbers | research-calculator `main` (remake data folder: formulas, EternityNum) | `game-economy` (rewritten generically) |
 | Genesis experiments | `WNGU` branch `claude/project-genesis-…` | `examples/`, `algorithms` |
 
 Not found as standalone folders: the Algorithm Lab, Material Codex, VFX Atlas and HUD Godrithms. VFX Atlas, Cel VFX Lab and Unreality Stack are embedded as deep labs inside the Living Effects Lab. `Artifacts/Algorithmic Idle/hud-godrithms` and `Artifacts/Cursed Survivors/cursed-algorithm-lab` are the closest matches in the vault. No standalone "Material Codex" folder exists: UNKNOWN — ask owner where it lives.

@@ -91,10 +91,18 @@ function Chain.distance(): Pass
 			for x = 0, w - 1 do
 				local i = y * w + x + 1
 				local best = d.v[i]
-				if x > 0 then best = math.min(best, at(x - 1, y) + 1) end
-				if y > 0 then best = math.min(best, at(x, y - 1) + 1) end
-				if x > 0 and y > 0 then best = math.min(best, at(x - 1, y - 1) + 1.4142) end
-				if x < w - 1 and y > 0 then best = math.min(best, at(x + 1, y - 1) + 1.4142) end
+				if x > 0 then
+					best = math.min(best, at(x - 1, y) + 1)
+				end
+				if y > 0 then
+					best = math.min(best, at(x, y - 1) + 1)
+				end
+				if x > 0 and y > 0 then
+					best = math.min(best, at(x - 1, y - 1) + 1.4142)
+				end
+				if x < w - 1 and y > 0 then
+					best = math.min(best, at(x + 1, y - 1) + 1.4142)
+				end
 				d.v[i] = best
 			end
 		end
@@ -102,10 +110,18 @@ function Chain.distance(): Pass
 			for x = w - 1, 0, -1 do
 				local i = y * w + x + 1
 				local best = d.v[i]
-				if x < w - 1 then best = math.min(best, at(x + 1, y) + 1) end
-				if y < h - 1 then best = math.min(best, at(x, y + 1) + 1) end
-				if x < w - 1 and y < h - 1 then best = math.min(best, at(x + 1, y + 1) + 1.4142) end
-				if x > 0 and y < h - 1 then best = math.min(best, at(x - 1, y + 1) + 1.4142) end
+				if x < w - 1 then
+					best = math.min(best, at(x + 1, y) + 1)
+				end
+				if y < h - 1 then
+					best = math.min(best, at(x, y + 1) + 1)
+				end
+				if x < w - 1 and y < h - 1 then
+					best = math.min(best, at(x + 1, y + 1) + 1.4142)
+				end
+				if x > 0 and y < h - 1 then
+					best = math.min(best, at(x - 1, y + 1) + 1.4142)
+				end
 				d.v[i] = best
 			end
 		end

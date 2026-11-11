@@ -1,0 +1,5467 @@
+{
+  "$schema": "./lexicon.schema.json",
+  "version": 1,
+  "count": 407,
+  "terms": [
+    {
+      "term": "loudness tier",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "One of six ranks (1 Moments … 6 Engines) that sets how loud an effect may be on screen.",
+      "use-when": "Deciding how much an effect may glow, move or cover.",
+      "pairs-with": [
+        "intensity ladder",
+        "pixel ownership",
+        "one loud element per panel"
+      ],
+      "prompt-phrase": "put this in loudness tier 2: bright on the onset frame, back to baseline within 12 frames",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "pixel ownership",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Every pixel has one owner rank (background < ambient < world < reward < threat < hero < UI < ceremony) and writes may only cover lower ranks.",
+      "use-when": "Deciding what may draw over what.",
+      "pairs-with": [
+        "owner buffer",
+        "loudness tier",
+        "protected region"
+      ],
+      "prompt-phrase": "stamp the effect at hero rank so it never covers threats, UI or ceremony pixels",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": true
+    },
+    {
+      "term": "owner buffer",
+      "tier": "T6 engines",
+      "domain": "hierarchy",
+      "meaning": "A byte per pixel recording which owner rank drew it this frame.",
+      "use-when": "Pixel renderers that need per-pixel draw rules.",
+      "pairs-with": [
+        "pixel ownership",
+        "EditableImage",
+        "CAN table"
+      ],
+      "prompt-phrase": "keep a u8 owner buffer cleared each frame and route every write through the owner rule",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "CAN table",
+      "tier": "T6 engines",
+      "domain": "hierarchy",
+      "meaning": "A lookup of which writer rank may paint over which destination rank.",
+      "use-when": "Centralising draw permissions for every FX write.",
+      "pairs-with": [
+        "owner buffer",
+        "pixel ownership"
+      ],
+      "prompt-phrase": "route all FX writes through one CAN[writer][dest] table instead of per-effect checks",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "intensity ladder",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "One game-state number from calm (0) to finale (5) that every visual layer reads to size its budget.",
+      "use-when": "Scaling spectacle with the situation.",
+      "pairs-with": [
+        "calm frame",
+        "hysteresis",
+        "intensity budget"
+      ],
+      "prompt-phrase": "drive bloom, particle caps and music level from the intensity rung, not per-effect logic",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": true
+    },
+    {
+      "term": "intensity budget",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "The knobs a rung allows: impact frames, ambient, particle scale, bloom, music level.",
+      "use-when": "Implementing the intensity ladder in a system.",
+      "pairs-with": [
+        "intensity ladder",
+        "hit-stop"
+      ],
+      "prompt-phrase": "read Intensity.budget(level) and skip impact frames when it says impact = false",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "calm rung",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Intensity 0: nothing near the player, menus at rest; ambient on, no impact frames.",
+      "use-when": "Defining the baseline look.",
+      "pairs-with": [
+        "intensity ladder",
+        "calm frame"
+      ],
+      "prompt-phrase": "at the calm rung keep music muffled and weapon ornament back",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "build rung",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Intensity 1: the crowd is growing; the celebration rung with full weapon ornament.",
+      "use-when": "Rewarding a strong build mid-run.",
+      "pairs-with": [
+        "intensity ladder",
+        "surge rung"
+      ],
+      "prompt-phrase": "let weapon trails run at full ornament on the build rung",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "surge rung",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Intensity 2: dense crowd near the player, a hostile shot near, or low HP.",
+      "use-when": "Danger moments that need clarity.",
+      "pairs-with": [
+        "intensity ladder",
+        "urgency beats rarity"
+      ],
+      "prompt-phrase": "on the surge rung turn ambient off and let HUD ornament wait",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "ceremony rung",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "Intensity 3: a level-up, chest or reward screen is open.",
+      "use-when": "Reward screens.",
+      "pairs-with": [
+        "reward sequencing",
+        "world dim"
+      ],
+      "prompt-phrase": "on the ceremony rung drop the world to the lowest band behind the reveal",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "boss rung",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "Intensity 4: a boss is on screen; impact on, ambient off, grade floor raised.",
+      "use-when": "Boss fights.",
+      "pairs-with": [
+        "intensity ladder",
+        "telegraph"
+      ],
+      "prompt-phrase": "on the boss rung raise the grade floor and allow impact frames",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "finale rung",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "Intensity 5: the final fight or countdown; everything allowed.",
+      "use-when": "The last minutes of a run.",
+      "pairs-with": [
+        "intensity ladder",
+        "impact frame"
+      ],
+      "prompt-phrase": "save the brightest grade and loudest music for the finale rung only",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "hysteresis",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Separate enter and exit thresholds so a state doesn't flicker at the boundary.",
+      "use-when": "Any visual state switched by a live number.",
+      "pairs-with": [
+        "intensity ladder",
+        "crowd LOD"
+      ],
+      "prompt-phrase": "enter at 12 nearby enemies, exit at 8, held 1 s, so the treatment doesn't flicker",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "calm frame",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A frame where nothing loops except the selection and slow ambient motion.",
+      "use-when": "Setting the baseline so peaks read.",
+      "pairs-with": [
+        "calm rung",
+        "recovery window"
+      ],
+      "prompt-phrase": "at rest nothing animates except the selected button's slow pulse",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "recovery window",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "The time after an event resolves for the screen to return to baseline (12 frames).",
+      "use-when": "Tuning effect tails.",
+      "pairs-with": [
+        "calm frame",
+        "event timeline"
+      ],
+      "prompt-phrase": "return the screen to baseline within 12 frames (200 ms) after the hit resolves",
+      "source": "vault/Notes/15 Attention System",
+      "starter": true
+    },
+    {
+      "term": "event timeline",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Baseline → anticipation → onset → active → resolution → recovery for every visible event.",
+      "use-when": "Planning an effect's timing.",
+      "pairs-with": [
+        "onset frame",
+        "anticipation",
+        "recovery window"
+      ],
+      "prompt-phrase": "write the effect as anticipation 0 frames, onset 2 frames, active 10, recovery 12",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "onset frame",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "The first 1–2 frames of an event; the brightest and most informative.",
+      "use-when": "Making hits read instantly.",
+      "pairs-with": [
+        "event timeline",
+        "impact flash"
+      ],
+      "prompt-phrase": "make the onset frame the brightest of the effect; everything after is dimmer",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "critical cue",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Information the player must get on time: hits on them, hostile shots, boss attacks, HP changes.",
+      "use-when": "Deciding what may never be delayed.",
+      "pairs-with": [
+        "decoration slot",
+        "urgency beats rarity"
+      ],
+      "prompt-phrase": "treat the hostile shot as a critical cue: it always draws on time, unclipped",
+      "source": "vault/Notes/15 Attention System",
+      "starter": true
+    },
+    {
+      "term": "decoration slot",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "One of a fixed number of places for decorative accents (6 world, 1 UI); losers are skipped, never delayed.",
+      "use-when": "Capping sparkle overload.",
+      "pairs-with": [
+        "critical cue",
+        "particle budget"
+      ],
+      "prompt-phrase": "cap decorations at 6 world slots; skip the 7th spark instead of queueing it",
+      "source": "vault/Notes/15 Attention System",
+      "starter": true
+    },
+    {
+      "term": "urgency beats rarity",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "When situations overlap, danger wins every channel over rarity or celebration.",
+      "use-when": "A pretty effect overlaps a threat.",
+      "pairs-with": [
+        "critical cue",
+        "protected region"
+      ],
+      "prompt-phrase": "even the Mythic aura drops its sparks inside a hostile shot's lane",
+      "source": "vault/Notes/15 Attention System",
+      "starter": true
+    },
+    {
+      "term": "protected region",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "A mask (hero, shots, close enemies, pickups, text) inside which decoration reduces itself.",
+      "use-when": "Keeping gameplay readable under spectacle.",
+      "pairs-with": [
+        "pixel ownership",
+        "urgency beats rarity"
+      ],
+      "prompt-phrase": "inside the hero's 2 px ring, effects drop one band and lose sparks",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "figure-ground gate",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A silhouette must be ≥ 2 luminance bands from its 1–2 px ring at the worst pixel.",
+      "use-when": "Checking any sprite or icon against its background.",
+      "pairs-with": [
+        "luminance band",
+        "thin ring",
+        "squint test"
+      ],
+      "prompt-phrase": "gate every enemy colour against the ground: at least 2 OKLab bands apart at the worst pixel",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "luminance band",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "One of 8 perceptual lightness steps (B0–B7) on OKLab L used to assign and check value.",
+      "use-when": "Value structure and banded lighting.",
+      "pairs-with": [
+        "figure-ground gate",
+        "OKLab"
+      ],
+      "prompt-phrase": "assign the world to bands B1–B3 and pickups to B4–B5",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "thin ring",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "A 1 px ring around the hero that darkens whatever is under it by 2 bands, never black.",
+      "use-when": "Keeping the hero findable without a heavy outline.",
+      "pairs-with": [
+        "figure-ground gate",
+        "silhouette"
+      ],
+      "prompt-phrase": "give the hero a 1 px 8-neighbour ring that shifts the ground down 2 bands",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "one loud element per panel",
+      "tier": "T3 hud",
+      "domain": "hierarchy",
+      "meaning": "A menu panel has exactly one element that draws the eye.",
+      "use-when": "Laying out cards, dialogs and shops.",
+      "pairs-with": [
+        "call to action",
+        "calm frame"
+      ],
+      "prompt-phrase": "on each shop card only the Buy button may animate or glow",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "colour job",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A meaningful hue carries one meaning only (gold currency, blue XP, red danger).",
+      "use-when": "Picking colours for anything that means something.",
+      "pairs-with": [
+        "currency gold",
+        "danger red",
+        "XP blue"
+      ],
+      "prompt-phrase": "use gold only for currency and the main call to action",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "currency gold",
+      "tier": "T3 hud",
+      "domain": "hierarchy",
+      "meaning": "#ffd24a, reserved for currency and the main call to action.",
+      "use-when": "Prices, coin counters, buy buttons.",
+      "pairs-with": [
+        "colour job",
+        "call to action"
+      ],
+      "prompt-phrase": "colour the price and Buy button currency gold; nothing else on the card is gold",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "danger red",
+      "tier": "T2 combat",
+      "domain": "hierarchy",
+      "meaning": "Red reserved for threats, damage taken and low HP.",
+      "use-when": "Hostile shots, damage numbers on the player, HP warnings.",
+      "pairs-with": [
+        "colour job",
+        "low-HP vignette"
+      ],
+      "prompt-phrase": "keep red for threats only; use bone white for \"new\" badges",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "XP blue",
+      "tier": "T3 hud",
+      "domain": "hierarchy",
+      "meaning": "Blue reserved for experience, XP gems and the XP bar.",
+      "use-when": "Progress toward levels.",
+      "pairs-with": [
+        "colour job",
+        "XP bar"
+      ],
+      "prompt-phrase": "XP gems and the XP bar are blue; nothing else is",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": false
+    },
+    {
+      "term": "rarity ladder",
+      "tier": "T5 materials",
+      "domain": "hierarchy",
+      "meaning": "Common → Uncommon → Rare → Epic → Legendary → Mythic → Secret, each adding one visual behaviour.",
+      "use-when": "Designing item tiers.",
+      "pairs-with": [
+        "rarity frame",
+        "rarity-as-material"
+      ],
+      "prompt-phrase": "each rarity adds exactly one behaviour: static, highlight, sweep, spin, sparks, rainbow, glitch",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "rarity-as-material",
+      "tier": "T5 materials",
+      "domain": "hierarchy",
+      "meaning": "Expressing rarity by surface: flat, satin, brushed, glass/gem, chrome/molten, holo, void.",
+      "use-when": "Items, icons and frames.",
+      "pairs-with": [
+        "rarity ladder",
+        "holo foil"
+      ],
+      "prompt-phrase": "map rarity to material: Rare brushed metal, Epic glass, Legendary chrome, Mythic holo",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "reward sequencing",
+      "tier": "T1 moments",
+      "domain": "hierarchy",
+      "meaning": "A reward hands attention along: container → item → identity → delta → continue.",
+      "use-when": "Reveal screens.",
+      "pairs-with": [
+        "skippable reveal",
+        "ceremony rung"
+      ],
+      "prompt-phrase": "sequence the reveal: crate shakes, item bursts, name stamps, stat delta, continue",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "crowd LOD",
+      "tier": "T6 engines",
+      "domain": "hierarchy",
+      "meaning": "Dense regions switch from sprites to aggregate glyphs before readability fails.",
+      "use-when": "Hundreds of enemies on screen.",
+      "pairs-with": [
+        "glyph density",
+        "hysteresis"
+      ],
+      "prompt-phrase": "collapse cells of 6+ enemies into density glyphs and restore at 3 or fewer",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "glyph density",
+      "tier": "T6 engines",
+      "domain": "hierarchy",
+      "meaning": "An ASCII ramp where density means count only: . : * # @.",
+      "use-when": "Aggregate crowd display.",
+      "pairs-with": [
+        "crowd LOD",
+        "glyph ramp"
+      ],
+      "prompt-phrase": "show crowd count with . for 3, : for 4–5, * for 6–7, # for 8–10, @ for 11+",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "attention channel",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "One of ten levers on attention: meaning, contrast, scale, detail, motion, occlusion, space, time, representation, sound.",
+      "use-when": "Diagnosing why something draws the eye.",
+      "pairs-with": [
+        "figure-ground gate",
+        "motion budget"
+      ],
+      "prompt-phrase": "check every attention channel, not just brightness, when an element draws too much eye",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "motion budget",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Caps on non-gameplay movers near the hero (≤ 3 per cell) and changed pixels (≤ 15 %).",
+      "use-when": "Busy backgrounds and auras.",
+      "pairs-with": [
+        "detail density",
+        "attention channel"
+      ],
+      "prompt-phrase": "near the hero allow at most 3 non-gameplay movers per 16×12 cell",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "detail density",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "How much edge and pattern sits in an area, independent of brightness.",
+      "use-when": "Ground textures eating outlines.",
+      "pairs-with": [
+        "motion budget",
+        "figure-ground gate"
+      ],
+      "prompt-phrase": "keep edge density under 25 % in the ring around protected silhouettes",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "squint test",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "Blur or squint at a frame to see only value and big shapes.",
+      "use-when": "Reviewing readability fast.",
+      "pairs-with": [
+        "figure-ground gate",
+        "silhouette read"
+      ],
+      "prompt-phrase": "squint-test the frame: hero, threats and lanes must survive a 4 px blur",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tier view",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A debug render that colours each pixel by its owner rank.",
+      "use-when": "Auditing ownership and loudness.",
+      "pairs-with": [
+        "owner buffer",
+        "saliency map"
+      ],
+      "prompt-phrase": "render a tier view where each owner rank has a flat colour to audit coverage",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "saliency map",
+      "tier": "all",
+      "domain": "hierarchy",
+      "meaning": "A computed map of where the eye is likely to go first.",
+      "use-when": "Finding elements that draw more attention than their tier allows.",
+      "pairs-with": [
+        "tier view",
+        "squint test"
+      ],
+      "prompt-phrase": "compare the saliency map with the tier view and fix decor that outranks pickups",
+      "source": "vault/Notes/16 Hierarchy Codex",
+      "starter": false
+    },
+    {
+      "term": "HUD",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The always-on layer of status and actions over gameplay.",
+      "use-when": "Any in-game status display.",
+      "pairs-with": [
+        "safe area",
+        "one loud element per panel"
+      ],
+      "prompt-phrase": "keep the HUD still at rest; animate only what just changed",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "safe area",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Screen region not covered by notches, rounded corners or system bars.",
+      "use-when": "Phone layouts.",
+      "pairs-with": [
+        "thumb zone",
+        "HUD"
+      ],
+      "prompt-phrase": "inset the HUD by the device safe area and keep 12 px margins",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "thumb zone",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Areas a phone player's thumbs cover (bottom corners) or reach easily.",
+      "use-when": "Placing buttons and status.",
+      "pairs-with": [
+        "safe area",
+        "touch target"
+      ],
+      "prompt-phrase": "put actions in the bottom-right thumb zone and status top-left",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "touch target",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The tappable area of a control; ≥ 44 px on phones.",
+      "use-when": "Buttons and icons on mobile.",
+      "pairs-with": [
+        "thumb zone"
+      ],
+      "prompt-phrase": "make every touch target at least 44×44 px even if the icon is smaller",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tabular figures",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Digits of equal width so counters don't wobble when values change.",
+      "use-when": "Any changing number.",
+      "pairs-with": [
+        "odometer counter",
+        "big-number suffix"
+      ],
+      "prompt-phrase": "use tabular-width digits so the counter doesn't jitter as it rolls",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "big-number suffix",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Abbreviating with K, M, B, T, Qa… and three significant digits.",
+      "use-when": "Currency and scores.",
+      "pairs-with": [
+        "odometer counter",
+        "number floor"
+      ],
+      "prompt-phrase": "show 3 significant digits plus a suffix: 1.23K, 45.6M",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": true
+    },
+    {
+      "term": "number floor",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Rounding displayed values down so the HUD never shows more than the player has.",
+      "use-when": "Currency displays.",
+      "pairs-with": [
+        "big-number suffix"
+      ],
+      "prompt-phrase": "floor displayed currency so 1,999 shows 1.99K, not 2.00K",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "odometer counter",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A counter whose changed digits roll vertically into place.",
+      "use-when": "Coins, scores, big numbers.",
+      "pairs-with": [
+        "tabular figures",
+        "count-up"
+      ],
+      "prompt-phrase": "roll only the changed digits over ~140 ms with an ease-out",
+      "source": "Living Effects Lab",
+      "starter": true
+    },
+    {
+      "term": "count-up",
+      "tier": "T1 moments",
+      "domain": "ui",
+      "meaning": "Animating a number from old to new value, often exponentially for big jumps.",
+      "use-when": "Payouts and results screens.",
+      "pairs-with": [
+        "odometer counter",
+        "tier threshold burst"
+      ],
+      "prompt-phrase": "count up exponentially over 1.2 s and burst a ring at each rarity threshold",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "ghost bar",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A delayed second fill that trails a bar's losses so damage reads as a chunk.",
+      "use-when": "HP, shields, boss bars.",
+      "pairs-with": [
+        "eased fill",
+        "damage number"
+      ],
+      "prompt-phrase": "trail HP loss with a pale ghost bar that catches up after 400 ms",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "eased fill",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A bar that animates to its target with easing and a glowing leading edge.",
+      "use-when": "XP and progress bars.",
+      "pairs-with": [
+        "ghost bar",
+        "leading-edge glow"
+      ],
+      "prompt-phrase": "ease the fill over 250 ms with a soft glow on the leading edge",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "leading-edge glow",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A bright cap on the moving end of a fill.",
+      "use-when": "Progress that should feel alive.",
+      "pairs-with": [
+        "eased fill"
+      ],
+      "prompt-phrase": "add a 6 px glow on the bar's leading edge only while it moves",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "radial cooldown",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A pie-sweep darkening an ability icon until it's ready.",
+      "use-when": "Ability bars.",
+      "pairs-with": [
+        "ready flash"
+      ],
+      "prompt-phrase": "darken the icon with a clockwise radial sweep and show seconds under 10 s",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "ready flash",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A one-frame white flash plus ring when a cooldown completes.",
+      "use-when": "Telling the player an ability is back.",
+      "pairs-with": [
+        "radial cooldown"
+      ],
+      "prompt-phrase": "when the cooldown ends, flash the icon white for 1 frame and expand a ring",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "combo meter",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A streak counter climbing named tiers with a decay bar.",
+      "use-when": "Hit streaks and chains.",
+      "pairs-with": [
+        "combo tier",
+        "decay bar"
+      ],
+      "prompt-phrase": "climb NICE → GREAT → INSANE → GODLIKE with a decay bar that breaks the streak",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "combo tier",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A named threshold of a combo meter with its own look.",
+      "use-when": "Escalating streak feedback.",
+      "pairs-with": [
+        "combo meter",
+        "rarity ladder"
+      ],
+      "prompt-phrase": "give each combo tier its own frame colour from the rarity ladder",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "decay bar",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A shrinking bar showing time left before a streak or buff ends.",
+      "use-when": "Combos, buffs, timers.",
+      "pairs-with": [
+        "combo meter"
+      ],
+      "prompt-phrase": "show a thin decay bar under the combo that refills on every hit",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "reward feed",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Stacked toasts announcing gains, fading after a few seconds.",
+      "use-when": "Loot and kill logs.",
+      "pairs-with": [
+        "toast merge"
+      ],
+      "prompt-phrase": "stack at most 4 toasts, fade at 2.5 s, merge repeats into ×N",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "toast merge",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Combining repeated notifications into one with a count.",
+      "use-when": "Spammy feeds.",
+      "pairs-with": [
+        "reward feed"
+      ],
+      "prompt-phrase": "merge repeated toasts into one line: \"+3 Gems ×4\"",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "damage number",
+      "tier": "T2 combat",
+      "domain": "ui",
+      "meaning": "A number popping from a hit showing damage dealt.",
+      "use-when": "Combat feedback.",
+      "pairs-with": [
+        "crit number",
+        "number cap"
+      ],
+      "prompt-phrase": "pop damage numbers at 1.4× scale to 1×, drift up 20 px, fade by 600 ms",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "crit number",
+      "tier": "T2 combat",
+      "domain": "ui",
+      "meaning": "A larger, outlined, shaking damage number for critical hits.",
+      "use-when": "Making crits read.",
+      "pairs-with": [
+        "damage number"
+      ],
+      "prompt-phrase": "crits pop at 1.8×, add a 2 px outline and a 3-frame shake",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "number cap",
+      "tier": "T2 combat",
+      "domain": "ui",
+      "meaning": "A limit on simultaneous damage numbers with merging beyond it.",
+      "use-when": "Dense combat.",
+      "pairs-with": [
+        "damage number",
+        "decoration slot"
+      ],
+      "prompt-phrase": "cap damage numbers at 12 and merge the rest into running totals",
+      "source": "aaa-kit/.claude/skills/ui-hud",
+      "starter": false
+    },
+    {
+      "term": "low-HP vignette",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A pulsing red edge and heartbeat when health is low.",
+      "use-when": "Danger state.",
+      "pairs-with": [
+        "danger red",
+        "surge rung"
+      ],
+      "prompt-phrase": "below 30 % HP pulse a double-beat red vignette at the screen edge",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "luck gauge",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A segmented boost meter with a spring needle that ignites at max.",
+      "use-when": "Boost and luck mechanics.",
+      "pairs-with": [
+        "spring animation"
+      ],
+      "prompt-phrase": "spring the gauge needle with overshoot and ignite the dial at max",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "rarity frame",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "An inventory slot border styled by rarity.",
+      "use-when": "Inventories and shops.",
+      "pairs-with": [
+        "rarity ladder",
+        "UIStroke"
+      ],
+      "prompt-phrase": "style each slot border by rarity: static, sweep, spin, sparks, rainbow, glitch",
+      "source": "Living Effects Lab",
+      "starter": true
+    },
+    {
+      "term": "call to action",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The single primary action on a screen, styled loudest.",
+      "use-when": "Buttons on shops and dialogs.",
+      "pairs-with": [
+        "one loud element per panel",
+        "currency gold"
+      ],
+      "prompt-phrase": "make Buy the call to action: gold fill, largest, the only animated element",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "button press",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Feedback when a button is pressed: scale down, then release overshoot.",
+      "use-when": "Any button.",
+      "pairs-with": [
+        "spring animation",
+        "hover state"
+      ],
+      "prompt-phrase": "press scales the button to 0.94 in 60 ms and releases with a 1.04 overshoot",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "hover state",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A subtle change on pointer-over (lift, brighten, outline).",
+      "use-when": "Desktop UI.",
+      "pairs-with": [
+        "button press"
+      ],
+      "prompt-phrase": "on hover lift the button 2 px and brighten its outline one band",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "focus ring",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A visible outline on the keyboard- or gamepad-focused element.",
+      "use-when": "Controller and keyboard navigation.",
+      "pairs-with": [
+        "hover state"
+      ],
+      "prompt-phrase": "show a 2 px bone-white focus ring on the selected element",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "modal",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A screen layer that blocks input to what's behind it until dismissed.",
+      "use-when": "Confirmations, reward screens.",
+      "pairs-with": [
+        "world dim"
+      ],
+      "prompt-phrase": "open purchases in a modal and dim the world one band behind it",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "world dim",
+      "tier": "T1 moments",
+      "domain": "ui",
+      "meaning": "Darkening the game world behind a UI or ceremony.",
+      "use-when": "Focusing attention on a reveal or menu.",
+      "pairs-with": [
+        "modal",
+        "ceremony rung"
+      ],
+      "prompt-phrase": "dim the world to the lowest band while the reveal plays",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": false
+    },
+    {
+      "term": "juice",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Small, layered feedback (scale, sound, particles, shake) that makes actions feel good.",
+      "use-when": "Polishing interactions.",
+      "pairs-with": [
+        "button press",
+        "hit-stop"
+      ],
+      "prompt-phrase": "add juice: 120 ms pop, a click sound and 6 sparks on buy",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "diegetic UI",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Interface that exists inside the game world (a lantern for health, a coin pile).",
+      "use-when": "Immersive HUDs.",
+      "pairs-with": [
+        "HUD"
+      ],
+      "prompt-phrase": "show health as the hero's lantern brightness, with the number small in the corner",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "nine-slice",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Scaling an image so corners stay fixed and edges stretch.",
+      "use-when": "Panels and frames at any size.",
+      "pairs-with": [
+        "UIStroke"
+      ],
+      "prompt-phrase": "build panels with nine-slice images so corners stay crisp at every size",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tween",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "An interpolation of a property over time with an easing curve.",
+      "use-when": "Any UI motion.",
+      "pairs-with": [
+        "easing curve"
+      ],
+      "prompt-phrase": "tween position over 180 ms with an ease-out cubic",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "easing curve",
+      "tier": "all",
+      "domain": "ui",
+      "meaning": "A function shaping motion over time (ease-out, back, elastic).",
+      "use-when": "Any animation.",
+      "pairs-with": [
+        "tween",
+        "overshoot"
+      ],
+      "prompt-phrase": "use ease-out cubic for arrivals and ease-in for exits",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "overshoot",
+      "tier": "all",
+      "domain": "ui",
+      "meaning": "Going slightly past the target before settling.",
+      "use-when": "Snappy, physical-feeling motion.",
+      "pairs-with": [
+        "easing curve",
+        "spring animation"
+      ],
+      "prompt-phrase": "land the card with a 6 % overshoot and settle in 120 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "spring animation",
+      "tier": "all",
+      "domain": "ui",
+      "meaning": "Motion driven by a damped spring rather than a fixed curve.",
+      "use-when": "Interactive, interruptible motion.",
+      "pairs-with": [
+        "overshoot"
+      ],
+      "prompt-phrase": "drive the panel with a spring: stiffness 300, damping 25",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "stagger",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Starting a list of animations with small delays between items.",
+      "use-when": "Lists and grids appearing.",
+      "pairs-with": [
+        "tween"
+      ],
+      "prompt-phrase": "stagger card entrances by 40 ms each, max 300 ms total",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "screen transition",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The animation between two screens (wipe, dissolve, iris).",
+      "use-when": "Menu flow.",
+      "pairs-with": [
+        "iris wipe"
+      ],
+      "prompt-phrase": "transition screens with a 250 ms iris wipe, never a hard cut",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "iris wipe",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A circular reveal or close transition.",
+      "use-when": "Scene changes.",
+      "pairs-with": [
+        "screen transition"
+      ],
+      "prompt-phrase": "close the old screen with an iris wipe centred on the button pressed",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tooltip",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A small panel explaining an element on hover or long-press.",
+      "use-when": "Stats and icons.",
+      "pairs-with": [
+        "long-press"
+      ],
+      "prompt-phrase": "show full numbers and stats in a tooltip on long-press",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "long-press",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Holding a touch to reveal secondary information.",
+      "use-when": "Phone detail views.",
+      "pairs-with": [
+        "tooltip"
+      ],
+      "prompt-phrase": "long-press a counter to show the exact value with commas",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "badge",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A small marker on an icon (new, count, alert).",
+      "use-when": "Notifications.",
+      "pairs-with": [
+        "colour job"
+      ],
+      "prompt-phrase": "mark new items with a bone-white dot, not red",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "progress ring",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A circular progress indicator.",
+      "use-when": "Timers and charging.",
+      "pairs-with": [
+        "radial cooldown"
+      ],
+      "prompt-phrase": "show charge as a progress ring that fills clockwise",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "inventory grid",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A grid of item slots.",
+      "use-when": "Inventories and collections.",
+      "pairs-with": [
+        "rarity frame"
+      ],
+      "prompt-phrase": "sort the inventory grid by rarity, loudest top-left",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "XP bar",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The bar showing progress to the next level.",
+      "use-when": "Levelling.",
+      "pairs-with": [
+        "XP blue",
+        "eased fill",
+        "level-up"
+      ],
+      "prompt-phrase": "fill the XP bar in XP blue with an eased leading edge; burst at full",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "HP bar",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "The player's or an enemy's health display.",
+      "use-when": "Combat status.",
+      "pairs-with": [
+        "ghost bar",
+        "danger red"
+      ],
+      "prompt-phrase": "show HP as a bar with a ghost bar trailing losses",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "boss bar",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A wide health bar for a boss, with phase markers.",
+      "use-when": "Boss fights.",
+      "pairs-with": [
+        "HP bar",
+        "boss rung"
+      ],
+      "prompt-phrase": "show the boss bar top-centre with ticks at each phase threshold",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "minimap",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A small overview map.",
+      "use-when": "Navigation.",
+      "pairs-with": [
+        "landmark"
+      ],
+      "prompt-phrase": "show landmarks and the player arrow on a minimap, nothing else",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "fog of war",
+      "tier": "T4 world",
+      "domain": "ui",
+      "meaning": "Hiding unexplored or out-of-sight areas.",
+      "use-when": "Exploration and strategy.",
+      "pairs-with": [
+        "minimap"
+      ],
+      "prompt-phrase": "reveal fog of war in a soft-edged radius around the player",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "off-screen indicator",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "An arrow at the screen edge pointing to something off screen.",
+      "use-when": "Objectives and threats.",
+      "pairs-with": [
+        "telegraph"
+      ],
+      "prompt-phrase": "point an edge arrow at the off-screen boss, red only for threats",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "quest tracker",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A compact list of current goals.",
+      "use-when": "Guiding players.",
+      "pairs-with": [
+        "one loud element per panel"
+      ],
+      "prompt-phrase": "track one active quest at a time with a progress count",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "notification dot",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "A small dot showing something new in a menu.",
+      "use-when": "Menu discoverability.",
+      "pairs-with": [
+        "badge"
+      ],
+      "prompt-phrase": "show a bone-white notification dot on tabs with unseen items",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "settings menu",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "Options for audio, graphics, controls and accessibility.",
+      "use-when": "Every game.",
+      "pairs-with": [
+        "reduced motion"
+      ],
+      "prompt-phrase": "include reduced motion, music, SFX and render quality in settings",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "shop card",
+      "tier": "T3 hud",
+      "domain": "ui",
+      "meaning": "One purchasable item's tile: icon, name, price and buy button.",
+      "use-when": "Shops.",
+      "pairs-with": [
+        "call to action",
+        "rarity frame"
+      ],
+      "prompt-phrase": "build the shop card: rarity frame, icon, name, gold price, one Buy button",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "reveal",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "The moment the player learns what they got.",
+      "use-when": "Any drop or unlock.",
+      "pairs-with": [
+        "reward sequencing",
+        "anticipation"
+      ],
+      "prompt-phrase": "build anticipation for 0.6 s, then reveal on a hit with a burst",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "anticipation",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A wind-up before an event that tells the player something is coming.",
+      "use-when": "Reveals, attacks, big hits.",
+      "pairs-with": [
+        "reveal",
+        "telegraph"
+      ],
+      "prompt-phrase": "add 0.4 s of anticipation: charge glow builds, sound rises",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "charge-up",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A building glow and sound before a reveal or attack.",
+      "use-when": "Summons and big attacks.",
+      "pairs-with": [
+        "anticipation",
+        "tier tell"
+      ],
+      "prompt-phrase": "charge up for 0.8 s with particles pulled inward",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "tier tell",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A colour or effect that hints at rarity one beat before the reveal.",
+      "use-when": "Gacha and chest reveals.",
+      "pairs-with": [
+        "charge-up",
+        "rarity ladder"
+      ],
+      "prompt-phrase": "tint the charge-up by tier one beat before the item appears",
+      "source": "aaa-kit/.claude/skills/reward-moments",
+      "starter": false
+    },
+    {
+      "term": "gacha beam",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A beam that climbs through rarity tiers before settling on the result.",
+      "use-when": "Summons and pulls.",
+      "pairs-with": [
+        "tier tell",
+        "reveal"
+      ],
+      "prompt-phrase": "climb the beam through tier colours, pausing a beat at each threshold passed",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "RNG reel",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A strip of items that decelerates onto the result.",
+      "use-when": "Crate and egg opening.",
+      "pairs-with": [
+        "near-miss",
+        "decide-then-animate"
+      ],
+      "prompt-phrase": "spin a reel that eases out and lands on the pre-rolled result with a small overshoot",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "near-miss",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Showing the next tier up right beside the landing slot.",
+      "use-when": "Building tension honestly.",
+      "pairs-with": [
+        "RNG reel"
+      ],
+      "prompt-phrase": "show a real higher-tier item one slot past the landing",
+      "source": "aaa-kit/.claude/skills/reward-moments",
+      "starter": false
+    },
+    {
+      "term": "decide-then-animate",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Roll the result on the server first; the animation only reveals it.",
+      "use-when": "Every RNG moment.",
+      "pairs-with": [
+        "RNG reel",
+        "server authority"
+      ],
+      "prompt-phrase": "roll on the server, send the result, then build the reel to land on it",
+      "source": "aaa-kit/.claude/skills/reward-moments",
+      "starter": true
+    },
+    {
+      "term": "skippable reveal",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Any input jumps the reveal to its final state.",
+      "use-when": "All reward moments.",
+      "pairs-with": [
+        "reward sequencing"
+      ],
+      "prompt-phrase": "a tap skips to the final state and restores the world",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": true
+    },
+    {
+      "term": "card flip",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A card rotating from back to face, often with rays behind it.",
+      "use-when": "Card and pet reveals.",
+      "pairs-with": [
+        "light rays",
+        "reveal"
+      ],
+      "prompt-phrase": "flip the card over 300 ms with rarity rays spinning behind the face",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "chest burst",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A chest lid pops, rays spin out and coins arc under gravity.",
+      "use-when": "Chest opening.",
+      "pairs-with": [
+        "coin arc",
+        "light rays"
+      ],
+      "prompt-phrase": "pop the lid, spin rays and arc 20 coins under gravity into the counter",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "coin arc",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Coins thrown in parabolas that magnetise into the counter.",
+      "use-when": "Payouts.",
+      "pairs-with": [
+        "chest burst",
+        "magnet pickup"
+      ],
+      "prompt-phrase": "arc coins out, bounce once, then magnetise into the coin counter",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "light rays",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Rotating rays behind a revealed item.",
+      "use-when": "Legendary+ reveals.",
+      "pairs-with": [
+        "card flip",
+        "chest burst"
+      ],
+      "prompt-phrase": "spin 12 soft rays behind the item at 20°/s, tinted by rarity",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "level-up",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "The moment a level is gained: bar fills, bursts, number stamps.",
+      "use-when": "Progression.",
+      "pairs-with": [
+        "eased fill",
+        "stamp"
+      ],
+      "prompt-phrase": "fill the XP bar, burst at full, stamp the new level number",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "stamp",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A number or word slamming in at large scale then settling.",
+      "use-when": "Level numbers, titles.",
+      "pairs-with": [
+        "level-up",
+        "hit-stop"
+      ],
+      "prompt-phrase": "stamp the level number in at 2× scale with a 3-frame hold",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "rebirth implosion",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A runaway number collapses, a shockwave resets the screen and the multiplier climbs.",
+      "use-when": "Prestige resets.",
+      "pairs-with": [
+        "shockwave",
+        "prestige"
+      ],
+      "prompt-phrase": "collapse the counter into a point, fire a shockwave, then stamp the new multiplier",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "portal backdrop",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A swirling vortex behind a top-tier reveal.",
+      "use-when": "Mythic reveals.",
+      "pairs-with": [
+        "gravitational lens",
+        "reveal"
+      ],
+      "prompt-phrase": "open a swirling portal behind Mythic reveals only",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "particle text morph",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "Hundreds of particles springing between words.",
+      "use-when": "Banners and announcements.",
+      "pairs-with": [
+        "stamp"
+      ],
+      "prompt-phrase": "morph 900 particles from the old word to the new banner",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "tier threshold burst",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A ring burst each time a count-up crosses a rarity threshold.",
+      "use-when": "Count-ups on rewards.",
+      "pairs-with": [
+        "count-up"
+      ],
+      "prompt-phrase": "burst a ring and shift colour each time the count passes a tier",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "purchase moment",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A short celebration confirming a purchase.",
+      "use-when": "Shops.",
+      "pairs-with": [
+        "call to action",
+        "coin arc"
+      ],
+      "prompt-phrase": "after buying, play a 0.8 s moment: item pops into its slot, coins fly out",
+      "source": "aaa-kit/.claude/skills/prompt-amplifier",
+      "starter": false
+    },
+    {
+      "term": "daily reward",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A login reward shown as a sequence of claimable days.",
+      "use-when": "Retention screens.",
+      "pairs-with": [
+        "reward sequencing"
+      ],
+      "prompt-phrase": "show 7 day tiles; today's pulses; claiming plays a short reveal",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "pity timer",
+      "tier": "T1 moments",
+      "domain": "reward",
+      "meaning": "A guarantee that raises odds or forces a high tier after N misses.",
+      "use-when": "Gacha fairness.",
+      "pairs-with": [
+        "decide-then-animate"
+      ],
+      "prompt-phrase": "guarantee an Epic within 50 pulls and show the pity counter",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "hit-stop",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Freezing gameplay for a few frames on impact.",
+      "use-when": "Making hits feel heavy.",
+      "pairs-with": [
+        "screen shake",
+        "impact flash",
+        "intensity budget"
+      ],
+      "prompt-phrase": "add a 2-frame hit-stop on hits and 6 frames on kills",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "screen shake",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Offsetting the camera on impact.",
+      "use-when": "Impacts and explosions.",
+      "pairs-with": [
+        "trauma",
+        "hit-stop"
+      ],
+      "prompt-phrase": "add a 6 px screen shake that decays over 120 ms",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "trauma",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A 0–1 value driving shake as trauma squared, decaying linearly.",
+      "use-when": "Stacking multiple hits into shake.",
+      "pairs-with": [
+        "screen shake"
+      ],
+      "prompt-phrase": "add 0.35 trauma per hit; shake = 6 px × trauma², decaying in 450 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "impact flash",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A 1–2 frame white overlay on the struck target.",
+      "use-when": "Confirming a hit.",
+      "pairs-with": [
+        "onset frame",
+        "hit-stop"
+      ],
+      "prompt-phrase": "flash the target white for 1 frame on hit",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "impact frame",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A held, high-contrast inverted frame on a huge hit, anime-style.",
+      "use-when": "Boss hits and finales.",
+      "pairs-with": [
+        "boss rung",
+        "hit-stop"
+      ],
+      "prompt-phrase": "on the boss's final hit show 2 inverted impact frames before colour returns",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "impact ring",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "An expanding ring at the hit point.",
+      "use-when": "Showing where a hit landed.",
+      "pairs-with": [
+        "shockwave"
+      ],
+      "prompt-phrase": "expand a 2 px ring from the hit point to 24 px over 150 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "shockwave",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "An expanding ring that flashes and pushes particles outward.",
+      "use-when": "Nukes and screen clears.",
+      "pairs-with": [
+        "impact ring",
+        "distortion"
+      ],
+      "prompt-phrase": "fire a shockwave that shoves every particle outward and flashes the screen 30 %",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "distortion",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Bending the image around an effect (heat haze, shockwave refraction).",
+      "use-when": "Big explosions and heat.",
+      "pairs-with": [
+        "shockwave",
+        "refraction"
+      ],
+      "prompt-phrase": "distort the background in a ring behind the shockwave",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "muzzle flash",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A 1–2 frame burst of light at a weapon's barrel.",
+      "use-when": "Shooting.",
+      "pairs-with": [
+        "onset frame"
+      ],
+      "prompt-phrase": "show a 2-frame muzzle flash and a 1-frame light pop",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "trail",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A fading ribbon behind a moving object.",
+      "use-when": "Swings, projectiles, dashes.",
+      "pairs-with": [
+        "swing smear",
+        "ribbon"
+      ],
+      "prompt-phrase": "trail the blade with a ribbon that fades over 120 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "swing smear",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A stretched arc drawn along a melee swing's path.",
+      "use-when": "Melee attacks.",
+      "pairs-with": [
+        "trail",
+        "cel VFX"
+      ],
+      "prompt-phrase": "draw a 3-frame swing smear following the blade arc",
+      "source": "vault/Notes/22 Cel VFX",
+      "starter": false
+    },
+    {
+      "term": "cel VFX",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Hand-drawn-style effects with flat colour shapes and hard edges.",
+      "use-when": "Stylised games.",
+      "pairs-with": [
+        "swing smear",
+        "toon ramp"
+      ],
+      "prompt-phrase": "use cel VFX: flat colour bursts with 2–3 tones and hard edges",
+      "source": "vault/Notes/22 Cel VFX",
+      "starter": false
+    },
+    {
+      "term": "branching lightning",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Bolts built by midpoint displacement with forks.",
+      "use-when": "Chain lightning.",
+      "pairs-with": [
+        "midpoint displacement",
+        "glow"
+      ],
+      "prompt-phrase": "strike with a midpoint-displaced bolt, two forks and a 1-frame screen flash",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "chain lightning",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Lightning jumping from target to target.",
+      "use-when": "Multi-target attacks.",
+      "pairs-with": [
+        "branching lightning"
+      ],
+      "prompt-phrase": "chain to 4 targets within 120 px, 60 ms per jump",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ember dissolve",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A noise-threshold burn-away with a glowing edge.",
+      "use-when": "Death and despawn.",
+      "pairs-with": [
+        "dissolve threshold",
+        "value noise"
+      ],
+      "prompt-phrase": "dissolve the corpse with noise and a 2 px glowing ember edge over 400 ms",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "dissolve threshold",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A rising cutoff on a noise texture that removes pixels below it.",
+      "use-when": "Any dissolve.",
+      "pairs-with": [
+        "ember dissolve"
+      ],
+      "prompt-phrase": "raise the dissolve threshold from 0 to 1 over 0.4 s",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "shatter",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Splitting a surface into triangles that fly from the impact.",
+      "use-when": "Breaking shields and glass.",
+      "pairs-with": [
+        "Voronoi",
+        "impact ring"
+      ],
+      "prompt-phrase": "shatter the shield into jittered triangles flying from the hit point",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "aura",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A persistent effect around a character showing a passive state.",
+      "use-when": "Buffs and passives.",
+      "pairs-with": [
+        "protected region"
+      ],
+      "prompt-phrase": "breathe a cellular-automaton aura ring around the hero, 30 % alpha",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "time freeze",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Halting motion with a cold tint and a sweeping clock hand.",
+      "use-when": "Stopwatch and freeze powers.",
+      "pairs-with": [
+        "hit-stop"
+      ],
+      "prompt-phrase": "freeze the world, tint it cold, sweep a clock hand over 1 s",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "magnet vortex",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Pickups spiralling into a point with stretched streaks.",
+      "use-when": "Collecting and magnets.",
+      "pairs-with": [
+        "magnet pickup"
+      ],
+      "prompt-phrase": "spiral pickups into the player with motion-stretched streaks",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "magnet pickup",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Pickups accelerating toward the collector once in range.",
+      "use-when": "XP gems and coins.",
+      "pairs-with": [
+        "magnet vortex",
+        "coin arc"
+      ],
+      "prompt-phrase": "accelerate gems toward the player within 80 px, ease-in, arrive in 0.3 s",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "plasma orb",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Crawling noise inside a glass sphere.",
+      "use-when": "Charge-ups and energy items.",
+      "pairs-with": [
+        "charge-up",
+        "glass"
+      ],
+      "prompt-phrase": "fill the orb with crawling plasma noise and a Fresnel glass rim",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "glyph rain",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Falling glyph columns with bright heads and fading tails.",
+      "use-when": "Digital zones.",
+      "pairs-with": [
+        "glyph ramp"
+      ],
+      "prompt-phrase": "rain glyph columns with bright heads and 12-glyph fading tails",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "telegraph",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A warning shape showing where an attack will land.",
+      "use-when": "Boss and enemy attacks.",
+      "pairs-with": [
+        "anticipation",
+        "danger red"
+      ],
+      "prompt-phrase": "draw the attack's real area in red 0.6 s before it lands, filling as it charges",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "kill chain",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Short arcs linking consecutive kills across a crowd.",
+      "use-when": "Crowd clears.",
+      "pairs-with": [
+        "branching lightning",
+        "decoration slot"
+      ],
+      "prompt-phrase": "link each kill to the next within 80 px with a short arc",
+      "source": "cursed-survivors/docs/look",
+      "starter": false
+    },
+    {
+      "term": "bloom",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "Bright areas bleeding light into their surroundings.",
+      "use-when": "True light sources.",
+      "pairs-with": [
+        "glow",
+        "intensity budget"
+      ],
+      "prompt-phrase": "bloom only true emitters: threshold 0.9, intensity from the rung",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "glow",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "A soft halo around a bright shape.",
+      "use-when": "Emitters and active states.",
+      "pairs-with": [
+        "bloom",
+        "SDF glow"
+      ],
+      "prompt-phrase": "add a soft glow only while the item is active",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "additive blending",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "Adding colour values together so overlaps get brighter.",
+      "use-when": "Light, fire, sparks.",
+      "pairs-with": [
+        "glow"
+      ],
+      "prompt-phrase": "draw sparks with additive blending so overlaps brighten",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "particle budget",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "A cap on live particles per system and per screen.",
+      "use-when": "Performance and clarity.",
+      "pairs-with": [
+        "decoration slot",
+        "intensity budget"
+      ],
+      "prompt-phrase": "cap the burst at 40 particles, scaled by the rung's particle multiplier",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "burst emit",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "Emitting a fixed number of particles at once instead of a stream.",
+      "use-when": "Impacts and pickups.",
+      "pairs-with": [
+        "particle budget"
+      ],
+      "prompt-phrase": "emit 12 particles in one burst instead of a continuous emitter",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "sub-emitter",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "A particle that spawns its own particles (sparks from a spark).",
+      "use-when": "Fireworks and debris.",
+      "pairs-with": [
+        "burst emit"
+      ],
+      "prompt-phrase": "give each firework shell a sub-emitter of 8 sparks on death",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "motion blur",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "Stretching a fast object along its motion.",
+      "use-when": "Fast projectiles and pickups.",
+      "pairs-with": [
+        "trail"
+      ],
+      "prompt-phrase": "stretch fast sprites along velocity by up to 3× their length",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "afterimage",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Fading copies of a sprite along its path.",
+      "use-when": "Dashes and teleports.",
+      "pairs-with": [
+        "trail"
+      ],
+      "prompt-phrase": "leave 4 afterimages 30 ms apart that fade over 150 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "dust puff",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Small soft clouds where something lands or turns.",
+      "use-when": "Grounding movement.",
+      "pairs-with": [
+        "burst emit"
+      ],
+      "prompt-phrase": "puff 3 dust sprites on landing and sharp turns",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "debris",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Small pieces flying from an impact under gravity.",
+      "use-when": "Breakables and explosions.",
+      "pairs-with": [
+        "sub-emitter"
+      ],
+      "prompt-phrase": "throw 6 debris chips with gravity and one bounce",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ribbon",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A strip of geometry following a path, textured and faded.",
+      "use-when": "Trails, beams, banners.",
+      "pairs-with": [
+        "trail",
+        "Beam"
+      ],
+      "prompt-phrase": "build the trail as a ribbon of quads that fade along their length",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Beam",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Roblox's textured strip between two attachments.",
+      "use-when": "Lasers and lightning in Roblox.",
+      "pairs-with": [
+        "ribbon",
+        "chain lightning"
+      ],
+      "prompt-phrase": "draw the laser as a Beam and animate its CurveSize",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Highlight",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Roblox's outline-and-fill effect on a model.",
+      "use-when": "Hit flashes and selection.",
+      "pairs-with": [
+        "impact flash"
+      ],
+      "prompt-phrase": "flash the hit enemy with a white Highlight for one frame",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ParticleEmitter",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "Roblox's particle system component.",
+      "use-when": "Sparks, dust, magic.",
+      "pairs-with": [
+        "burst emit"
+      ],
+      "prompt-phrase": "call ParticleEmitter:Emit(12) on hit instead of leaving it enabled",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "flipbook",
+      "tier": "all",
+      "domain": "vfx",
+      "meaning": "An animated texture played from a grid of frames.",
+      "use-when": "Explosions and smoke.",
+      "pairs-with": [
+        "cel VFX"
+      ],
+      "prompt-phrase": "play the explosion as a 4×4 flipbook at 24 fps",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "spark",
+      "tier": "T2 combat",
+      "domain": "vfx",
+      "meaning": "A tiny bright fast particle.",
+      "use-when": "Impacts and metal hits.",
+      "pairs-with": [
+        "decoration slot",
+        "additive blending"
+      ],
+      "prompt-phrase": "emit 6 sparks with gravity, additive, 150 ms life",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "heat haze",
+      "tier": "T4 world",
+      "domain": "vfx",
+      "meaning": "Wavy distortion above hot surfaces.",
+      "use-when": "Lava and fire.",
+      "pairs-with": [
+        "distortion"
+      ],
+      "prompt-phrase": "add a subtle heat haze above the lava, 2 px amplitude",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "holo foil",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A trading-card foil whose rainbow shifts with tilt and a sheen band sweeps.",
+      "use-when": "Mythic and shiny variants.",
+      "pairs-with": [
+        "Fresnel",
+        "iridescence"
+      ],
+      "prompt-phrase": "give Mythic cards holo foil: hue shifts with tilt, sheen follows the pointer",
+      "source": "Living Effects Lab",
+      "starter": true
+    },
+    {
+      "term": "brushed metal",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Streak texture with an anisotropic highlight along the grain.",
+      "use-when": "Metal UI panels, Rare items.",
+      "pairs-with": [
+        "anisotropic highlight"
+      ],
+      "prompt-phrase": "brushed metal: horizontal streaks with a highlight stretched along the grain",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "anisotropic highlight",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A highlight stretched in one direction by surface grain.",
+      "use-when": "Brushed metal and hair.",
+      "pairs-with": [
+        "brushed metal"
+      ],
+      "prompt-phrase": "stretch the highlight 6× along the grain direction",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "chrome",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A mirror metal reflecting its environment with high contrast.",
+      "use-when": "Legendary and premium items.",
+      "pairs-with": [
+        "environment reflection",
+        "Fresnel"
+      ],
+      "prompt-phrase": "liquid chrome: dark base, sharp white highlights, reflected sky gradient",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "faceted gem",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A cut gem whose facets light up as it turns, with star glints.",
+      "use-when": "Currency icons and gem items.",
+      "pairs-with": [
+        "star glint"
+      ],
+      "prompt-phrase": "facet the gem into 8 sides that brighten as they face the light",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "star glint",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A four-point sparkle on a highlight.",
+      "use-when": "Gems and polished metal.",
+      "pairs-with": [
+        "faceted gem"
+      ],
+      "prompt-phrase": "add at most 3 star glints at once, each 200 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "glass",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A surface showing mostly what's behind it with a bright rim and chromatic edges.",
+      "use-when": "Potions and lens UI.",
+      "pairs-with": [
+        "refraction",
+        "Fresnel"
+      ],
+      "prompt-phrase": "glass: refract the background, thin bright rim, slight chromatic split at edges",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "crystal",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A raymarched or faceted transparent solid with internal colour.",
+      "use-when": "Gem items and crystals.",
+      "pairs-with": [
+        "faceted gem",
+        "SDF"
+      ],
+      "prompt-phrase": "a crystal with deeper internal colour than its surface and sharp facet edges",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "soap film",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Thin-film interference colours flowing across a bubble.",
+      "use-when": "Bubble pets and shields.",
+      "pairs-with": [
+        "thin-film interference"
+      ],
+      "prompt-phrase": "flow thin-film colours across the bubble with a slow swirl",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "molten",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Plasma noise through a black-body heat ramp with a cooling crust.",
+      "use-when": "Lava zones and forges.",
+      "pairs-with": [
+        "black-body ramp"
+      ],
+      "prompt-phrase": "molten core: noise through a black-body ramp with dark crust cracks",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "black-body ramp",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A colour ramp from black through red, orange and yellow to white by temperature.",
+      "use-when": "Heat, fire, lava.",
+      "pairs-with": [
+        "molten"
+      ],
+      "prompt-phrase": "colour heat with a black-body ramp: black → red → orange → white",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "emissive",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A surface that emits its own light.",
+      "use-when": "Lights and active states.",
+      "pairs-with": [
+        "bloom"
+      ],
+      "prompt-phrase": "make only active elements emissive; turn emission off when inactive",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "satin",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A soft sheen between flat and metallic.",
+      "use-when": "Uncommon items.",
+      "pairs-with": [
+        "rarity-as-material"
+      ],
+      "prompt-phrase": "satin finish: one soft broad highlight, no sparkle",
+      "source": "aaa-kit/HIERARCHY.md",
+      "starter": false
+    },
+    {
+      "term": "void material",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A starfield seen through the surface with glitch slices on the rim.",
+      "use-when": "Secret rarity.",
+      "pairs-with": [
+        "glitch slice"
+      ],
+      "prompt-phrase": "void material: parallax starfield inside, glitch slices on the rim",
+      "source": "aaa-kit/.claude/skills/materials",
+      "starter": false
+    },
+    {
+      "term": "glitch slice",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Horizontal bands of an image shifted sideways for a frame.",
+      "use-when": "Secret items and digital corruption.",
+      "pairs-with": [
+        "void material"
+      ],
+      "prompt-phrase": "shift 1–2 horizontal slices 4 px sideways for one frame every second",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "Fresnel",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Surfaces reflect more at grazing angles; the rim gets brighter.",
+      "use-when": "Glass, water, rims.",
+      "pairs-with": [
+        "rim light"
+      ],
+      "prompt-phrase": "add a Fresnel rim: pow(1 − dot(n, v), 5)",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "rim light",
+      "tier": "all",
+      "domain": "materials",
+      "meaning": "A bright edge on the side away from the main light.",
+      "use-when": "Separating a figure from its background.",
+      "pairs-with": [
+        "Fresnel",
+        "figure-ground gate"
+      ],
+      "prompt-phrase": "add a cool rim light so the hero separates from dark ground",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "PBR",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Physically based rendering with albedo, normal, metalness and roughness maps.",
+      "use-when": "3D surfaces.",
+      "pairs-with": [
+        "SurfaceAppearance"
+      ],
+      "prompt-phrase": "author PBR maps: albedo, normal, metalness, roughness",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "roughness",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "How blurry a surface's reflections are.",
+      "use-when": "Material tuning.",
+      "pairs-with": [
+        "PBR"
+      ],
+      "prompt-phrase": "roughness 0.15 for polished gold, 0.6 for worn iron",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "environment reflection",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Reflecting the surrounding sky or scene on a surface.",
+      "use-when": "Metals and glass.",
+      "pairs-with": [
+        "chrome"
+      ],
+      "prompt-phrase": "reflect the sky gradient in the chrome so it reads as metal",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "toon ramp",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Lighting quantised into 2–4 flat steps.",
+      "use-when": "Cel shading.",
+      "pairs-with": [
+        "luminance band",
+        "cel VFX"
+      ],
+      "prompt-phrase": "light with a 3-step toon ramp and a hard terminator",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "iridescence",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Colour that shifts with viewing angle.",
+      "use-when": "Foil, beetle shells, oil.",
+      "pairs-with": [
+        "thin-film interference",
+        "holo foil"
+      ],
+      "prompt-phrase": "iridescent hue = view angle × film thickness",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "cel shading",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Rendering with flat colour bands and hard shadow edges.",
+      "use-when": "Stylised 3D or 2D.",
+      "pairs-with": [
+        "toon ramp"
+      ],
+      "prompt-phrase": "cel-shade with two light bands and a hard terminator",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "normal map",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "A texture storing surface direction for lighting detail.",
+      "use-when": "Detail without geometry.",
+      "pairs-with": [
+        "PBR"
+      ],
+      "prompt-phrase": "bake a normal map for the bevelled edges",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "matcap",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Lighting looked up from a sphere image by surface normal.",
+      "use-when": "Cheap stylised metal and clay.",
+      "pairs-with": [
+        "chrome"
+      ],
+      "prompt-phrase": "shade the icon with a chrome matcap for a cheap metal look",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "signed distance field",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "A function returning distance to a shape's edge, negative inside.",
+      "use-when": "Shapes with soft edges, outlines and glows.",
+      "pairs-with": [
+        "smooth union",
+        "SDF glow"
+      ],
+      "prompt-phrase": "build the shape as a signed distance field and derive fill, outline and glow from it",
+      "source": "aaa-kit/.claude/skills/shaders-and-sdf",
+      "starter": true
+    },
+    {
+      "term": "SDF",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Short for signed distance field.",
+      "use-when": "Any procedural shape.",
+      "pairs-with": [
+        "signed distance field"
+      ],
+      "prompt-phrase": "draw the panel as an SDF rounded box with 1 px anti-aliasing",
+      "source": "aaa-kit/.claude/skills/shaders-and-sdf",
+      "starter": false
+    },
+    {
+      "term": "smooth union",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Blending two SDFs with a smooth minimum so they merge like liquid.",
+      "use-when": "Metaballs and organic shapes.",
+      "pairs-with": [
+        "signed distance field",
+        "metaball"
+      ],
+      "prompt-phrase": "merge the blobs with a smooth union, k = 0.4",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "metaball",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Blobs that merge when close, built from smooth unions.",
+      "use-when": "Liquid UI, slimes.",
+      "pairs-with": [
+        "smooth union"
+      ],
+      "prompt-phrase": "render health orbs as metaballs that merge as they fill",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "SDF glow",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "A falloff computed from distance outside a shape.",
+      "use-when": "Cheap glows.",
+      "pairs-with": [
+        "signed distance field",
+        "glow"
+      ],
+      "prompt-phrase": "glow = (1 − d / 12)² outside the shape",
+      "source": "aaa-kit/.claude/skills/shaders-and-sdf",
+      "starter": false
+    },
+    {
+      "term": "analytic anti-aliasing",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Edge smoothing from the distance value (clamp(0.5 − d)).",
+      "use-when": "Crisp SDF edges.",
+      "pairs-with": [
+        "SDF"
+      ],
+      "prompt-phrase": "anti-alias with coverage = clamp(0.5 − d, 0, 1)",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "raymarching",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Rendering by stepping along rays by the SDF distance until hitting a surface.",
+      "use-when": "3D procedural scenes in shaders.",
+      "pairs-with": [
+        "sphere tracing",
+        "soft shadow"
+      ],
+      "prompt-phrase": "raymarch the scene with up to 128 steps and an early out at 0.0005",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "sphere tracing",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Raymarching where each step is the distance to the nearest surface.",
+      "use-when": "SDF scenes.",
+      "pairs-with": [
+        "raymarching"
+      ],
+      "prompt-phrase": "sphere-trace the SDF scene and stop at 12 units",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "soft shadow",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Penumbra estimated from the closest SDF approach along the light ray.",
+      "use-when": "Raymarched lighting.",
+      "pairs-with": [
+        "raymarching"
+      ],
+      "prompt-phrase": "soft shadows: res = min(res, 10·h/t) along the light ray",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ambient occlusion",
+      "tier": "all",
+      "domain": "shaders",
+      "meaning": "Darkening creases where ambient light can't reach.",
+      "use-when": "Grounding objects.",
+      "pairs-with": [
+        "soft shadow"
+      ],
+      "prompt-phrase": "add 5-tap SDF ambient occlusion in the creases",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "value noise",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Smooth noise from interpolated random values on a grid.",
+      "use-when": "Cheap organic variation.",
+      "pairs-with": [
+        "fBm",
+        "hash function"
+      ],
+      "prompt-phrase": "use hashed value noise so results are seedable",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "gradient noise",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Noise from interpolated random gradients (Perlin, simplex).",
+      "use-when": "Smoother natural noise.",
+      "pairs-with": [
+        "value noise",
+        "fBm"
+      ],
+      "prompt-phrase": "use gradient noise for terrain to avoid blocky artefacts",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "fBm",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Fractal Brownian motion: summed octaves of noise at doubling frequency and halving amplitude.",
+      "use-when": "Clouds, terrain, fire.",
+      "pairs-with": [
+        "octave",
+        "domain warping"
+      ],
+      "prompt-phrase": "5-octave fBm, lacunarity 2, gain 0.5",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "octave",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "One layer of fBm at a given frequency.",
+      "use-when": "Tuning noise detail.",
+      "pairs-with": [
+        "fBm"
+      ],
+      "prompt-phrase": "add octaves until the detail stops showing at play size",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "domain warping",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Offsetting noise input by another noise for swirling organic shapes.",
+      "use-when": "Marble, smoke, corruption.",
+      "pairs-with": [
+        "fBm"
+      ],
+      "prompt-phrase": "warp the noise domain by a second fBm at strength 4",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "hash function",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "A fast deterministic function turning coordinates into pseudo-random numbers.",
+      "use-when": "Seedable randomness in shaders and Luau.",
+      "pairs-with": [
+        "value noise"
+      ],
+      "prompt-phrase": "hash cell coordinates instead of calling the RNG",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "thin-film interference",
+      "tier": "T5 materials",
+      "domain": "shaders",
+      "meaning": "Colour from light reflecting off two surfaces of a thin layer.",
+      "use-when": "Soap, oil, beetles.",
+      "pairs-with": [
+        "iridescence",
+        "soap film"
+      ],
+      "prompt-phrase": "hue = fract(k · thickness · cos θ) through a spectral palette",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "refraction",
+      "tier": "T5 materials",
+      "domain": "shaders",
+      "meaning": "Light bending through a surface, offsetting what's seen behind.",
+      "use-when": "Glass and water.",
+      "pairs-with": [
+        "glass",
+        "distortion"
+      ],
+      "prompt-phrase": "offset the background sample by the surface normal × 0.03",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "gravitational lens",
+      "tier": "T1 moments",
+      "domain": "shaders",
+      "meaning": "Bending the background around a point mass.",
+      "use-when": "Black holes and portals.",
+      "pairs-with": [
+        "portal backdrop"
+      ],
+      "prompt-phrase": "lens the background: offset = normalize(p) · k / distance",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "chromatic aberration",
+      "tier": "all",
+      "domain": "shaders",
+      "meaning": "Splitting colour channels slightly at edges.",
+      "use-when": "Glass, impact, glitch.",
+      "pairs-with": [
+        "glass"
+      ],
+      "prompt-phrase": "split RGB by 1 px at the edges of the lens only",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "dithering",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Using patterned pixels to suggest in-between tones.",
+      "use-when": "Pixel-art gradients.",
+      "pairs-with": [
+        "Bayer matrix"
+      ],
+      "prompt-phrase": "dither band edges with an 8×8 Bayer pattern",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Bayer matrix",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "A fixed threshold pattern for ordered dithering.",
+      "use-when": "Stable dithering in pixel art.",
+      "pairs-with": [
+        "dithering"
+      ],
+      "prompt-phrase": "ordered dither with an 8×8 Bayer matrix so the pattern doesn't crawl",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "interleaved gradient noise",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "A screen-space noise for dithering smooth gradients without banding.",
+      "use-when": "Removing banding.",
+      "pairs-with": [
+        "dithering"
+      ],
+      "prompt-phrase": "dither gradients with interleaved gradient noise",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "OKLab",
+      "tier": "all",
+      "domain": "shaders",
+      "meaning": "A perceptual colour space where equal steps look equal.",
+      "use-when": "Palettes, bands and gradients.",
+      "pairs-with": [
+        "luminance band"
+      ],
+      "prompt-phrase": "mix colours and measure lightness in OKLab, not sRGB",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tone mapping",
+      "tier": "all",
+      "domain": "shaders",
+      "meaning": "Compressing high-dynamic-range colour into displayable range.",
+      "use-when": "Bright scenes and bloom.",
+      "pairs-with": [
+        "bloom"
+      ],
+      "prompt-phrase": "tone-map with ACES so highlights roll off instead of clipping",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "gamma correction",
+      "tier": "all",
+      "domain": "shaders",
+      "meaning": "Converting between linear light and display sRGB.",
+      "use-when": "Any lighting maths.",
+      "pairs-with": [
+        "OKLab"
+      ],
+      "prompt-phrase": "light in linear space and convert to sRGB at the end",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "full-screen triangle",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "One oversized triangle covering the screen for a fragment shader pass.",
+      "use-when": "Shader post passes.",
+      "pairs-with": [
+        "raymarching"
+      ],
+      "prompt-phrase": "draw the pass with a single full-screen triangle",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ping-pong buffer",
+      "tier": "T6 engines",
+      "domain": "shaders",
+      "meaning": "Two textures alternating as input and output across simulation steps.",
+      "use-when": "GPU simulations.",
+      "pairs-with": [
+        "reaction-diffusion"
+      ],
+      "prompt-phrase": "run reaction-diffusion in ping-pong buffers, 8 steps per frame",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "godrithm",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A chain of small typed algorithm passes that together make one look.",
+      "use-when": "Building a reusable procedural look.",
+      "pairs-with": [
+        "pass chain",
+        "typed pass"
+      ],
+      "prompt-phrase": "build the look as a godrithm: noise → warp → threshold → distance → bands",
+      "source": "vault/Notes/21 Godrithms",
+      "starter": true
+    },
+    {
+      "term": "pass chain",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "An ordered list of passes where each output feeds the next.",
+      "use-when": "Composing procedural effects.",
+      "pairs-with": [
+        "godrithm",
+        "typed pass"
+      ],
+      "prompt-phrase": "run the passes as a chain and cache every static intermediate",
+      "source": "aaa-kit/.claude/skills/algorithms",
+      "starter": false
+    },
+    {
+      "term": "typed pass",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A pass with a declared input and output type (field, mask, points, palette).",
+      "use-when": "Making passes swappable.",
+      "pairs-with": [
+        "pass chain"
+      ],
+      "prompt-phrase": "declare each pass as field → field so they can be reordered",
+      "source": "aaa-kit/.claude/skills/algorithms",
+      "starter": false
+    },
+    {
+      "term": "algorithm factory",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A planner that assembles a pass chain backwards from a requested output.",
+      "use-when": "Generating looks on demand.",
+      "pairs-with": [
+        "godrithm"
+      ],
+      "prompt-phrase": "let a planner pick the cheapest chain that produces a glow mask",
+      "source": "vault/Artifacts/Godrithms/algorithm-factory",
+      "starter": false
+    },
+    {
+      "term": "distance transform",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Computing each cell's distance to the nearest feature.",
+      "use-when": "Outlines, glows, bevels, fields.",
+      "pairs-with": [
+        "jump flooding",
+        "signed distance field"
+      ],
+      "prompt-phrase": "compute a chamfer distance transform from the mask for a 6 px glow",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "jump flooding",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A GPU algorithm computing Voronoi and distance fields in log₂(n) passes.",
+      "use-when": "Fast distance fields on the GPU.",
+      "pairs-with": [
+        "distance transform",
+        "Voronoi"
+      ],
+      "prompt-phrase": "build the distance field with jump flooding in 9 passes for 512²",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Voronoi",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Partitioning space into cells around seed points.",
+      "use-when": "Stained glass, cracks, biomes.",
+      "pairs-with": [
+        "Worley noise",
+        "jump flooding"
+      ],
+      "prompt-phrase": "partition the map into Voronoi cells for biomes",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Worley noise",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Noise based on distance to the nearest random feature points.",
+      "use-when": "Cells, scales, caustics.",
+      "pairs-with": [
+        "Voronoi"
+      ],
+      "prompt-phrase": "use Worley F2 − F1 for crisp cell edges",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "cellular automaton",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A grid where each cell updates from local rules.",
+      "use-when": "Caves, fire spread, life patterns.",
+      "pairs-with": [
+        "Game of Life"
+      ],
+      "prompt-phrase": "carve caves with 5 steps of the 4-5 cellular automaton rule",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Game of Life",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Conway's cellular automaton with birth on 3 and survival on 2–3 neighbours.",
+      "use-when": "Living patterns.",
+      "pairs-with": [
+        "cellular automaton"
+      ],
+      "prompt-phrase": "seed a Game of Life aura that breathes around the hero",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "reaction-diffusion",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Two simulated chemicals (Gray–Scott) forming spots and stripes.",
+      "use-when": "Coral, infection, skin patterns.",
+      "pairs-with": [
+        "Gray–Scott",
+        "ping-pong buffer"
+      ],
+      "prompt-phrase": "grow corruption as Gray–Scott reaction-diffusion with f 0.037, k 0.06",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "Gray–Scott",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "The reaction-diffusion model with feed and kill rates.",
+      "use-when": "Tuning reaction-diffusion.",
+      "pairs-with": [
+        "reaction-diffusion"
+      ],
+      "prompt-phrase": "Gray–Scott with feed 0.055 and kill 0.062 for mitosis spots",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "flow field",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A grid of directions that particles or agents follow.",
+      "use-when": "Crowds, wind, silk backgrounds.",
+      "pairs-with": [
+        "boids",
+        "Dijkstra map"
+      ],
+      "prompt-phrase": "steer the crowd with a flow field toward the player, updated at 10 Hz",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "boids",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Flocking from separation, alignment and cohesion.",
+      "use-when": "Birds, fish, bats.",
+      "pairs-with": [
+        "flow field",
+        "spatial hash"
+      ],
+      "prompt-phrase": "flock 200 boids with a spatial hash for neighbours",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "spatial hash",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Bucketing objects by grid cell for fast neighbour queries.",
+      "use-when": "Collision and separation at scale.",
+      "pairs-with": [
+        "boids"
+      ],
+      "prompt-phrase": "hash enemies into 32 px cells and only test neighbouring cells",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "quadtree",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A tree that splits 2D space into four children as it fills.",
+      "use-when": "Uneven densities, culling.",
+      "pairs-with": [
+        "spatial hash"
+      ],
+      "prompt-phrase": "use a quadtree when entities cluster unevenly",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "A*",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Pathfinding with a heuristic toward the goal.",
+      "use-when": "Single-agent paths.",
+      "pairs-with": [
+        "Dijkstra map"
+      ],
+      "prompt-phrase": "path single units with A* on the nav grid",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Dijkstra map",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A distance-to-goal value for every cell, shared by all agents.",
+      "use-when": "Many agents chasing one target.",
+      "pairs-with": [
+        "flow field",
+        "A*"
+      ],
+      "prompt-phrase": "build one Dijkstra map from the player and let every enemy descend it",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "L-system",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A grammar that rewrites strings into branching structures.",
+      "use-when": "Trees, lightning, coral.",
+      "pairs-with": [
+        "turtle graphics"
+      ],
+      "prompt-phrase": "grow trees with an L-system: F → F[+F]F[−F]F, 4 iterations",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "turtle graphics",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Drawing by moving and turning a pen from instructions.",
+      "use-when": "Rendering L-systems.",
+      "pairs-with": [
+        "L-system"
+      ],
+      "prompt-phrase": "interpret the L-system string with turtle graphics, 25° turns",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "midpoint displacement",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Recursively offsetting segment midpoints for fractal lines.",
+      "use-when": "Lightning, coastlines, cracks.",
+      "pairs-with": [
+        "branching lightning"
+      ],
+      "prompt-phrase": "displace midpoints 5 times, halving the offset each time",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Verlet integration",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Physics from current and previous positions; stable for ropes and cloth.",
+      "use-when": "Whips, cloth, chains.",
+      "pairs-with": [
+        "Verlet cloth"
+      ],
+      "prompt-phrase": "simulate the rope with Verlet integration and 8 constraint passes",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "Verlet cloth",
+      "tier": "T4 world",
+      "domain": "algorithms",
+      "meaning": "A pinned grid of Verlet points shaded by its folds.",
+      "use-when": "Flags, banners, capes.",
+      "pairs-with": [
+        "Verlet integration"
+      ],
+      "prompt-phrase": "flap the banner as a pinned Verlet cloth in gusting wind",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "Poisson disk",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Random points no closer than a minimum distance.",
+      "use-when": "Even, natural-looking scatter.",
+      "pairs-with": [
+        "Bridson sampling",
+        "scatter mask"
+      ],
+      "prompt-phrase": "scatter trees with Poisson disk at 12 stud spacing",
+      "source": "aaa-kit/.claude/skills/procedural-world",
+      "starter": true
+    },
+    {
+      "term": "Bridson sampling",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "The O(n) Poisson-disk algorithm using a background grid.",
+      "use-when": "Fast Poisson scatter.",
+      "pairs-with": [
+        "Poisson disk"
+      ],
+      "prompt-phrase": "sample with Bridson's algorithm, 30 tries per active point",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "marching squares",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Turning a scalar field into contour lines.",
+      "use-when": "Outlining blobs and terrain.",
+      "pairs-with": [
+        "metaball"
+      ],
+      "prompt-phrase": "extract the island outline with marching squares at 0.5",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "wave function collapse",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Tile placement by propagating adjacency constraints.",
+      "use-when": "Tile-based levels.",
+      "pairs-with": [
+        "tileset"
+      ],
+      "prompt-phrase": "generate rooms with wave function collapse over a 12-tile set",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "seeded RNG",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A random generator started from a seed so results repeat.",
+      "use-when": "Deterministic generation.",
+      "pairs-with": [
+        "determinism"
+      ],
+      "prompt-phrase": "pass a seeded RNG into every generator; never call the global one",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "determinism",
+      "tier": "all",
+      "domain": "algorithms",
+      "meaning": "Same inputs always give the same outputs.",
+      "use-when": "Replays, tests, shared worlds.",
+      "pairs-with": [
+        "seeded RNG",
+        "golden frame"
+      ],
+      "prompt-phrase": "make the generator deterministic so one seed rebuilds the world",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "glyph ramp",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Characters ordered by visual density used to shade with text.",
+      "use-when": "ASCII renderers.",
+      "pairs-with": [
+        "glyph density",
+        "ASCII renderer"
+      ],
+      "prompt-phrase": "shade with the glyph ramp \" .:-=+*#%@\" by luminance",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "ASCII renderer",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Rendering a scene as characters chosen by luminance and edge direction.",
+      "use-when": "Retro modes and crowd LOD.",
+      "pairs-with": [
+        "glyph ramp"
+      ],
+      "prompt-phrase": "render the sphere per character cell with edge glyphs slash, pipe, backslash and dash",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "palette quantisation",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Snapping colours to a fixed palette.",
+      "use-when": "Consistent pixel-art looks.",
+      "pairs-with": [
+        "luminance band",
+        "dithering"
+      ],
+      "prompt-phrase": "quantise to an 8-band OKLab palette with dithered edges",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "kuwahara filter",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "An edge-preserving smoothing filter that looks painterly.",
+      "use-when": "Painterly post effects.",
+      "pairs-with": [
+        "pass chain"
+      ],
+      "prompt-phrase": "apply an anisotropic Kuwahara filter for a painted look",
+      "source": "vault/Artifacts/Godrithms",
+      "starter": false
+    },
+    {
+      "term": "spring damper",
+      "tier": "all",
+      "domain": "algorithms",
+      "meaning": "A damped spring used to smooth or animate values.",
+      "use-when": "Camera, UI and needles.",
+      "pairs-with": [
+        "spring animation"
+      ],
+      "prompt-phrase": "smooth the needle with a critically damped spring",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "perlin noise",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Ken Perlin's gradient noise.",
+      "use-when": "Smooth natural variation.",
+      "pairs-with": [
+        "gradient noise"
+      ],
+      "prompt-phrase": "use math.noise (Perlin) remapped to 0..1 for terrain",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "simplex noise",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "A faster gradient noise with fewer artefacts in higher dimensions.",
+      "use-when": "3D and 4D noise.",
+      "pairs-with": [
+        "gradient noise"
+      ],
+      "prompt-phrase": "use simplex noise for animated 3D fields",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "blue noise",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Noise with even spacing and no low-frequency clumps.",
+      "use-when": "Dithering and sampling.",
+      "pairs-with": [
+        "dithering",
+        "Poisson disk"
+      ],
+      "prompt-phrase": "sample with blue noise so the pattern has no clumps",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "flood fill",
+      "tier": "T6 engines",
+      "domain": "algorithms",
+      "meaning": "Filling a connected region from a seed.",
+      "use-when": "Region detection and paint.",
+      "pairs-with": [
+        "cellular automaton"
+      ],
+      "prompt-phrase": "flood fill from the spawn to find reachable cells",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "landmark",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A unique silhouette at a decision point that players navigate by.",
+      "use-when": "Map readability.",
+      "pairs-with": [
+        "lane",
+        "set piece"
+      ],
+      "prompt-phrase": "place 1–3 landmarks per screen-width at junctions",
+      "source": "aaa-kit/.claude/skills/procedural-world",
+      "starter": false
+    },
+    {
+      "term": "lane",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A clear path the player moves along.",
+      "use-when": "Arena and level layout.",
+      "pairs-with": [
+        "landmark",
+        "choke point"
+      ],
+      "prompt-phrase": "keep lanes 3 tiles wide and clear of props",
+      "source": "aaa-kit/.claude/skills/procedural-world",
+      "starter": false
+    },
+    {
+      "term": "choke point",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A narrow passage that concentrates movement and fights.",
+      "use-when": "Level pacing.",
+      "pairs-with": [
+        "lane"
+      ],
+      "prompt-phrase": "add one choke point between open fields for pacing",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "safe pocket",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A small protected area for recovery.",
+      "use-when": "Survival arenas.",
+      "pairs-with": [
+        "lane"
+      ],
+      "prompt-phrase": "leave a safe pocket every 40 tiles with no spawns",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "biome",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A region with its own palette, props and rules.",
+      "use-when": "Big maps.",
+      "pairs-with": [
+        "Voronoi"
+      ],
+      "prompt-phrase": "assign each Voronoi region a biome with one palette ramp",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "scatter mask",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A function that forbids scatter in some areas (lanes, water).",
+      "use-when": "Prop placement.",
+      "pairs-with": [
+        "Poisson disk"
+      ],
+      "prompt-phrase": "mask Poisson scatter so nothing spawns on lanes or water",
+      "source": "aaa-kit/.claude/skills/procedural-world",
+      "starter": false
+    },
+    {
+      "term": "prop size class",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Grouping props into large, medium and small and placing large first.",
+      "use-when": "Natural-looking scatter.",
+      "pairs-with": [
+        "Poisson disk"
+      ],
+      "prompt-phrase": "place large props first, then medium at half spacing, then small",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "set piece",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A handcrafted or scripted moment placed in a generated world.",
+      "use-when": "Memorable beats.",
+      "pairs-with": [
+        "landmark"
+      ],
+      "prompt-phrase": "place a collapsing-bridge set piece where the route crosses the river",
+      "source": "vault/Notes/26 Map Set Pieces",
+      "starter": false
+    },
+    {
+      "term": "decal",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A flat mark projected on a surface (scorch, footprint, crack).",
+      "use-when": "Showing history and direction.",
+      "pairs-with": [
+        "battle history"
+      ],
+      "prompt-phrase": "stamp low-contrast decals that never outshine pickups",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "battle history",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Persistent marks of what happened (scorch, blood, footprints).",
+      "use-when": "Making the world remember.",
+      "pairs-with": [
+        "decal"
+      ],
+      "prompt-phrase": "write scorch marks into 16×16 history blocks only where fights happened",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "parallax",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Background layers moving slower than the foreground for depth.",
+      "use-when": "2D depth.",
+      "pairs-with": [
+        "depth fog"
+      ],
+      "prompt-phrase": "three parallax layers at 0.2, 0.5 and 0.8 of camera speed",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "depth fog",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Fading distant things toward a fog colour.",
+      "use-when": "Depth and readability.",
+      "pairs-with": [
+        "parallax"
+      ],
+      "prompt-phrase": "fog distant layers toward the sky colour by 40 %",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "god rays",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Visible light shafts through gaps.",
+      "use-when": "Forests and temples.",
+      "pairs-with": [
+        "volumetric light"
+      ],
+      "prompt-phrase": "march god rays back toward the sun through foliage gaps",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "volumetric light",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Light scattering through air, fog or dust.",
+      "use-when": "Atmosphere.",
+      "pairs-with": [
+        "god rays"
+      ],
+      "prompt-phrase": "add faint volumetric light in the temple, ≤ 15 % brightness",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "aurora",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Layered light curtains in a night sky.",
+      "use-when": "Night and winter maps.",
+      "pairs-with": [
+        "parallax"
+      ],
+      "prompt-phrase": "layer aurora curtains with slow ray streaks over the mountains",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "fireflies",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Wandering glows blinking on independent clocks.",
+      "use-when": "Night ambience.",
+      "pairs-with": [
+        "additive blending"
+      ],
+      "prompt-phrase": "30 fireflies on independent blink clocks, drawn additively",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "parallax snowfall",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Snow in depth layers that piles into drifts.",
+      "use-when": "Winter maps.",
+      "pairs-with": [
+        "parallax"
+      ],
+      "prompt-phrase": "three layers of snow that pile into drifts along edges",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "curl noise",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Divergence-free noise for swirling particle motion.",
+      "use-when": "Smoke and ink.",
+      "pairs-with": [
+        "flow field"
+      ],
+      "prompt-phrase": "advect particles through curl noise for ink trails",
+      "source": "Living Effects Lab",
+      "starter": false
+    },
+    {
+      "term": "day-night cycle",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Lighting and palette changing over time.",
+      "use-when": "Open worlds.",
+      "pairs-with": [
+        "colour grading"
+      ],
+      "prompt-phrase": "shift the grade over a 20-minute day-night cycle",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "colour grading",
+      "tier": "all",
+      "domain": "world",
+      "meaning": "Adjusting the final image's colours for mood.",
+      "use-when": "Setting tone per area.",
+      "pairs-with": [
+        "tone mapping"
+      ],
+      "prompt-phrase": "grade the cave cooler and darker by one band",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "heightfield",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Terrain stored as a height per grid point.",
+      "use-when": "Terrain generation.",
+      "pairs-with": [
+        "fBm"
+      ],
+      "prompt-phrase": "build the island as an fBm heightfield with an edge falloff",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "edge falloff",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Lowering height toward the map edge to form islands.",
+      "use-when": "Island maps.",
+      "pairs-with": [
+        "heightfield"
+      ],
+      "prompt-phrase": "multiply height by a radial falloff so the map becomes an island",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "hydraulic erosion",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Simulating water carving terrain.",
+      "use-when": "Realistic terrain.",
+      "pairs-with": [
+        "heightfield"
+      ],
+      "prompt-phrase": "run 50k droplets of hydraulic erosion for natural valleys",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "tileset",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A set of tiles that fit together.",
+      "use-when": "Tile-based maps.",
+      "pairs-with": [
+        "wave function collapse"
+      ],
+      "prompt-phrase": "build the dungeon from a 16-tile tileset with matching edges",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "streaming",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Loading world parts near the player only.",
+      "use-when": "Large Roblox worlds.",
+      "pairs-with": [
+        "LOD"
+      ],
+      "prompt-phrase": "enable StreamingEnabled and keep generated models atomic",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "LOD",
+      "tier": "all",
+      "domain": "world",
+      "meaning": "Level of detail: simpler versions far away.",
+      "use-when": "Performance at distance.",
+      "pairs-with": [
+        "crowd LOD",
+        "mesh LOD"
+      ],
+      "prompt-phrase": "use three LODs: full under 50 studs, half to 150, quarter beyond",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "mesh LOD",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "Fewer triangles for distant meshes.",
+      "use-when": "EditableMesh terrain.",
+      "pairs-with": [
+        "LOD",
+        "skirt"
+      ],
+      "prompt-phrase": "halve the cells per chunk beyond 50 studs",
+      "source": "aaa-kit/.claude/skills/editable-mesh",
+      "starter": false
+    },
+    {
+      "term": "skirt",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A vertical strip under a mesh edge hiding LOD cracks.",
+      "use-when": "Chunked terrain.",
+      "pairs-with": [
+        "mesh LOD"
+      ],
+      "prompt-phrase": "add a 2-stud skirt to every chunk edge to hide cracks",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "chunk",
+      "tier": "T4 world",
+      "domain": "world",
+      "meaning": "A fixed-size piece of a large surface built and updated on its own.",
+      "use-when": "Big terrain and maps.",
+      "pairs-with": [
+        "mesh LOD"
+      ],
+      "prompt-phrase": "split terrain into 32×32 chunks and rebuild only dirty ones",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "faucet",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A source of currency (taps, passive income, rewards).",
+      "use-when": "Economy design.",
+      "pairs-with": [
+        "sink"
+      ],
+      "prompt-phrase": "list every faucet and its rate per minute",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "sink",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A way currency leaves the economy (upgrades, consumables).",
+      "use-when": "Preventing inflation.",
+      "pairs-with": [
+        "faucet"
+      ],
+      "prompt-phrase": "give every faucet a matching sink",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "geometric cost curve",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Cost = base × growth^level.",
+      "use-when": "Upgrade prices.",
+      "pairs-with": [
+        "closed-form buy-max"
+      ],
+      "prompt-phrase": "cost = 10 × 1.15^level",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "polynomial curve",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Value = base × (level + 1)^power.",
+      "use-when": "XP to next level.",
+      "pairs-with": [
+        "geometric cost curve"
+      ],
+      "prompt-phrase": "XP needed = 100 × (level + 1)²",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "soft cap",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Linear growth up to a cap, then diminishing returns.",
+      "use-when": "Stats that shouldn't explode.",
+      "pairs-with": [
+        "diminishing returns"
+      ],
+      "prompt-phrase": "soft-cap crit chance at 50 % with logarithmic growth beyond",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "diminishing returns",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Each extra unit gives less than the last.",
+      "use-when": "Stacking bonuses.",
+      "pairs-with": [
+        "soft cap"
+      ],
+      "prompt-phrase": "stack speed bonuses with diminishing returns",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "closed-form buy-max",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Computing the most levels affordable with a formula, not a loop.",
+      "use-when": "Buy-max buttons.",
+      "pairs-with": [
+        "geometric cost curve"
+      ],
+      "prompt-phrase": "compute buy-max with the geometric series closed form, then check the boundary",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "buy-max",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A button buying as many levels as affordable.",
+      "use-when": "Incremental shops.",
+      "pairs-with": [
+        "closed-form buy-max"
+      ],
+      "prompt-phrase": "add ×1, ×10 and Max buttons using closed-form maths",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "prestige",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Resetting progress for a permanent multiplier or currency.",
+      "use-when": "Long-term incremental loops.",
+      "pairs-with": [
+        "reset layer",
+        "prestige payout"
+      ],
+      "prompt-phrase": "first prestige at 15–30 min, each run 2–5× faster",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "reset layer",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A data row describing what a reset wipes, keeps and pays.",
+      "use-when": "Implementing prestige.",
+      "pairs-with": [
+        "prestige"
+      ],
+      "prompt-phrase": "define rebirth as a reset layer row: wipes coins and upgrades, pays gems",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "prestige payout",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Currency from a reset, usually k × total^0.5.",
+      "use-when": "Balancing prestige.",
+      "pairs-with": [
+        "prestige"
+      ],
+      "prompt-phrase": "pay floor(1 × coinsEarned^0.5) gems on rebirth",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "payback time",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Seconds of income to recoup an upgrade's cost.",
+      "use-when": "Judging upgrade value.",
+      "pairs-with": [
+        "pacing"
+      ],
+      "prompt-phrase": "rank upgrades by payback time = cost / income gained",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "pacing",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "How the wait between meaningful purchases evolves.",
+      "use-when": "Avoiding walls and free rides.",
+      "pairs-with": [
+        "pacing wall",
+        "payback time"
+      ],
+      "prompt-phrase": "simulate a player and keep each wait within 2× of the last",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": true
+    },
+    {
+      "term": "pacing wall",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A sudden jump in wait time between purchases.",
+      "use-when": "Finding grind spikes.",
+      "pairs-with": [
+        "pacing"
+      ],
+      "prompt-phrase": "flag any wait that jumps more than 2× as a pacing wall",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "offline earnings",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Income granted for time away, capped and reduced.",
+      "use-when": "Idle games.",
+      "pairs-with": [
+        "reward sequencing"
+      ],
+      "prompt-phrase": "grant offline earnings at 50 % rate, capped at 8 hours, shown as a reward",
+      "source": "aaa-kit/.claude/skills/game-economy",
+      "starter": false
+    },
+    {
+      "term": "automation",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A per-second effect run by one central system.",
+      "use-when": "Passive income, regen, timers.",
+      "pairs-with": [
+        "central system"
+      ],
+      "prompt-phrase": "add passive income as an automation entry, not a new loop",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "unlock gate",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Content hidden until a stat condition is met.",
+      "use-when": "Progression gating.",
+      "pairs-with": [
+        "central system"
+      ],
+      "prompt-phrase": "gate the second zone behind an unlock row: coinsEarned ≥ 1e6",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "multiplier stack",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "How several multipliers combine (additive within a group, multiplicative across).",
+      "use-when": "Balancing bonuses.",
+      "pairs-with": [
+        "diminishing returns"
+      ],
+      "prompt-phrase": "add bonuses within a group, multiply across groups",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "big number",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A value past 1e308 stored as layered exponent.",
+      "use-when": "Late incremental games.",
+      "pairs-with": [
+        "EternityNum",
+        "big-number suffix"
+      ],
+      "prompt-phrase": "store values past 9e15 as EternityNum strings",
+      "source": "aaa-kit/examples/bignum",
+      "starter": false
+    },
+    {
+      "term": "EternityNum",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A Luau big-number type {sign, layer, mag} with break_eternity maths.",
+      "use-when": "Numbers past double range.",
+      "pairs-with": [
+        "big number"
+      ],
+      "prompt-phrase": "use EternityNum for currency once it can pass 9e15",
+      "source": "aaa-kit/examples/bignum",
+      "starter": false
+    },
+    {
+      "term": "leaderboard encoding",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Mapping big numbers to order-preserving integers for OrderedDataStore.",
+      "use-when": "Big-number leaderboards.",
+      "pairs-with": [
+        "EternityNum"
+      ],
+      "prompt-phrase": "encode scores with lbencode before writing to OrderedDataStore",
+      "source": "aaa-kit/examples/bignum",
+      "starter": false
+    },
+    {
+      "term": "balance in data",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Keeping every tunable number in content tables, never in logic.",
+      "use-when": "Any balance work.",
+      "pairs-with": [
+        "content module"
+      ],
+      "prompt-phrase": "move every price and rate into content rows; services hold none",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": true
+    },
+    {
+      "term": "gacha odds",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "Published drop rates per tier.",
+      "use-when": "Fair RNG.",
+      "pairs-with": [
+        "pity timer",
+        "decide-then-animate"
+      ],
+      "prompt-phrase": "show exact odds per tier on the pull screen",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "idle game",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A game where progress continues with little input.",
+      "use-when": "Genre framing.",
+      "pairs-with": [
+        "automation",
+        "offline earnings"
+      ],
+      "prompt-phrase": "design the idle loop: tap early, automate mid, prestige late",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "incremental game",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "A game about numbers growing through upgrades and resets.",
+      "use-when": "Genre framing.",
+      "pairs-with": [
+        "prestige",
+        "big number"
+      ],
+      "prompt-phrase": "structure the incremental loop around three reset layers",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "conversion rate",
+      "tier": "economy",
+      "domain": "economy",
+      "meaning": "The exchange rate between two currencies.",
+      "use-when": "Multi-currency economies.",
+      "pairs-with": [
+        "faucet",
+        "sink"
+      ],
+      "prompt-phrase": "convert coins to gems at 1000:1 with a daily cap",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "Kit hub",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "The one shared module every script requires, with no game logic.",
+      "use-when": "Structuring a Roblox game.",
+      "pairs-with": [
+        "service",
+        "component"
+      ],
+      "prompt-phrase": "require Kit for Format, Guard, Maid and Signal; never put game logic in it",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "service",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A server-authoritative module with init, start and per-player lifecycle.",
+      "use-when": "Game rules and data.",
+      "pairs-with": [
+        "Kit hub",
+        "registry"
+      ],
+      "prompt-phrase": "write it as a service with init, start, playerAdded and playerRemoving",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "registry",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "The list that boots services in order: every init, then every start.",
+      "use-when": "Service wiring.",
+      "pairs-with": [
+        "service"
+      ],
+      "prompt-phrase": "register services in dependency order and boot once",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "component",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Per-instance behaviour bound to a CollectionService tag with construct/start/stop.",
+      "use-when": "Things on screen.",
+      "pairs-with": [
+        "Maid",
+        "CollectionService tag"
+      ],
+      "prompt-phrase": "make it a tagged component with a Maid cleaned in stop",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "content module",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A module returning one frozen table of data rows.",
+      "use-when": "Upgrades, unlocks, loot.",
+      "pairs-with": [
+        "balance in data"
+      ],
+      "prompt-phrase": "add the item as a row in the content module, numbers only",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "central system",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A pure module owning one cross-cutting job (save, automations, unlocks, resets, intensity).",
+      "use-when": "Avoiding ad-hoc loops and wipes.",
+      "pairs-with": [
+        "automation",
+        "unlock gate"
+      ],
+      "prompt-phrase": "route it through the central system instead of a custom loop",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "where things go",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A table mapping each kind of change to its one home.",
+      "use-when": "Deciding where code lives.",
+      "pairs-with": [
+        "Kit hub"
+      ],
+      "prompt-phrase": "check the where-things-go table before adding a file",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "slip-ups as rules",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Turning each past bug into a written rule with its reason.",
+      "use-when": "Team rules docs.",
+      "pairs-with": [
+        "where things go"
+      ],
+      "prompt-phrase": "add the bug to the rules table: what happened, the rule that prevents it",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "Maid",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "An object collecting connections and instances to clean in one call.",
+      "use-when": "Component and service cleanup.",
+      "pairs-with": [
+        "component"
+      ],
+      "prompt-phrase": "give every connection to self._maid and clean it in stop",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "Signal",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A typed event with connect, once and fire.",
+      "use-when": "Decoupled communication.",
+      "pairs-with": [
+        "Maid"
+      ],
+      "prompt-phrase": "expose changes as a Signal and connect through the Maid",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "server authority",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "The server decides every outcome; clients only request.",
+      "use-when": "Anything involving value.",
+      "pairs-with": [
+        "remote validation"
+      ],
+      "prompt-phrase": "the client requests, the server validates and decides",
+      "source": "industry",
+      "starter": true
+    },
+    {
+      "term": "remote validation",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Checking every remote argument on the server: shape, rate, state.",
+      "use-when": "All RemoteEvents and RemoteFunctions.",
+      "pairs-with": [
+        "server authority",
+        "rate limit"
+      ],
+      "prompt-phrase": "validate shape (type, whitelist, finite, capped), then rate, then state",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": true
+    },
+    {
+      "term": "whitelist key",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Accepting only string keys that exist in a known table.",
+      "use-when": "Any string argument.",
+      "pairs-with": [
+        "remote validation"
+      ],
+      "prompt-phrase": "accept the upgrade id only if Upgrades[id] exists",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "NaN guard",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Rejecting NaN and infinity in numeric input.",
+      "use-when": "Any number from a client.",
+      "pairs-with": [
+        "remote validation"
+      ],
+      "prompt-phrase": "reject v ~= v and math.abs(v) == math.huge",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "rate limit",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Refusing requests that come faster than a set interval per player.",
+      "use-when": "Remotes and actions.",
+      "pairs-with": [
+        "debounce"
+      ],
+      "prompt-phrase": "rate-limit taps to 12.5 per second per player on the server",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "debounce",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Ignoring repeat triggers within a short window.",
+      "use-when": "Touches, clicks, remotes.",
+      "pairs-with": [
+        "rate limit"
+      ],
+      "prompt-phrase": "debounce the touch per player for 0.5 s on the server",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "session lock",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Marking a save as owned by one server so two can't write it.",
+      "use-when": "DataStore saves.",
+      "pairs-with": [
+        "save reconcile"
+      ],
+      "prompt-phrase": "lock the save with the job id and refuse to write if another server holds it",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "save reconcile",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Filling missing fields from the template when loading an old save.",
+      "use-when": "Adding save fields.",
+      "pairs-with": [
+        "session lock",
+        "save template"
+      ],
+      "prompt-phrase": "add the field to the template; reconcile fills old saves on load",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "save template",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "The default shape of a new save.",
+      "use-when": "Save design.",
+      "pairs-with": [
+        "save reconcile"
+      ],
+      "prompt-phrase": "add new fields only to the save template",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "read-only session",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "After a failed load, never save, so a bad load can't wipe good data.",
+      "use-when": "DataStore errors.",
+      "pairs-with": [
+        "session lock"
+      ],
+      "prompt-phrase": "on load failure mark the session read-only and warn",
+      "source": "aaa-kit/examples/framework-starter",
+      "starter": false
+    },
+    {
+      "term": "receipt dedupe",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Recording PurchaseIds so a retried receipt isn't granted twice.",
+      "use-when": "Developer products.",
+      "pairs-with": [
+        "server authority"
+      ],
+      "prompt-phrase": "store PurchaseId in the save and return PurchaseGranted for duplicates",
+      "source": "aaa-kit/.claude/skills/roblox-luau-standards",
+      "starter": false
+    },
+    {
+      "term": "string require",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "require(\"./X\") paths that work in Roblox and in lune.",
+      "use-when": "Testable shared modules.",
+      "pairs-with": [
+        "lune test"
+      ],
+      "prompt-phrase": "use string requires so lune can run the module",
+      "source": "aaa-kit/docs/STYLE.md",
+      "starter": false
+    },
+    {
+      "term": "lune test",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A headless Luau test run with lune.",
+      "use-when": "Pure logic.",
+      "pairs-with": [
+        "determinism"
+      ],
+      "prompt-phrase": "add a lune test for every pure module before shipping",
+      "source": "aaa-kit/tools/lib/t.luau",
+      "starter": false
+    },
+    {
+      "term": "compile check",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "Compiling every Luau file to catch syntax errors without running.",
+      "use-when": "Before every commit.",
+      "pairs-with": [
+        "lune test"
+      ],
+      "prompt-phrase": "run lune run tools/check_luau.luau and require 0 failed",
+      "source": "aaa-kit/tools/check_luau.luau",
+      "starter": false
+    },
+    {
+      "term": "golden frame",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A stored reference render that tests compare against.",
+      "use-when": "Catching unintended visual changes.",
+      "pairs-with": [
+        "determinism"
+      ],
+      "prompt-phrase": "compare the render against the golden frame checksum",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "CollectionService tag",
+      "tier": "framework",
+      "domain": "code",
+      "meaning": "A label on instances used to bind components.",
+      "use-when": "Attaching behaviour to instances.",
+      "pairs-with": [
+        "component"
+      ],
+      "prompt-phrase": "tag the label CoinCounter and let the component bind to it",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "EditableImage",
+      "tier": "T6 engines",
+      "domain": "code",
+      "meaning": "A Roblox image whose pixels code can write.",
+      "use-when": "Pixel renderers and procedural textures.",
+      "pairs-with": [
+        "owner buffer",
+        "WritePixelsBuffer"
+      ],
+      "prompt-phrase": "draw the frame into an EditableImage and upload once per frame",
+      "source": "aaa-kit/.claude/skills/editable-image",
+      "starter": false
+    },
+    {
+      "term": "WritePixelsBuffer",
+      "tier": "T6 engines",
+      "domain": "code",
+      "meaning": "The EditableImage call that uploads an RGBA buffer.",
+      "use-when": "Pixel renderers.",
+      "pairs-with": [
+        "EditableImage"
+      ],
+      "prompt-phrase": "upload the whole frame with one WritePixelsBuffer call",
+      "source": "aaa-kit/.claude/skills/editable-image",
+      "starter": false
+    },
+    {
+      "term": "EditableMesh",
+      "tier": "T6 engines",
+      "domain": "code",
+      "meaning": "A Roblox mesh whose vertices and triangles code can write.",
+      "use-when": "Procedural geometry.",
+      "pairs-with": [
+        "mesh LOD"
+      ],
+      "prompt-phrase": "build terrain chunks as EditableMeshes from a pure builder",
+      "source": "aaa-kit/.claude/skills/editable-mesh",
+      "starter": false
+    },
+    {
+      "term": "UIStroke",
+      "tier": "T3 hud",
+      "domain": "code",
+      "meaning": "A Roblox outline on UI elements.",
+      "use-when": "Frames and text outlines.",
+      "pairs-with": [
+        "rarity frame"
+      ],
+      "prompt-phrase": "outline the slot with a UIStroke coloured by rarity",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "UIGradient",
+      "tier": "T3 hud",
+      "domain": "code",
+      "meaning": "A Roblox colour/transparency gradient on UI, rotatable and offsettable.",
+      "use-when": "Sweeps and spins on UI.",
+      "pairs-with": [
+        "rarity frame"
+      ],
+      "prompt-phrase": "tween the UIGradient Offset for a shine sweep every 2.5 s",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "SurfaceAppearance",
+      "tier": "T5 materials",
+      "domain": "code",
+      "meaning": "Roblox PBR maps on a MeshPart.",
+      "use-when": "3D materials.",
+      "pairs-with": [
+        "PBR"
+      ],
+      "prompt-phrase": "apply a SurfaceAppearance with metalness and roughness maps",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "pixel snapping",
+      "tier": "T6 engines",
+      "domain": "code",
+      "meaning": "Drawing only at whole-pixel coordinates.",
+      "use-when": "Hard-pixel art.",
+      "pairs-with": [
+        "EditableImage"
+      ],
+      "prompt-phrase": "snap every sprite to integer pixels; no sub-pixel drawing",
+      "source": "aaa-kit/.claude/skills/editable-image",
+      "starter": false
+    },
+    {
+      "term": "object pooling",
+      "tier": "all",
+      "domain": "code",
+      "meaning": "Reusing objects instead of creating and destroying them.",
+      "use-when": "Particles, projectiles, UI rows.",
+      "pairs-with": [
+        "particle budget"
+      ],
+      "prompt-phrase": "pool projectiles: 200 preallocated, recycled on hit",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "frame budget",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "The milliseconds available per frame (16.6 ms at 60 fps).",
+      "use-when": "Planning any per-frame work.",
+      "pairs-with": [
+        "phone multiplier"
+      ],
+      "prompt-phrase": "keep this system under 0.8 ms of the 16.6 ms frame budget",
+      "source": "aaa-kit/CLAUDE.md",
+      "starter": true
+    },
+    {
+      "term": "phone multiplier",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Assuming a phone runs roughly 4–5× slower than a desktop.",
+      "use-when": "Estimating mobile cost.",
+      "pairs-with": [
+        "frame budget"
+      ],
+      "prompt-phrase": "budget for a 5× slower phone: 2 ms on desktop means 10 ms on a phone",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "per-layer timing",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Measuring each render layer's milliseconds separately.",
+      "use-when": "Finding the expensive layer.",
+      "pairs-with": [
+        "frame budget"
+      ],
+      "prompt-phrase": "time each layer with os.clock and show a rolling average",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "hot path",
+      "tier": "framework",
+      "domain": "performance",
+      "meaning": "Code that runs every frame or per entity.",
+      "use-when": "Optimising and logging rules.",
+      "pairs-with": [
+        "no hot-path prints"
+      ],
+      "prompt-phrase": "keep the hot path allocation-free and print-free",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "no hot-path prints",
+      "tier": "framework",
+      "domain": "performance",
+      "meaning": "Never printing per hit, per frame or per sale.",
+      "use-when": "Logging.",
+      "pairs-with": [
+        "hot path"
+      ],
+      "prompt-phrase": "remove prints from the per-hit handler; warn once per real failure",
+      "source": "aaa-kit/docs/FRAMEWORK.md",
+      "starter": false
+    },
+    {
+      "term": "allocation-free loop",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "A per-frame loop that creates no tables or closures.",
+      "use-when": "Avoiding GC hitches.",
+      "pairs-with": [
+        "hot path",
+        "object pooling"
+      ],
+      "prompt-phrase": "hoist tables out of the render loop so it allocates nothing per frame",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "native codegen",
+      "tier": "framework",
+      "domain": "performance",
+      "meaning": "Luau's --!native compilation for faster inner loops.",
+      "use-when": "Heavy maths in Studio.",
+      "pairs-with": [
+        "interpreter budget"
+      ],
+      "prompt-phrase": "mark the inner pixel loop --!native and measure interpreted too",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "interpreter budget",
+      "tier": "framework",
+      "domain": "performance",
+      "meaning": "Planning for live clients that may run Luau without native codegen.",
+      "use-when": "Client performance.",
+      "pairs-with": [
+        "native codegen"
+      ],
+      "prompt-phrase": "measure the renderer interpreted, since live clients may not use native",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "baking",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Precomputing expensive results once (textures, shaded sprites).",
+      "use-when": "Static content.",
+      "pairs-with": [
+        "cache"
+      ],
+      "prompt-phrase": "bake the shaded sprites per palette band at load",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "cache",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Storing a computed result to reuse.",
+      "use-when": "Repeated expensive work.",
+      "pairs-with": [
+        "baking"
+      ],
+      "prompt-phrase": "cache the noise field; recompute only the animated tail",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "dirty flag",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Marking something as changed so it's rebuilt only then.",
+      "use-when": "Avoiding per-frame rebuilds.",
+      "pairs-with": [
+        "cache"
+      ],
+      "prompt-phrase": "rebuild the chunk only when its dirty flag is set",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "frame-sliced work",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Splitting heavy work across several frames.",
+      "use-when": "Generation and baking.",
+      "pairs-with": [
+        "dirty flag"
+      ],
+      "prompt-phrase": "generate 100 props per frame with task.wait() between batches",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "half-rate update",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Running a system every other frame or at a lower rate.",
+      "use-when": "Expensive ambient systems.",
+      "pairs-with": [
+        "intensity budget"
+      ],
+      "prompt-phrase": "update the light map at 30 Hz and the world pass every other frame on phones",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "culling",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Skipping work for things off screen or hidden.",
+      "use-when": "Many objects.",
+      "pairs-with": [
+        "LOD"
+      ],
+      "prompt-phrase": "cull particles outside the viewport before updating them",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "draw call",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "One batch of rendering submitted to the GPU.",
+      "use-when": "3D and web performance.",
+      "pairs-with": [
+        "batching"
+      ],
+      "prompt-phrase": "batch the props to cut draw calls",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "batching",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "Combining many draws into one.",
+      "use-when": "Many similar objects.",
+      "pairs-with": [
+        "draw call"
+      ],
+      "prompt-phrase": "batch all coins into one instanced draw",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "p95 frame time",
+      "tier": "all",
+      "domain": "performance",
+      "meaning": "The frame time 95 % of frames beat; shows hitches averages hide.",
+      "use-when": "Performance reporting.",
+      "pairs-with": [
+        "frame budget"
+      ],
+      "prompt-phrase": "report average and p95 frame time for the endgame scene",
+      "source": "cursed-survivors/docs/budgets.md",
+      "starter": false
+    },
+    {
+      "term": "silhouette",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "An object's outline shape, readable without detail.",
+      "use-when": "Character, enemy and icon design.",
+      "pairs-with": [
+        "silhouette read",
+        "figure-ground gate"
+      ],
+      "prompt-phrase": "make each enemy family readable from its silhouette alone at 16 px",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "silhouette read",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Testing identification with a solid black fill.",
+      "use-when": "Reviewing designs.",
+      "pairs-with": [
+        "silhouette"
+      ],
+      "prompt-phrase": "fill every sprite black and check each family is still identifiable",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "value structure",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "The arrangement of lights and darks in a frame.",
+      "use-when": "Composition and readability.",
+      "pairs-with": [
+        "luminance band"
+      ],
+      "prompt-phrase": "design value structure in greyscale before colour",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "greyscale check",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Viewing a frame without colour to judge value.",
+      "use-when": "Readability reviews.",
+      "pairs-with": [
+        "value structure"
+      ],
+      "prompt-phrase": "review the capture in greyscale; threats must still pop",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "focal point",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Where the eye goes first.",
+      "use-when": "Composition.",
+      "pairs-with": [
+        "saliency map"
+      ],
+      "prompt-phrase": "make the reward the focal point: brightest, largest, centred",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "visual noise",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Detail that competes for attention without carrying meaning.",
+      "use-when": "Busy screens.",
+      "pairs-with": [
+        "detail density"
+      ],
+      "prompt-phrase": "cut visual noise: remove decor that doesn't help a decision",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "lantern light",
+      "tier": "T2 combat",
+      "domain": "art",
+      "meaning": "The hero's own warm light, the only warm source in a cool world.",
+      "use-when": "Exploration-driven lighting.",
+      "pairs-with": [
+        "colour job"
+      ],
+      "prompt-phrase": "the hero carries the only warm lantern light; the world stays cool",
+      "source": "vault/Notes/16 Hierarchy Codex",
+      "starter": false
+    },
+    {
+      "term": "banded lighting",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Lighting quantised to a few luminance bands.",
+      "use-when": "Cel and pixel looks.",
+      "pairs-with": [
+        "luminance band",
+        "toon ramp"
+      ],
+      "prompt-phrase": "quantise lighting to 8 bands with dithered transitions",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "palette ramp",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "An ordered set of shades for one hue family.",
+      "use-when": "Consistent shading.",
+      "pairs-with": [
+        "palette quantisation"
+      ],
+      "prompt-phrase": "give each material a 5-step palette ramp from shadow to highlight",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "hue shift",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Shifting hue as value changes (cooler shadows, warmer lights).",
+      "use-when": "Richer shading.",
+      "pairs-with": [
+        "palette ramp"
+      ],
+      "prompt-phrase": "shift shadows toward blue and highlights toward yellow",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "saturation hierarchy",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Reserving high saturation for what matters.",
+      "use-when": "Directing attention with colour.",
+      "pairs-with": [
+        "colour job"
+      ],
+      "prompt-phrase": "keep the world desaturated so threats and pickups own saturation",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "phone-first framing",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "Designing for a phone screen before desktop.",
+      "use-when": "Any Roblox UI or camera.",
+      "pairs-with": [
+        "safe area",
+        "thumb zone"
+      ],
+      "prompt-phrase": "design at 390×844 first, then scale up",
+      "source": "aaa-kit/CLAUDE.md",
+      "starter": false
+    },
+    {
+      "term": "outline weight",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "The thickness of an outline relative to the sprite.",
+      "use-when": "Consistent sprite style.",
+      "pairs-with": [
+        "thin ring"
+      ],
+      "prompt-phrase": "use 1 px outlines on 16 px sprites and 2 px on 32 px",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "light direction",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "One consistent key-light direction across all art.",
+      "use-when": "Visual consistency.",
+      "pairs-with": [
+        "rim light"
+      ],
+      "prompt-phrase": "light every sprite from the top-left",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "art bible",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "The written rules of a game's look.",
+      "use-when": "Keeping a team consistent.",
+      "pairs-with": [
+        "colour job",
+        "palette ramp"
+      ],
+      "prompt-phrase": "write the art bible: palette, light direction, outline rule, colour jobs",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "mood board",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "A collection of references that defines a target look.",
+      "use-when": "Starting a new look.",
+      "pairs-with": [
+        "art bible"
+      ],
+      "prompt-phrase": "assemble a mood board of 12 references before drawing",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "contrast ratio",
+      "tier": "all",
+      "domain": "art",
+      "meaning": "The ratio between two luminances; for text ≥ 4.5:1.",
+      "use-when": "Text and UI legibility.",
+      "pairs-with": [
+        "figure-ground gate"
+      ],
+      "prompt-phrase": "keep UI text at least 4.5:1 against its plate",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "audio cue",
+      "tier": "all",
+      "domain": "audio-feel",
+      "meaning": "A sound tied to a visual event.",
+      "use-when": "Feedback.",
+      "pairs-with": [
+        "sting",
+        "layered impact sound"
+      ],
+      "prompt-phrase": "pair the reveal with a rising tone and a hit on the onset frame",
+      "source": "vault/Notes/15 Attention System",
+      "starter": false
+    },
+    {
+      "term": "sting",
+      "tier": "T1 moments",
+      "domain": "audio-feel",
+      "meaning": "A short musical phrase marking a moment.",
+      "use-when": "Rewards and level-ups.",
+      "pairs-with": [
+        "audio cue"
+      ],
+      "prompt-phrase": "play a tier-specific sting on the reveal",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "layered impact sound",
+      "tier": "T2 combat",
+      "domain": "audio-feel",
+      "meaning": "An impact built from transient, body and tail layers.",
+      "use-when": "Weighty hits.",
+      "pairs-with": [
+        "audio cue"
+      ],
+      "prompt-phrase": "layer a sharp transient, a mid body and a short tail for each hit",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "pitch variation",
+      "tier": "all",
+      "domain": "audio-feel",
+      "meaning": "Randomising pitch slightly to avoid repetition.",
+      "use-when": "Repeated sounds.",
+      "pairs-with": [
+        "audio cue"
+      ],
+      "prompt-phrase": "vary pitch ±6 % on every coin pickup",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "rising pitch chain",
+      "tier": "T3 hud",
+      "domain": "audio-feel",
+      "meaning": "Each consecutive pickup plays a slightly higher note.",
+      "use-when": "Combos and coin streams.",
+      "pairs-with": [
+        "combo meter"
+      ],
+      "prompt-phrase": "raise pickup pitch one semitone per pickup in a streak, reset after 1 s",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "ducking",
+      "tier": "all",
+      "domain": "audio-feel",
+      "meaning": "Lowering music under important sounds.",
+      "use-when": "Mixing.",
+      "pairs-with": [
+        "audio cue"
+      ],
+      "prompt-phrase": "duck music 6 dB under the reveal sting",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "music intensity",
+      "tier": "all",
+      "domain": "audio-feel",
+      "meaning": "Music level and filter following the intensity rung.",
+      "use-when": "Adaptive music.",
+      "pairs-with": [
+        "intensity ladder"
+      ],
+      "prompt-phrase": "open the music's high shelf as the intensity rung climbs",
+      "source": "cursed-survivors/src/shared/Intensity.luau",
+      "starter": false
+    },
+    {
+      "term": "haptics",
+      "tier": "all",
+      "domain": "audio-feel",
+      "meaning": "Controller or phone vibration on events.",
+      "use-when": "Mobile and console feel.",
+      "pairs-with": [
+        "hit-stop"
+      ],
+      "prompt-phrase": "pulse a 20 ms haptic on hits and a 60 ms one on kills",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "game feel",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "How responsive and physical control feels.",
+      "use-when": "Polishing play.",
+      "pairs-with": [
+        "juice",
+        "hit-stop"
+      ],
+      "prompt-phrase": "tune game feel: input to motion within one frame, clear impacts",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "input buffer",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Remembering an input briefly so it fires when possible.",
+      "use-when": "Action timing.",
+      "pairs-with": [
+        "coyote time"
+      ],
+      "prompt-phrase": "buffer jump inputs for 100 ms",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "coyote time",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Allowing a jump shortly after leaving a ledge.",
+      "use-when": "Platformers.",
+      "pairs-with": [
+        "input buffer"
+      ],
+      "prompt-phrase": "allow jumps up to 80 ms after leaving the ledge",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "squash and stretch",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Deforming shapes to show speed and impact.",
+      "use-when": "Characters and pickups.",
+      "pairs-with": [
+        "overshoot"
+      ],
+      "prompt-phrase": "squash the coin 20 % on landing and stretch it toward the magnet",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "follow-through",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Parts continuing to move after the main motion stops.",
+      "use-when": "Natural animation.",
+      "pairs-with": [
+        "overlap"
+      ],
+      "prompt-phrase": "let the cape follow through for 150 ms after the stop",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "overlap",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Different parts moving slightly out of sync.",
+      "use-when": "Organic motion.",
+      "pairs-with": [
+        "follow-through"
+      ],
+      "prompt-phrase": "offset hair and cape motion by 2 frames",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "anticipation pose",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "A small opposite motion before an action.",
+      "use-when": "Attacks and jumps.",
+      "pairs-with": [
+        "anticipation"
+      ],
+      "prompt-phrase": "crouch 3 frames before the jump",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "camera lag",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "The camera trailing its target slightly.",
+      "use-when": "Smooth cameras.",
+      "pairs-with": [
+        "camera lead"
+      ],
+      "prompt-phrase": "lag the camera 0.1 s behind the player",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "camera lead",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "The camera looking ahead in the movement direction.",
+      "use-when": "Fast movement.",
+      "pairs-with": [
+        "camera lag"
+      ],
+      "prompt-phrase": "lead the camera 20 % of screen width in the move direction",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "aim assist",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Gently helping aim toward valid targets.",
+      "use-when": "Mobile shooters.",
+      "pairs-with": [
+        "game feel"
+      ],
+      "prompt-phrase": "snap aim within 12° to the nearest target on touch",
+      "source": "cursed-survivors/tests/aim.luau",
+      "starter": false
+    },
+    {
+      "term": "readability under spectacle",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "Keeping gameplay information clear while effects are maxed.",
+      "use-when": "Late-game screens.",
+      "pairs-with": [
+        "protected region",
+        "intensity ladder"
+      ],
+      "prompt-phrase": "at max spectacle every threat must still pass the gate",
+      "source": "vault/Research/Render Deep Dive/09",
+      "starter": false
+    },
+    {
+      "term": "reduced motion",
+      "tier": "all",
+      "domain": "game-feel",
+      "meaning": "A setting or OS preference to tone down motion.",
+      "use-when": "Accessibility.",
+      "pairs-with": [
+        "screen shake"
+      ],
+      "prompt-phrase": "honour reduced motion: shake at 25 %, no flashes",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "brief",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "A structured request: goal, tier, deliverable, constraints, quality bar, done-check.",
+      "use-when": "Starting any task.",
+      "pairs-with": [
+        "prompt amplifier",
+        "done-check"
+      ],
+      "prompt-phrase": "write a brief before building: goal, tier, deliverable, constraints, bar, done",
+      "source": "aaa-kit/.claude/skills/prompt-amplifier",
+      "starter": true
+    },
+    {
+      "term": "prompt amplifier",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Turning a vague request into a brief with options.",
+      "use-when": "Weak prompts.",
+      "pairs-with": [
+        "brief"
+      ],
+      "prompt-phrase": "amplify the prompt into a brief, then proceed on Solid",
+      "source": "aaa-kit/.claude/skills/prompt-amplifier",
+      "starter": false
+    },
+    {
+      "term": "solid bold insane",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Three escalation levels: ship-ready, signature, memorable.",
+      "use-when": "Offering options.",
+      "pairs-with": [
+        "prompt amplifier"
+      ],
+      "prompt-phrase": "offer solid, bold and insane versions and start on solid",
+      "source": "aaa-kit/.claude/skills/prompt-amplifier",
+      "starter": false
+    },
+    {
+      "term": "done-check",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "An observable condition that proves the work is done.",
+      "use-when": "Ending any task.",
+      "pairs-with": [
+        "brief"
+      ],
+      "prompt-phrase": "done when the capture at 390×844 shows the price readable and the test passes",
+      "source": "aaa-kit/.claude/skills/prompt-amplifier",
+      "starter": false
+    },
+    {
+      "term": "self-check",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "The checklist a skill runs before saying done.",
+      "use-when": "Finishing skill work.",
+      "pairs-with": [
+        "done-check"
+      ],
+      "prompt-phrase": "run the skill's self-check and list any item that fails",
+      "source": "aaa-kit/.claude/skills",
+      "starter": false
+    },
+    {
+      "term": "before/after capture",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Screenshots of the same state before and after a change.",
+      "use-when": "Visual changes.",
+      "pairs-with": [
+        "done-check"
+      ],
+      "prompt-phrase": "capture before and after at the same seed and size",
+      "source": "cursed-survivors/docs/look",
+      "starter": false
+    },
+    {
+      "term": "parity checklist",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "A list of features to match against a reference.",
+      "use-when": "Ports and remakes.",
+      "pairs-with": [
+        "done-check"
+      ],
+      "prompt-phrase": "track feature parity in a checklist: done, partial, missing",
+      "source": "cursed-survivors/docs/PARITY_CHECKLIST.md",
+      "starter": false
+    },
+    {
+      "term": "handoff note",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "A written state of work for the next session.",
+      "use-when": "Ending a session.",
+      "pairs-with": [
+        "brief"
+      ],
+      "prompt-phrase": "write a handoff: what's done, what's verified, what's next",
+      "source": "cursed-survivors/docs/HANDOFF.md",
+      "starter": false
+    },
+    {
+      "term": "skeleton first",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Build every system end to end with placeholders, then raise quality module by module.",
+      "use-when": "Starting a big game.",
+      "pairs-with": [
+        "parity checklist"
+      ],
+      "prompt-phrase": "build the full skeleton playable first, then polish one module at a time",
+      "source": "cursed-survivors/docs/decisions.md",
+      "starter": false
+    },
+    {
+      "term": "vertical slice",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "One small part of the game at final quality.",
+      "use-when": "Proving the look and feel.",
+      "pairs-with": [
+        "skeleton first"
+      ],
+      "prompt-phrase": "build a vertical slice: one stage, one weapon, one reward at ship quality",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "playtest",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Watching real players use the build.",
+      "use-when": "Validating feel and difficulty.",
+      "pairs-with": [
+        "done-check"
+      ],
+      "prompt-phrase": "playtest with 3 players and note where they hesitate",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "code review",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "Reading a change for bugs before merging.",
+      "use-when": "Every change.",
+      "pairs-with": [
+        "done-check"
+      ],
+      "prompt-phrase": "review the diff for correctness before merging",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "draft PR",
+      "tier": "process",
+      "domain": "process",
+      "meaning": "A pull request opened for review before it's ready to merge.",
+      "use-when": "Sharing work in progress.",
+      "pairs-with": [
+        "code review"
+      ],
+      "prompt-phrase": "open a draft PR on a feature branch",
+      "source": "industry",
+      "starter": false
+    }
+  ]
+}

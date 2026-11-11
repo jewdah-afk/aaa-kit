@@ -1,6 +1,6 @@
 ---
 name: ui-hud
-description: Use when building or fixing any HUD or in-game UI - currency and big-number displays (K/M/B/T), XP/HP/progress bars, cooldown icons, combo meters, loot/kill feeds, damage numbers, rarity frames and inventory slots, shop cards, buttons and UI juice. Triggers on "HUD", "UI", "bar", "counter", "cooldown", "inventory", "shop UI", "damage numbers", "make the UI pop", "fix the ui".
+description: Use when building or fixing any HUD or in-game UI - currency and big-number displays (K/M/B/T), XP/HP/progress bars, cooldown icons, combo meters, loot/kill feeds, damage numbers, rarity frames and inventory slots, shop cards, buttons and UI juice. Triggers on "HUD", "UI", "bar", "counter", "cooldown", "inventory", "shop UI", "damage numbers", "HUD layout", "UI juice".
 ---
 
 # ui-hud

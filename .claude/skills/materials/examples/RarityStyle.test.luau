@@ -1,4 +1,5 @@
 --!strict
+--# selene: allow(multiple_statements)
 local RarityStyle = require("./RarityStyle")
 local t = require("../../../../tools/lib/t")
 
