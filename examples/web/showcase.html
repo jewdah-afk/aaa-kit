@@ -1,0 +1,1079 @@
+<title>aaa-kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a tech-art bench between heat and frost. Left-aligned 12-column grid, live specimens set into slabs, real numbers as structure. */
+:root {
+  --ground: #111317;
+  --slab: #181b20;
+  --slab-2: #1e2228;
+  --rule: #2a2f37;
+  --ink: #eceae5;
+  --mute: #9aa0a8;
+  --heat: #ff9a3c;
+  --frost: #8fd8ff;
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body: "Instrument Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --gut: max(16px, env(safe-area-inset-left, 0px));
+  --gut-r: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
+a { color: inherit; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: var(--gut); padding-right: var(--gut-r); }
+.mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--mute); }
+.eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(44px, 8.4vw, 112px); line-height: 0.92; letter-spacing: -0.035em; font-variation-settings: "wdth" 82, "opsz" 96; }
+h2 { font-size: clamp(30px, 4.6vw, 56px); line-height: 1; letter-spacing: -0.025em; font-variation-settings: "wdth" 86, "opsz" 72; }
+h3 { font-size: 22px; line-height: 1.15; letter-spacing: -0.01em; font-variation-settings: "wdth" 92; }
+p { margin: 0; max-width: 62ch; color: var(--mute); }
+p strong { color: var(--ink); font-weight: 600; }
+code, pre { font-family: var(--mono); }
+.heat { color: var(--heat); }
+.frost { color: var(--frost); }
+
+/* top bar */
+header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--ground) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+header.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+.mark { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; text-decoration: none; display: flex; align-items: baseline; gap: 2px; }
+.mark i { font-style: normal; color: var(--heat); }
+.mark b { color: var(--frost); font-weight: 800; }
+nav { display: flex; gap: 18px; flex-wrap: wrap; }
+nav a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-decoration: none; color: var(--mute); padding: 6px 0; }
+nav a:hover, nav a:focus-visible { color: var(--ink); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--frost); outline-offset: 3px; border-radius: 4px; }
+@media (max-width: 560px) { nav { display: none; } }
+
+/* hero */
+.hero { padding-block: 44px 28px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: center; }
+@media (max-width: 880px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+.hero .lede { display: grid; gap: 22px; align-content: center; }
+.hero .lede p { font-size: 18px; }
+.split { display: block; }
+.split em { font-style: normal; background: linear-gradient(90deg, var(--heat), #ffd29a 45%, var(--frost)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.relic { position: relative; display: grid; gap: 8px; }
+.relic canvas { width: 100%; max-width: 520px; aspect-ratio: 1; display: block; margin-left: auto; cursor: grab; touch-action: none; border-radius: 50%; background: radial-gradient(circle at 50% 55%, #1c2027 0, var(--ground) 68%); }
+.relic .legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; max-width: 520px; margin-left: auto; width: 100%; }
+.thermo { display: flex; align-items: center; gap: 10px; }
+.thermo span { height: 4px; width: 120px; border-radius: 2px; background: linear-gradient(90deg, var(--frost), #3a4350 50%, var(--heat)); }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.btn { font: 600 15px var(--body); color: #14100b; background: var(--heat); border: 0; border-radius: 999px; padding: 12px 20px; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+
+/* numbers */
+.numbers { border-block: 1px solid var(--rule); }
+.numbers .wrap { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.numbers .wrap > div { padding: 18px 14px 18px 0; display: grid; gap: 2px; }
+.numbers b { font-family: var(--display); font-size: 34px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 85; }
+@media (max-width: 880px) { .numbers .wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 440px) { .numbers .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+section.block { padding-block: 72px 8px; display: grid; gap: 28px; }
+.head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px; align-items: end; }
+@media (max-width: 880px) { .head { grid-template-columns: minmax(0, 1fr); } }
+
+/* specimens */
+.specimens { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.spec { grid-column: span 4; background: var(--slab); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.spec.wide { grid-column: span 8; }
+.spec.half { grid-column: span 6; }
+@media (max-width: 980px) { .spec, .spec.wide, .spec.half { grid-column: span 6; } }
+@media (max-width: 640px) { .spec, .spec.wide, .spec.half { grid-column: span 12; } }
+.spec canvas { width: 100%; aspect-ratio: 1; display: block; background: #0d0f12; touch-action: none; cursor: crosshair; }
+.spec.wide canvas { aspect-ratio: 2 / 1; }
+.spec .cap { padding: 14px 16px 16px; display: grid; gap: 8px; align-content: start; }
+.spec .cap p { font-size: 14.5px; }
+.recipe { display: flex; flex-wrap: wrap; gap: 6px; }
+.recipe span { font-family: var(--mono); font-size: 11px; color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 7px; background: var(--slab-2); }
+.spec .foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.toggle { font: 500 12px var(--mono); color: var(--ink); background: var(--slab-2); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; cursor: pointer; min-height: 32px; }
+.toggle[aria-pressed="true"] { border-color: var(--frost); color: var(--frost); }
+
+/* hierarchy ladder */
+.ladder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 880px) { .ladder { grid-template-columns: minmax(0, 1fr); } }
+.tiers { display: grid; border-top: 1px solid var(--rule); }
+.tier { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.tier b { font-family: var(--display); font-size: 38px; line-height: 0.9; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tier h3 { font-size: 18px; }
+.tier p { font-size: 14px; }
+.rules { display: grid; gap: 10px; align-content: start; }
+.rule { background: var(--slab); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; align-items: center; }
+.rule b { font-family: var(--display); font-size: 26px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 85; }
+.rule p { font-size: 14px; }
+
+/* kit index */
+.index { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+@media (max-width: 880px) { .index { grid-template-columns: minmax(0, 1fr); } }
+.index > div { padding: 22px 22px 26px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 10px; align-content: start; min-width: 0; }
+.index ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.index li { font-size: 14.5px; color: var(--mute); }
+.index li b { color: var(--ink); font-weight: 600; }
+
+/* start */
+.start { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 24px; align-items: start; }
+@media (max-width: 880px) { .start { grid-template-columns: minmax(0, 1fr); } }
+pre.term { margin: 0; background: #0b0d10; border: 1px solid var(--rule); border-radius: 12px; padding: 18px; font-size: 13.5px; line-height: 1.7; overflow-x: auto; color: var(--ink); }
+pre.term .c { color: #5e6672; }
+pre.term .p { color: var(--frost); }
+footer { margin-top: 80px; border-top: 1px solid var(--rule); }
+footer .wrap { padding-block: 26px 40px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="mark" href="#top" aria-label="aaa-kit, back to top"><i>aaa</i>-kit<b>.</b></a>
+    <nav aria-label="Sections">
+      <a href="#specimens">Specimens</a>
+      <a href="#hierarchy">Hierarchy</a>
+      <a href="#kit">The kit</a>
+      <a href="#start">Start</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="lede">
+      <div class="eyebrow">Roblox game-dev super repo · Luau · tested headless</div>
+      <h1><span class="split">Every surface</span><span class="split"><em>remembers.</em></span></h1>
+      <p>aaa-kit is the hub behind our games: a hierarchy that decides what owns each pixel, <strong>15 Claude skills</strong>, tested Luau libraries, and textures that are <strong>baked onto real models, move in realtime and react when they're hit</strong>. Everything on this page is running live.</p>
+      <div class="cta-row">
+        <a class="btn" href="#start">Get the kit</a>
+        <a class="btn ghost" href="#specimens">See the specimens</a>
+      </div>
+    </div>
+    <div class="relic">
+      <canvas id="relic" width="320" height="320" aria-label="A relic that dissolves from one baked material into the next. Drag to turn it, tap to strike it."></canvas>
+      <div class="legend">
+        <span class="mono" id="relicName">Metamorph · baking…</span>
+        <span class="thermo mono"><span aria-hidden="true"></span>tap to strike</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="numbers" aria-label="The kit in numbers">
+    <div class="wrap">
+      <div><b>15</b><span class="mono">Claude skills</span></div>
+      <div><b>444</b><span class="mono">lexicon terms</span></div>
+      <div><b>30</b><span class="mono">research chapters</span></div>
+      <div><b>10</b><span class="mono">playbooks</span></div>
+      <div><b>15</b><span class="mono">baked materials</span></div>
+      <div><b>36/36</b><span class="mono">GIFs flash-safe</span></div>
+    </div>
+  </div>
+
+  <section class="wrap block" id="specimens">
+    <div class="head">
+      <h2>New specimens, built from <span class="heat">every</span> discovery</h2>
+      <p>Each one stacks techniques from the library: UV-space bakes, pre-baked fields, reactive state, parallax occlusion, shell fur, infinite zoom and the hierarchy auditor. Every frame is computed on the CPU, the way a Roblox client draws into an <strong>EditableImage</strong>.</p>
+    </div>
+    <div class="specimens">
+      <article class="spec half">
+        <canvas id="shock" width="240" height="240" aria-label="A painted steel crate struck by alternating heat and frost; where they meet, steam rings and cracks."></canvas>
+        <div class="cap">
+          <h3>Thermal shock</h3>
+          <p>Heat and frost hits land on a painted steel crate. Frost grows from a moving front, heat melts it, and where they meet the metal throws a steam ring and keeps a crack scar.</p>
+          <div class="recipe"><span>bake</span><span>React heat</span><span>React frost</span><span>ripple</span><span>crystal field</span></div>
+          <div class="foot"><span class="mono">tap: <span class="heat">heat</span> · shift-tap (every 2nd tap on touch): <span class="frost">frost</span></span><span class="mono" id="shockMs">–</span></div>
+        </div>
+      </article>
+      <article class="spec half">
+        <canvas id="portal" width="240" height="240" aria-label="A stone ring with deep parallax, its centre an endless zoom into a reaction-diffusion tunnel."></canvas>
+        <div class="cap">
+          <h3>Abyss portal</h3>
+          <p>A flat square marched as a height field gives a stone ring real depth. Where the ray falls into the hole, it lands in an infinite zoom of a reaction-diffusion render, offset by the same view, so the tunnel sits behind the stone.</p>
+          <div class="recipe"><span>Parallax.pom</span><span>Parallax.zoom</span><span>reaction-diffusion</span><span>rune pulse</span></div>
+          <div class="foot"><span class="mono">move the pointer to look in</span><span class="mono" id="portalMs">–</span></div>
+        </div>
+      </article>
+      <article class="spec half">
+        <canvas id="pelt" width="240" height="240" aria-label="A fur ball with embers flowing at the roots; the fur lags when it lurches."></canvas>
+        <div class="cap">
+          <h3>Ember pelt</h3>
+          <p>Sixteen offset shells make fur with real depth. A looping lava table flows through the roots, so embers glow under the ash-grey tips, and a spring makes the fur lag whenever the body lurches.</p>
+          <div class="recipe"><span>Parallax.shells</span><span>Animate flow</span><span>React.spring</span></div>
+          <div class="foot"><span class="mono">drag it hard and let go</span><span class="mono" id="peltMs">–</span></div>
+        </div>
+      </article>
+      <article class="spec half">
+        <canvas id="lens" width="240" height="240" aria-label="A mock game shop screen with the predicted scanpath drawn over it."></canvas>
+        <div class="cap">
+          <h3>Hierarchy lens</h3>
+          <p>The auditor's salience model on a shop screen: centre-surround contrast, few-peaks weighting, then a scanpath with inhibition of return. With three loud panels the eye goes to the HUD first. Fix it, and the path runs item, then buy button. The caption is measured live.</p>
+          <div class="recipe"><span>tools/hierarchy</span><span>salience</span><span>inhibition of return</span></div>
+          <div class="foot"><button class="toggle" id="lensFix" type="button" aria-pressed="false">Fix the hierarchy</button><button class="toggle" id="lensHeat" type="button" aria-pressed="true">Heatmap</button></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap block" id="hierarchy">
+    <div class="head">
+      <h2>One rule above all: <span class="frost">one thing</span> is loud</h2>
+      <p>HIERARCHY.md ranks every visual on six loudness tiers, and each rule now has research and a number behind it. The checks run on every change.</p>
+    </div>
+    <div class="ladder">
+      <div class="tiers" aria-label="Loudness tiers, loudest first">
+        <div class="tier"><b class="heat">1</b><div><h3>Moments and rewards</h3><p>Owns the screen for a beat, one at a time, skippable. The world dims behind it.</p></div></div>
+        <div class="tier"><b>2</b><div><h3>Combat and impact</h3><p>Bright on the onset frame and back to baseline within twelve frames. Threats outrank loot.</p></div></div>
+        <div class="tier"><b>3</b><div><h3>HUD and interface</h3><p>Still until a number changes, then it says exactly what changed.</p></div></div>
+        <div class="tier"><b>4</b><div><h3>World and atmosphere</h3><p>A muted value range and slow ambient motion. It never competes with play.</p></div></div>
+        <div class="tier"><b>5</b><div><h3>Materials</h3><p>Rarity as material: brushed, glass, chrome, holo. Read up close and quiet at a distance.</p></div></div>
+        <div class="tier"><b class="frost">6</b><div><h3>Generative engines</h3><p>Reaction-diffusion, flow fields and boids run underneath and make content.</p></div></div>
+      </div>
+      <div class="rules">
+        <div class="rule"><b>Lc 75+</b><p><strong>Text contrast</strong> for numbers read in play (APCA), 60 for labels, 30 for anything disabled.</p></div>
+        <div class="rule"><b>≤ 3 / s</b><p><strong>Flashes</strong> over 2.78% of the screen (WCAG 2.3.1). It caught our own parallax window flickering, and soft edges with bilinear sampling fixed it.</p></div>
+        <div class="rule"><b>600 ms</b><p><strong>Minimum wind-up</strong> for a familiar attack: notice, decide, act, plus network latency. New attacks get 1 s or more.</p></div>
+        <div class="rule"><b>500 ms</b><p><strong>Gap between reward beats</strong>, so the second one doesn't vanish in the attentional blink.</p></div>
+        <div class="rule"><b>ΔE 0.04</b><p><strong>Colour-blind safe ladders.</strong> It caught Rare and Epic collapsing under deuteranopia, and Rare moved to a lighter blue.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="kit">
+    <div class="head">
+      <h2>What's in the kit</h2>
+      <p>One clone. Type <strong>hi</strong> and the kit doctor checks your machine. Ask for something vague and the prompt amplifier turns it into a brief with three ambition levels.</p>
+    </div>
+    <div class="index">
+      <div>
+        <div class="eyebrow">Claude skills · 15</div>
+        <ul>
+          <li><b>ui-hud</b>, <b>reward-moments</b>, <b>vfx</b></li>
+          <li><b>materials</b>, <b>shaders-and-sdf</b>, <b>algorithms</b></li>
+          <li><b>editable-image</b>, <b>editable-mesh</b>, <b>procedural-world</b></li>
+          <li><b>game-economy</b>, <b>roblox-luau-standards</b>, <b>art-direction</b></li>
+          <li><b>hierarchy-audit</b>, <b>prompt-amplifier</b>, <b>kit-doctor</b></li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Luau libraries · 3</div>
+        <ul>
+          <li><b>surfacebake</b>: textures baked onto your meshes; 15 materials; realtime and reactive surfaces; depth without shaders</li>
+          <li><b>frontier</b>: EditableImage and EditableMesh at the limits: falling sand, 2D GI, voxel terrain, lightmaps, fracture</li>
+          <li><b>pixelfx</b>: 15 pixel effects, up to a 1,000-enemy crowd</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Playbooks · 10</div>
+        <ul>
+          <li>Figma → Roblox UI, rebuilt node for node</li>
+          <li>UI motion and sound · icon pipeline</li>
+          <li>World hierarchy · VFX craft · look-dev loop</li>
+          <li>Studio workflow · working with Claude</li>
+          <li>Parity and porting · procedural textures</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Research · 30 chapters</div>
+        <ul>
+          <li>EditableImage and EditableMesh APIs with cookbooks</li>
+          <li>Luau performance, architecture, security</li>
+          <li>Procgen, NPC AI, live ops, QA</li>
+          <li>Hierarchy science: attention, contrast, timing, audio</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Tools</div>
+        <ul>
+          <li><b>doctor.py</b>: toolchain and repo health</li>
+          <li><b>hierarchy.py</b>: scanpath, APCA, colour blindness, flash safety</li>
+          <li><b>Figma kit</b>, <b>icon pipeline</b>, <b>GIF recorders</b></li>
+          <li><b>check_all.sh</b>: one command, everything green</li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Review agents · 4</div>
+        <ul>
+          <li><b>ui-qa</b>: zoomed-in visual QA</li>
+          <li><b>style-guard</b>: the locked style rules</li>
+          <li><b>visual-hierarchy</b>: reading order</li>
+          <li><b>roblox-feasibility</b>: can Roblox actually render it?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="start">
+    <div class="start">
+      <div style="display:grid;gap:18px;align-content:start">
+        <h2>Start in ten seconds</h2>
+        <p>Clone it, open it in Claude Code and say hi. Everything is checked headless: Luau compiles and tests, links, skill routing, the lexicon, flash safety, and every web page at phone and desktop size.</p>
+        <p class="mono">Code MIT · docs CC BY-ND 4.0 · Roblox / Luau · phone first</p>
+      </div>
+      <pre class="term"><span class="c"># get it</span>
+<span class="p">$</span> git clone https://github.com/jewdah-afk/aaa-kit
+<span class="c"># ask it</span>
+<span class="p">&gt;</span> hi
+<span class="c"># bake rust onto a mesh you own (client)</span>
+Apply.bakeMeshPart(workspace.Barrel, Presets.rustedIron, { size = 512 })
+<span class="c"># prove it</span>
+<span class="p">$</span> bash tools/check_all.sh
+all checks passed</pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="mono">aaa-kit · hierarchy, skills, libraries, research</span>
+    <a class="mono" href="https://github.com/jewdah-afk/aaa-kit">github.com/jewdah-afk/aaa-kit</a>
+  </div>
+</footer>
+
+<script>
+"use strict";
+// ===== engine spliced from surface-bake.html by tools/build_showcase.py =====
+// ---------------------------------------------------------------- noise (improved Perlin, seeded)
+const PERM = new Uint8Array(512);
+(function () {
+  const p = Array.from({ length: 256 }, (_, i) => i);
+  let s = 1337;
+  for (let i = 255; i > 0; i--) { s = (Math.imul(s, 1103515245) + 12345) >>> 0; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 512; i++) PERM[i] = p[i & 255];
+})();
+const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+function grad(h, x, y, z) { const u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14 ? x : z); return ((h & 1) ? -u : u) + ((h & 2) ? -v : v); }
+function noise3(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const A = PERM[X] + Y, AA = PERM[A] + Z, AB = PERM[A + 1] + Z, B = PERM[X + 1] + Y, BA = PERM[B] + Z, BB = PERM[B + 1] + Z;
+  const l = (a, b, t) => a + t * (b - a);
+  return l(l(l(grad(PERM[AA] & 15, x, y, z), grad(PERM[BA] & 15, x - 1, y, z), u), l(grad(PERM[AB] & 15, x, y - 1, z), grad(PERM[BB] & 15, x - 1, y - 1, z), u), v),
+    l(l(grad(PERM[AA + 1] & 15, x, y, z - 1), grad(PERM[BA + 1] & 15, x - 1, y, z - 1), u), l(grad(PERM[AB + 1] & 15, x, y - 1, z - 1), grad(PERM[BB + 1] & 15, x - 1, y - 1, z - 1), u), v), w);
+}
+function fbm(x, y, z, oct) { let s = 0, a = 1, n = 0; for (let i = 0; i < oct; i++) { s += noise3(x, y, z) * a; n += a; a *= 0.5; x = x * 2 + 17.3; y = y * 2 + 9.1; z = z * 2 + 3.7; } return s / n * 1.6; }
+function ridged(x, y, z, oct) { let s = 0, a = 1, n = 0; for (let i = 0; i < oct; i++) { const r = 1 - Math.abs(noise3(x, y, z) * 1.6); s += r * r * a; n += a; a *= 0.5; x = x * 2 + 17.3; y = y * 2 + 9.1; z = z * 2 + 3.7; } return s / n; }
+function warped(x, y, z, oct, k) { return fbm(x + fbm(x + 5.2, y + 1.3, z + 2.8, 3) * k, y + fbm(x + 1.7, y + 9.2, z + 4.1, 3) * k, z + fbm(x + 8.3, y + 2.8, z + 7.7, 3) * k, oct); }
+function hash3(ix, iy, iz, k) {
+  let h = (Math.imul(ix, 73856093) ^ Math.imul(iy, 19349663) ^ Math.imul(iz, 83492791) ^ Math.imul(k, 2654435761)) >>> 0;
+  h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0; h ^= h >>> 16; return (h >>> 0) / 4294967296;
+}
+function voronoi(x, y, z, jit) {
+  const cx = Math.floor(x), cy = Math.floor(y), cz = Math.floor(z); let f1 = 9, f2 = 9, id = 0; const j = jit ?? 1;
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+    const ix = cx + dx, iy = cy + dy, iz = cz + dz;
+    const px = ix + 0.5 + (hash3(ix, iy, iz, 1) - 0.5) * j, py = iy + 0.5 + (hash3(ix, iy, iz, 2) - 0.5) * j, pz = iz + 0.5 + (hash3(ix, iy, iz, 3) - 0.5) * j;
+    const d = Math.hypot(px - x, py - y, pz - z);
+    if (d < f1) { f2 = f1; f1 = d; id = hash3(ix, iy, iz, 4); } else if (d < f2) f2 = d;
+  }
+  return [f1, f2, id];
+}
+
+// ---------------------------------------------------------------- a 2D algorithm render to project: Gray-Scott reaction-diffusion
+const RD = (function () {
+  const N = 96, A = new Float32Array(N * N).fill(1), B = new Float32Array(N * N);
+  let s = 7; const rnd = () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
+  for (let k = 0; k < 40; k++) { const x0 = (rnd() * N) | 0, y0 = (rnd() * N) | 0; for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) B[((y0 + y + N) % N) * N + (x0 + x + N) % N] = 1; }
+  const A2 = new Float32Array(N * N), B2 = new Float32Array(N * N), f = 0.0545, kk = 0.062;
+  let a = A, b = B, a2 = A2, b2 = B2;
+  for (let it = 0; it < 2400; it++) {
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const i = y * N + x, l = y * N + (x + N - 1) % N, r = y * N + (x + 1) % N, u = ((y + N - 1) % N) * N + x, d = ((y + 1) % N) * N + x;
+      const la = a[l] + a[r] + a[u] + a[d] - 4 * a[i], lb = b[l] + b[r] + b[u] + b[d] - 4 * b[i], abb = a[i] * b[i] * b[i];
+      a2[i] = a[i] + (1.0 * la * 0.2 - abb + f * (1 - a[i])); b2[i] = b[i] + (0.5 * lb * 0.2 + abb - (kk + f) * b[i]);
+    }
+    [a, a2] = [a2, a]; [b, b2] = [b2, b];
+  }
+  const img = new Uint8Array(N * N * 4);
+  for (let i = 0; i < N * N; i++) { const v = Math.max(0, Math.min(255, (b[i] * 3.2 * 255) | 0)); img[i * 4] = img[i * 4 + 1] = img[i * 4 + 2] = v; img[i * 4 + 3] = 255; }
+  return { img, w: N, h: N };
+})();
+function triplanar(t, px, py, pz, nx, ny, nz, scale) {
+  let ax = Math.abs(nx) ** 4, ay = Math.abs(ny) ** 4, az = Math.abs(nz) ** 4; const s = ax + ay + az; ax /= s; ay /= s; az /= s;
+  const tap = (u, v) => { const x = ((Math.floor(u * scale * t.w) % t.w) + t.w) % t.w, y = ((Math.floor(v * scale * t.h) % t.h) + t.h) % t.h; return t.img[(y * t.w + x) * 4] / 255; };
+  return tap(pz, py) * ax + tap(px, pz) * ay + tap(px, py) * az;
+}
+
+// ---------------------------------------------------------------- meshes (same layout as lib/surfacebake/Mesh.luau)
+function newMesh() { return { P: [], tris: [], UV: [], N: [], weld: new Map() }; }
+function addV(m, x, y, z) { const k = Math.round(x * 1e5) + "," + Math.round(y * 1e5) + "," + Math.round(z * 1e5); let id = m.weld.get(k); if (id !== undefined) return id; id = m.P.length / 3; m.P.push(x, y, z); m.weld.set(k, id); return id; }
+function addTri(m, a, b, c) { for (const k of [a, b, c]) { m.tris.push(addV(m, k[0], k[1], k[2])); m.UV.push(k[3], k[4]); m.N.push(k[5], k[6], k[7]); } }
+function sphere(r, segs, rings) {
+  const m = newMesh();
+  const c = (i, j) => { const u = i / segs, v = j / rings, th = u * 2 * Math.PI, ph = v * Math.PI; const nx = Math.sin(ph) * Math.cos(th), ny = Math.cos(ph), nz = Math.sin(ph) * Math.sin(th); return [nx * r, ny * r, nz * r, u, v, nx, ny, nz]; };
+  for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = c(i, j), b = c(i + 1, j), cc = c(i + 1, j + 1), d = c(i, j + 1); if (j > 0) addTri(m, a, cc, b); if (j < rings - 1) addTri(m, a, d, cc); }
+  return m;
+}
+function box(hx, hy, hz, n) {
+  const m = newMesh(), H = [hx, hy, hz], margin = 0.02;
+  const faces = [[[1, 0, 0], [0, 0, -1], [0, -1, 0], 0, 0], [[-1, 0, 0], [0, 0, 1], [0, -1, 0], 1, 0], [[0, 1, 0], [1, 0, 0], [0, 0, 1], 2, 0], [[0, -1, 0], [1, 0, 0], [0, 0, -1], 0, 1], [[0, 0, 1], [1, 0, 0], [0, -1, 0], 1, 1], [[0, 0, -1], [-1, 0, 0], [0, -1, 0], 2, 1]];
+  for (const [nr, ua, va, col, row] of faces) {
+    const c = (s, t) => { const p = [0, 1, 2].map(k => (nr[k] + ua[k] * s + va[k] * t) * H[k]); return [p[0], p[1], p[2], (col + margin + (s + 1) / 2 * (1 - 2 * margin)) / 3, (row + margin + (t + 1) / 2 * (1 - 2 * margin)) / 2, nr[0], nr[1], nr[2]]; };
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const s0 = -1 + 2 * i / n, s1 = -1 + 2 * (i + 1) / n, t0 = -1 + 2 * j / n, t1 = -1 + 2 * (j + 1) / n; const a = c(s0, t0), b = c(s1, t0), cc = c(s1, t1), d = c(s0, t1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  }
+  return m;
+}
+function torus(R, r, segs, sides) {
+  const m = newMesh();
+  const c = (i, j) => { const u = i / segs, v = j / sides, th = u * 2 * Math.PI, ph = v * 2 * Math.PI, cx = Math.cos(th), cz = Math.sin(th), nx = Math.cos(ph) * cx, ny = Math.sin(ph), nz = Math.cos(ph) * cz; return [cx * R + nx * r, ny * r, cz * R + nz * r, u, v, nx, ny, nz]; };
+  for (let j = 0; j < sides; j++) for (let i = 0; i < segs; i++) { const a = c(i, j), b = c(i + 1, j), cc = c(i + 1, j + 1), d = c(i, j + 1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  return m;
+}
+// A barrel: bulging side (one UV band) plus two lids as separate UV discs.
+function barrel(r, h, segs) {
+  const m = newMesh(), rings = 6;
+  const side = (i, j) => { const u = i / segs, th = u * 2 * Math.PI, t = j / rings, y = (t - 0.5) * h; const bulge = 1 + 0.12 * Math.sin(t * Math.PI); const nx = Math.cos(th), nz = Math.sin(th); return [nx * r * bulge, y, nz * r * bulge, u, 0.02 + t * 0.6, nx, 0, nz]; };
+  for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = side(i, j), b = side(i + 1, j), cc = side(i + 1, j + 1), d = side(i, j + 1); addTri(m, a, b, cc); addTri(m, a, cc, d); }
+  for (const sgn of [1, -1]) {
+    const y = sgn * h / 2, cu = sgn > 0 ? 0.25 : 0.75;
+    for (let i = 0; i < segs; i++) {
+      const t0 = i / segs * 2 * Math.PI, t1 = (i + 1) / segs * 2 * Math.PI;
+      const ctr = [0, y, 0, cu, 0.81, 0, sgn, 0];
+      const p0 = [Math.cos(t0) * r, y, Math.sin(t0) * r, cu + Math.cos(t0) * 0.17, 0.81 + Math.sin(t0) * 0.17, 0, sgn, 0];
+      const p1 = [Math.cos(t1) * r, y, Math.sin(t1) * r, cu + Math.cos(t1) * 0.17, 0.81 + Math.sin(t1) * 0.17, 0, sgn, 0];
+      addTri(m, ctr, p0, p1);
+    }
+  }
+  return m;
+}
+
+// ---------------------------------------------------------------- bake (port of Raster/Surface/Recipe/Bake.luau)
+const norm = (x, y, z) => { const l = Math.hypot(x, y, z) || 1; return [x / l, y / l, z / l]; };
+function bake(m, recipe, S) {
+  const t0 = performance.now();
+  const n = S * S, cover = new Uint8Array(n), tri = new Int32Array(n), bar = new Float32Array(n * 3), pos = new Float32Array(n * 3), nrm = new Float32Array(n * 3), tan = new Float32Array(n * 3), bit = new Float32Array(n * 3);
+  const { P, tris, UV, N } = m, nt = tris.length / 3;
+  // per-triangle tangent (+u) and bitangent (+v)
+  const TB = new Float32Array(nt * 6);
+  for (let t = 0; t < nt; t++) {
+    const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+    const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+    const du1 = UV[t * 6 + 2] - UV[t * 6], dv1 = UV[t * 6 + 3] - UV[t * 6 + 1], du2 = UV[t * 6 + 4] - UV[t * 6], dv2 = UV[t * 6 + 5] - UV[t * 6 + 1];
+    const det = du1 * dv2 - du2 * dv1, r = Math.abs(det) < 1e-14 ? 0 : 1 / det;
+    const T = norm(...[0, 1, 2].map(k => (e1[k] * dv2 - e2[k] * dv1) * r)), B = norm(...[0, 1, 2].map(k => (e2[k] * du1 - e1[k] * du2) * r));
+    TB.set([...T, ...B], t * 6);
+  }
+  let covered = 0;
+  for (let t = 0; t < nt; t++) {
+    const ax = UV[t * 6] * S, ay = UV[t * 6 + 1] * S, bx = UV[t * 6 + 2] * S, by = UV[t * 6 + 3] * S, cx = UV[t * 6 + 4] * S, cy = UV[t * 6 + 5] * S;
+    const area = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay); if (Math.abs(area) < 1e-12) continue; const inv = 1 / area;
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx, cx) - 0.5)), x1 = Math.min(S - 1, Math.ceil(Math.max(ax, bx, cx) - 0.5));
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by, cy) - 0.5)), y1 = Math.min(S - 1, Math.ceil(Math.max(ay, by, cy) - 0.5));
+    const ia = tris[t * 3], ib = tris[t * 3 + 1], ic = tris[t * 3 + 2];
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const px = x + 0.5, py = y + 0.5;
+      const w0 = ((bx - px) * (cy - py) - (cx - px) * (by - py)) * inv, w1 = ((cx - px) * (ay - py) - (ax - px) * (cy - py)) * inv, w2 = 1 - w0 - w1;
+      if (w0 < -1e-7 || w1 < -1e-7 || w2 < -1e-7) continue;
+      const i = y * S + x; if (!cover[i]) covered++; cover[i] = 1; tri[i] = t + 1; bar.set([w0, w1, w2], i * 3);
+      for (let k = 0; k < 3; k++) pos[i * 3 + k] = w0 * P[ia * 3 + k] + w1 * P[ib * 3 + k] + w2 * P[ic * 3 + k];
+      const nn = norm(w0 * N[t * 9] + w1 * N[t * 9 + 3] + w2 * N[t * 9 + 6], w0 * N[t * 9 + 1] + w1 * N[t * 9 + 4] + w2 * N[t * 9 + 7], w0 * N[t * 9 + 2] + w1 * N[t * 9 + 5] + w2 * N[t * 9 + 8]);
+      let T = TB.subarray(t * 6, t * 6 + 3), d = T[0] * nn[0] + T[1] * nn[1] + T[2] * nn[2];
+      const q = norm(T[0] - nn[0] * d, T[1] - nn[1] * d, T[2] - nn[2] * d);
+      const V = TB.subarray(t * 6 + 3, t * 6 + 6), dn = V[0] * nn[0] + V[1] * nn[1] + V[2] * nn[2], dq = V[0] * q[0] + V[1] * q[1] + V[2] * q[2];
+      const w = norm(V[0] - nn[0] * dn - q[0] * dq, V[1] - nn[1] * dn - q[1] * dq, V[2] - nn[2] * dn - q[2] * dq);
+      nrm.set(nn, i * 3); tan.set(q, i * 3); bit.set(w, i * 3);
+    }
+  }
+  // dilate 4 texels
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+  for (let pass = 0; pass < 4; pass++) {
+    const fill = [];
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = y * S + x; if (cover[i]) continue; for (const [dx, dy] of dirs) { const X = x + dx, Y = y + dy; if (X >= 0 && X < S && Y >= 0 && Y < S && cover[Y * S + X]) { fill.push(i, Y * S + X); break; } } }
+    for (let k = 0; k < fill.length; k += 2) { const i = fill[k], j = fill[k + 1]; cover[i] = 2; tri[i] = tri[j]; for (const a of [bar, pos, nrm, tan, bit]) a.copyWithin(i * 3, j * 3, j * 3 + 3); }
+  }
+  const tRaster = performance.now();
+  // vertex normals (authored corners averaged), AO, sharp edges
+  const nv = P.length / 3, VN = new Float32Array(nv * 3);
+  for (let t = 0; t < nt; t++) for (let k = 0; k < 3; k++) { const v = tris[t * 3 + k]; for (let c = 0; c < 3; c++) VN[v * 3 + c] += N[t * 9 + k * 3 + c]; }
+  for (let v = 0; v < nv; v++) VN.set(norm(VN[v * 3], VN[v * 3 + 1], VN[v * 3 + 2]), v * 3);
+  let cxm = 0, cym = 0, czm = 0; for (let v = 0; v < nv; v++) { cxm += P[v * 3]; cym += P[v * 3 + 1]; czm += P[v * 3 + 2]; } cxm /= nv; cym /= nv; czm /= nv;
+  let rad = 0; for (let v = 0; v < nv; v++) rad = Math.max(rad, Math.hypot(P[v * 3] - cxm, P[v * 3 + 1] - cym, P[v * 3 + 2] - czm));
+  const aoR = rad * 0.25, RAYS = 20, gold = Math.PI * (3 - Math.sqrt(5)), grid = new Map(), key = (a, b, c) => a + "," + b + "," + c;
+  for (let t = 0; t < nt; t++) {
+    const vs = [tris[t * 3], tris[t * 3 + 1], tris[t * 3 + 2]], mn = [0, 1, 2].map(k => Math.floor(Math.min(...vs.map(v => P[v * 3 + k])) / aoR)), mx = [0, 1, 2].map(k => Math.floor(Math.max(...vs.map(v => P[v * 3 + k])) / aoR));
+    for (let a = mn[0]; a <= mx[0]; a++) for (let b = mn[1]; b <= mx[1]; b++) for (let c = mn[2]; c <= mx[2]; c++) { const k = key(a, b, c); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(t); }
+  }
+  const AO = new Float32Array(nv);
+  for (let v = 0; v < nv; v++) {
+    const n0 = [VN[v * 3], VN[v * 3 + 1], VN[v * 3 + 2]], T = norm(...(Math.abs(n0[0]) < 0.9 ? [0, n0[2], -n0[1]] : [-n0[2], 0, n0[0]])), B = [n0[1] * T[2] - n0[2] * T[1], n0[2] * T[0] - n0[0] * T[2], n0[0] * T[1] - n0[1] * T[0]];
+    const o = [P[v * 3] + n0[0] * aoR * 0.01, P[v * 3 + 1] + n0[1] * aoR * 0.01, P[v * 3 + 2] + n0[2] * aoR * 0.01], c = o.map(q => Math.floor(q / aoR)), cand = new Set();
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let d = -1; d <= 1; d++) for (const t of grid.get(key(c[0] + a, c[1] + b, c[2] + d)) || []) cand.add(t);
+    let hits = 0;
+    for (let r = 0; r < RAYS; r++) {
+      const rr = Math.sqrt((r + 0.5) / RAYS), th = r * gold, l = [rr * Math.cos(th), rr * Math.sin(th), Math.sqrt(1 - rr * rr)];
+      const D = [0, 1, 2].map(k => T[k] * l[0] + B[k] * l[1] + n0[k] * l[2]);
+      for (const t of cand) {
+        const a = tris[t * 3], b = tris[t * 3 + 1], cc = tris[t * 3 + 2]; if (a === v || b === v || cc === v) continue;
+        const A = [P[a * 3], P[a * 3 + 1], P[a * 3 + 2]], e1 = [P[b * 3] - A[0], P[b * 3 + 1] - A[1], P[b * 3 + 2] - A[2]], e2 = [P[cc * 3] - A[0], P[cc * 3 + 1] - A[1], P[cc * 3 + 2] - A[2]];
+        const p = [D[1] * e2[2] - D[2] * e2[1], D[2] * e2[0] - D[0] * e2[2], D[0] * e2[1] - D[1] * e2[0]], det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2]; if (Math.abs(det) < 1e-12) continue;
+        const iv = 1 / det, s = [o[0] - A[0], o[1] - A[1], o[2] - A[2]], u = (s[0] * p[0] + s[1] * p[1] + s[2] * p[2]) * iv; if (u < 0 || u > 1) continue;
+        const qv = [s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]], w = (D[0] * qv[0] + D[1] * qv[1] + D[2] * qv[2]) * iv; if (w < 0 || u + w > 1) continue;
+        const tt = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) * iv; if (tt > 1e-4 && tt < aoR) { hits++; break; }
+      }
+    }
+    AO[v] = 1 - hits / RAYS;
+  }
+  const edgeMax = rad * 0.1, faceMap = new Map(), fn = [];
+  for (let t = 0; t < nt; t++) {
+    const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+    const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+    fn.push(norm(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]));
+    for (const [p, q] of [[a, b], [b, c], [c, a]]) { const k = Math.min(p, q) + ":" + Math.max(p, q); if (!faceMap.has(k)) faceMap.set(k, []); faceMap.get(k).push(t); }
+  }
+  const segs = [];
+  for (const [k, list] of faceMap) {
+    let sharp = list.length === 1;
+    for (let i = 1; i < list.length && !sharp; i++) { const p = fn[list[0]], q = fn[list[i]]; if (Math.abs(p[0] * q[0] + p[1] * q[1] + p[2] * q[2]) < Math.cos(Math.PI / 6)) sharp = true; }
+    if (sharp) { const [a, b] = k.split(":").map(Number); segs.push([P[a * 3], P[a * 3 + 1], P[a * 3 + 2], P[b * 3], P[b * 3 + 1], P[b * 3 + 2]]); }
+  }
+  const sgrid = new Map();
+  for (const s of segs) for (let a = Math.floor(Math.min(s[0], s[3]) / edgeMax); a <= Math.floor(Math.max(s[0], s[3]) / edgeMax); a++) for (let b = Math.floor(Math.min(s[1], s[4]) / edgeMax); b <= Math.floor(Math.max(s[1], s[4]) / edgeMax); b++) for (let c = Math.floor(Math.min(s[2], s[5]) / edgeMax); c <= Math.floor(Math.max(s[2], s[5]) / edgeMax); c++) { const k = key(a, b, c); if (!sgrid.has(k)) sgrid.set(k, []); sgrid.get(k).push(s); }
+  const tSurface = performance.now();
+  // shade
+  const maps = { albedo: new Uint8ClampedArray(n * 4), normal: new Uint8ClampedArray(n * 4), roughness: new Uint8ClampedArray(n * 4), metalness: new Uint8ClampedArray(n * 4), edge: new Uint8ClampedArray(n * 4), ao: new Uint8ClampedArray(n * 4) };
+  let area = 0; for (let t = 0; t < nt; t++) { const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2]; const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]]; area += Math.hypot(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]) / 2; }
+  const eps = Math.sqrt(area / Math.max(1, covered)), strength = recipe.normalStrength ?? 1;
+  const ctx = {}, edgeT = new Float32Array(n), aoT = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const q = i * 4;
+    if (!cover[i]) { maps.normal.set([128, 128, 255, 255], q); maps.roughness.set([128, 128, 128, 255], q); continue; }
+    const t = tri[i] - 1, b0 = bar[i * 3], b1 = bar[i * 3 + 1], b2 = bar[i * 3 + 2];
+    ctx.px = pos[i * 3]; ctx.py = pos[i * 3 + 1]; ctx.pz = pos[i * 3 + 2]; ctx.nx = nrm[i * 3]; ctx.ny = nrm[i * 3 + 1]; ctx.nz = nrm[i * 3 + 2];
+    ctx.ao = b0 * AO[tris[t * 3]] + b1 * AO[tris[t * 3 + 1]] + b2 * AO[tris[t * 3 + 2]];
+    let best = edgeMax; const cc = [ctx.px, ctx.py, ctx.pz].map(v => Math.floor(v / edgeMax));
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let d = -1; d <= 1; d++) for (const s of sgrid.get(key(cc[0] + a, cc[1] + b, cc[2] + d)) || []) {
+      const dx = s[3] - s[0], dy = s[4] - s[1], dz = s[5] - s[2], l2 = dx * dx + dy * dy + dz * dz, u = l2 > 0 ? Math.min(1, Math.max(0, ((ctx.px - s[0]) * dx + (ctx.py - s[1]) * dy + (ctx.pz - s[2]) * dz) / l2)) : 0;
+      best = Math.min(best, Math.hypot(s[0] + dx * u - ctx.px, s[1] + dy * u - ctx.py, s[2] + dz * u - ctx.pz));
+    }
+    ctx.edge = best; edgeT[i] = best; aoT[i] = ctx.ao;
+    const [r, g, bb, ro, me, h0] = shade(recipe, ctx);
+    const T = [tan[i * 3], tan[i * 3 + 1], tan[i * 3 + 2]], V = [bit[i * 3], bit[i * 3 + 1], bit[i * 3 + 2]];
+    const ht = height(recipe, ctx, ctx.px + T[0] * eps, ctx.py + T[1] * eps, ctx.pz + T[2] * eps), hu = height(recipe, ctx, ctx.px - V[0] * eps, ctx.py - V[1] * eps, ctx.pz - V[2] * eps);
+    const du = (ht - h0) / eps * strength, dv = (hu - h0) / eps * strength, l = Math.hypot(du, dv, 1);
+    maps.albedo.set([r * 255, g * 255, bb * 255, 255], q);
+    maps.normal.set([(-du / l * 0.5 + 0.5) * 255, (-dv / l * 0.5 + 0.5) * 255, (1 / l * 0.5 + 0.5) * 255, 255], q);
+    maps.roughness.set([ro * 255, ro * 255, ro * 255, 255], q); maps.metalness.set([me * 255, me * 255, me * 255, 255], q);
+    const ev = (1 - best / edgeMax) * 255; maps.edge.set([ev, ev, ev, 255], q); maps.ao.set([ctx.ao * 255, ctx.ao * 255, ctx.ao * 255, 255], q);
+  }
+  const tShade = performance.now();
+  return { S, maps, cover, pos, nrm, edgeT, aoT, ms: { raster: tRaster - t0, surface: tSurface - tRaster, shade: tShade - tSurface } };
+}
+
+// ---------------------------------------------------------------- recipe evaluation (port of Recipe.luau)
+const smooth = (lo, hi, x) => { if (lo === hi) return x >= lo ? 1 : 0; const t = Math.min(1, Math.max(0, (x - lo) / (hi - lo))); return t * t * (3 - 2 * t); };
+function field(term, c, px, py, pz) {
+  const s = term.scale ?? 1, sx = px * s + (term.seed ?? 0) * 31.7, sy = py * s, sz = pz * s;
+  switch (term[0]) {
+    case "noise": return term.warp ? warped(sx, sy, sz, term.octaves ?? 4, term.warp) : fbm(sx, sy, sz, term.octaves ?? 4);
+    case "ridged": return ridged(sx, sy, sz, term.octaves ?? 4);
+    case "voronoi": { const [f1, f2, id] = voronoi(sx, sy, sz, term.jitter); return term.field === "f1" ? f1 : term.field === "id" ? id : f2 - f1; }
+    case "curvature": return 0.5;
+    case "ao": return c.ao;
+    case "edge": return c.edge;
+    case "up": return c.ny;
+    case "y": return py;
+    case "image": return triplanar(RD, px, py, pz, c.nx, c.ny, c.nz, s);
+    case "wave": { const d = term.dir ?? [1, 0, 0]; let ph = (px * d[0] + py * d[1] + pz * d[2]) * s; if (term.warp) { const ws = term.warpScale ?? 1; ph += fbm(px * ws, py * ws, pz * ws, term.octaves ?? 4) * term.warp; } return Math.sin(ph * 2 * Math.PI); }
+    case "rings": { const a = term.axis ?? "y"; const r = a === "y" ? Math.hypot(px, pz) : a === "x" ? Math.hypot(py, pz) : Math.hypot(px, py); let v = r * s; if (term.warp) { const ws = term.warpScale ?? 1; v += fbm(px * ws, py * ws, pz * ws, term.octaves ?? 3) * term.warp; } return v - Math.floor(v); }
+    case "grid": { const ax = Math.abs(c.nx), ay = Math.abs(c.ny), az = Math.abs(c.nz); let u, v; if (ax >= ay && ax >= az) { u = sy; v = sz; } else if (ay >= az) { u = sx; v = sz; } else { u = sx; v = sy; } return Math.min(Math.abs(u - Math.round(u)), Math.abs(v - Math.round(v))); }
+  }
+  return 1;
+}
+function mask(terms, c, px, py, pz) { if (!terms) return 1; let m = 1; for (const t of terms) { let v = field(t, c, px, py, pz); if (t.lo !== undefined) v = smooth(t.lo, t.hi, v); m *= v; if (m <= 0) return 0; } return m; }
+function height(r, c, px, py, pz) {
+  let h = 0;
+  for (const t of r.detail ?? []) { let v = field(t, c, px, py, pz); if (t.lo !== undefined) v = smooth(t.lo, t.hi, v); h += v * (t.amp ?? 1); }
+  for (const L of r.layers ?? []) if (L.height) h += L.height * mask(L.mask, c, px, py, pz) * (L.opacity ?? 1);
+  return h;
+}
+function shade(r, c) {
+  const base = r.base ?? {}; let [cr, cg, cb] = base.color ?? [0.5, 0.5, 0.5], rough = base.rough ?? 0.5, metal = base.metal ?? 0;
+  if (base.vary) { const k = 1 + fbm(c.px * base.vary.scale, c.py * base.vary.scale, c.pz * base.vary.scale, 3) * base.vary.amount; cr *= k; cg *= k; cb *= k; }
+  for (const L of r.layers ?? []) {
+    const m = mask(L.mask, c, c.px, c.py, c.pz) * (L.opacity ?? 1); if (m <= 0) continue;
+    if (L.color) { let [lr, lg, lb] = L.color; if (L.vary) { const k = 1 + fbm(c.px * L.vary.scale + 7, c.py * L.vary.scale, c.pz * L.vary.scale, 3) * L.vary.amount; lr *= k; lg *= k; lb *= k; } cr += (lr - cr) * m; cg += (lg - cg) * m; cb += (lb - cb) * m; }
+    if (L.rough !== undefined) rough += (L.rough - rough) * m; if (L.metal !== undefined) metal += (L.metal - metal) * m;
+  }
+  const cl = v => Math.min(1, Math.max(0, v));
+  return [cl(cr), cl(cg), cl(cb), cl(rough), cl(metal), height(r, c, c.px, c.py, c.pz)];
+}
+const term = (kind, o) => Object.assign([kind], o);
+// Same numbers as lib/surfacebake/Presets.luau, plus a reaction-diffusion layer projected triplanar.
+const RECIPES = {
+  "Painted metal": { base: { color: [0.16, 0.36, 0.62], rough: 0.45, metal: 0, vary: { scale: 3, amount: 0.06 } }, detail: [term("noise", { scale: 14, octaves: 3, amp: 0.004 })], layers: [
+    { color: [0.62, 0.63, 0.66], rough: 0.25, metal: 1, height: -0.04, mask: [term("edge", { lo: 0.09, hi: 0.02 }), term("noise", { scale: 9, octaves: 4, lo: -0.25, hi: 0.15 })] },
+    { color: [0.12, 0.1, 0.08], rough: 0.9, opacity: 0.85, mask: [term("ao", { lo: 0.8, hi: 0.45 }), term("noise", { scale: 6, octaves: 3, lo: -0.4, hi: 0.3 })] },
+    { color: [0.55, 0.5, 0.42], rough: 0.95, opacity: 0.5, mask: [term("up", { lo: 0.55, hi: 0.9 }), term("noise", { scale: 5, octaves: 4, lo: -0.2, hi: 0.4 })] }], normalStrength: 1 },
+  "Rusted iron": { base: { color: [0.36, 0.36, 0.38], rough: 0.35, metal: 1, vary: { scale: 5, amount: 0.08 } }, detail: [term("noise", { scale: 30, octaves: 3, amp: 0.01 })], layers: [
+    { color: [0.45, 0.2, 0.08], rough: 0.92, metal: 0, height: 0.05, vary: { scale: 14, amount: 0.25 }, mask: [term("noise", { scale: 2.5, octaves: 5, warp: 1.2, lo: -0.05, hi: 0.2 })] },
+    { color: [0.28, 0.1, 0.04], rough: 1, height: -0.03, mask: [term("noise", { scale: 2.5, octaves: 5, warp: 1.2, lo: 0.2, hi: 0.35 }), term("voronoi", { scale: 22, lo: 0.12, hi: 0 })] },
+    { color: [0.62, 0.62, 0.64], rough: 0.2, metal: 1, mask: [term("edge", { lo: 0.05, hi: 0.01 }), term("noise", { scale: 12, octaves: 3, lo: -0.3, hi: 0.2 })] }], normalStrength: 1.2 },
+  "Mossy stone": { base: { color: [0.48, 0.47, 0.44], rough: 0.85, vary: { scale: 2, amount: 0.12 } }, detail: [term("voronoi", { scale: 3, lo: 0, hi: 0.18, amp: 0.12 }), term("noise", { scale: 12, octaves: 4, amp: 0.025 })], layers: [
+    { color: [0.4, 0.38, 0.36], opacity: 0.6, mask: [term("voronoi", { scale: 3, field: "id", lo: 0.4, hi: 0.8 })] },
+    { color: [0.25, 0.24, 0.22], rough: 1, mask: [term("voronoi", { scale: 3, lo: 0.08, hi: 0 })] },
+    { color: [0.22, 0.38, 0.12], rough: 0.95, height: 0.02, vary: { scale: 16, amount: 0.3 }, mask: [term("up", { lo: 0.2, hi: 0.75 }), term("noise", { scale: 3, octaves: 5, lo: -0.1, hi: 0.25 })] },
+    { color: [0.16, 0.3, 0.1], rough: 0.95, opacity: 0.8, mask: [term("ao", { lo: 0.85, hi: 0.55 })] }], normalStrength: 1.5 },
+  "Lava rock": { base: { color: [0.09, 0.08, 0.08], rough: 0.9, vary: { scale: 4, amount: 0.2 } }, detail: [term("ridged", { scale: 3, octaves: 4, amp: 0.08 })], layers: [
+    { color: [1, 0.42, 0.08], rough: 0.6, height: -0.06, mask: [term("voronoi", { scale: 4, lo: 0.09, hi: 0 }), term("noise", { scale: 2, octaves: 3, lo: -0.3, hi: 0.1 })] },
+    { color: [1, 0.75, 0.3], mask: [term("voronoi", { scale: 4, lo: 0.03, hi: 0 }), term("noise", { scale: 2, octaves: 3, lo: 0, hi: 0.3 })] }], normalStrength: 1.3, emissive: true },
+  "Ice": { base: { color: [0.78, 0.9, 0.97], rough: 0.12, vary: { scale: 3, amount: 0.05 } }, detail: [term("ridged", { scale: 5, octaves: 3, amp: 0.02 })], layers: [
+    { color: [0.35, 0.6, 0.85], opacity: 0.7, mask: [term("ao", { lo: 0.9, hi: 0.5 })] },
+    { color: [0.95, 0.98, 1], rough: 0.6, height: 0.01, mask: [term("voronoi", { scale: 6, lo: 0.05, hi: 0 })] }], normalStrength: 0.8 },
+  "Reaction-diffusion coral": { base: { color: [0.86, 0.42, 0.36], rough: 0.7, vary: { scale: 4, amount: 0.1 } }, detail: [term("image", { scale: 0.55, amp: 0.05 })], layers: [
+    { color: [0.98, 0.86, 0.7], rough: 0.5, height: 0.02, mask: [term("image", { scale: 0.55, lo: 0.25, hi: 0.6 })] },
+    { color: [0.35, 0.12, 0.12], rough: 0.9, opacity: 0.8, mask: [term("ao", { lo: 0.9, hi: 0.5 })] }], normalStrength: 1.4 },
+};
+Object.assign(RECIPES, {
+  "Wood": { base: { color: [0.56, 0.36, 0.2], rough: 0.55, vary: { scale: 1.5, amount: 0.1 } }, detail: [term("wave", { dir: [0, 1, 0], scale: 18, warp: 0.6, warpScale: 2, amp: 0.004 })], layers: [
+    { color: [0.36, 0.21, 0.11], height: -0.01, mask: [term("rings", { scale: 7, warp: 1.4, warpScale: 1.2, lo: 0.55, hi: 0.85 })] },
+    { color: [0.25, 0.14, 0.07], rough: 0.7, mask: [term("voronoi", { scale: 1.5, field: "f1", lo: 0.18, hi: 0.08 }), term("noise", { scale: 3, octaves: 2, lo: 0.1, hi: 0.3 })] },
+    { color: [0.68, 0.48, 0.3], rough: 0.8, mask: [term("edge", { lo: 0.07, hi: 0.015 }), term("noise", { scale: 10, octaves: 3, lo: -0.3, hi: 0.2 })] }], normalStrength: 1 },
+  "Gold": { base: { color: [1, 0.77, 0.34], rough: 0.18, metal: 1, vary: { scale: 3, amount: 0.04 } }, layers: [
+    { color: [0.45, 0.33, 0.14], rough: 0.6, opacity: 0.9, mask: [term("ao", { lo: 0.9, hi: 0.55 }), term("noise", { scale: 5, octaves: 3, lo: -0.4, hi: 0.2 })] },
+    { rough: 0.35, opacity: 0.6, mask: [term("noise", { scale: 7, octaves: 4, warp: 1.5, lo: 0.25, hi: 0.45 })] },
+    { color: [1, 0.87, 0.55], rough: 0.08, mask: [term("edge", { lo: 0.04, hi: 0 })] }], normalStrength: 0.5 },
+  "Marble": { base: { color: [0.92, 0.91, 0.88], rough: 0.12, vary: { scale: 2, amount: 0.05 } }, layers: [
+    { color: [0.42, 0.42, 0.46], rough: 0.2, mask: [term("wave", { dir: [0.6, 0.8, 0.2], scale: 1.6, warp: 3.2, warpScale: 1.4, octaves: 5, lo: 0.86, hi: 0.97 })] },
+    { color: [0.78, 0.6, 0.3], rough: 0.15, metal: 0.6, mask: [term("wave", { dir: [-0.3, 0.9, 0.4], scale: 0.9, warp: 4, warpScale: 1, octaves: 5, lo: 0.95, hi: 0.99 })] }], normalStrength: 0.3 },
+  "Sci-fi panel": { base: { color: [0.68, 0.7, 0.74], rough: 0.4, metal: 0.8, vary: { scale: 2, amount: 0.04 } }, layers: [
+    { color: [0.58, 0.6, 0.64], opacity: 0.7, mask: [term("voronoi", { scale: 2, field: "id", lo: 0.5, hi: 0.8 })] },
+    { color: [0.12, 0.13, 0.15], rough: 0.8, height: -0.03, mask: [term("grid", { scale: 2, lo: 0.03, hi: 0 })] },
+    { color: [0.3, 0.9, 1], rough: 0.3, metal: 0, mask: [term("grid", { scale: 0.5, lo: 0.02, hi: 0 }), term("up", { lo: 0.5, hi: -0.5 })] },
+    { color: [0.85, 0.86, 0.88], rough: 0.25, mask: [term("edge", { lo: 0.05, hi: 0 }), term("noise", { scale: 14, octaves: 3, lo: -0.2, hi: 0.3 })] }], normalStrength: 1 },
+  "Camo": { base: { color: [0.42, 0.45, 0.3], rough: 0.85 }, layers: [
+    { color: [0.36, 0.27, 0.17], mask: [term("noise", { scale: 1.6, octaves: 3, warp: 0.8, lo: 0.05, hi: 0.09 })] },
+    { color: [0.16, 0.18, 0.13], mask: [term("noise", { scale: 2.2, octaves: 3, warp: 0.8, seed: 3, lo: 0.15, hi: 0.19 })] },
+    { color: [0.66, 0.6, 0.44], mask: [term("noise", { scale: 2.6, octaves: 3, warp: 0.8, seed: 7, lo: 0.3, hi: 0.34 })] }], normalStrength: 0.2 },
+  "Snow rock": { base: { color: [0.4, 0.39, 0.38], rough: 0.85, vary: { scale: 3, amount: 0.15 } }, detail: [term("ridged", { scale: 2.5, octaves: 5, amp: 0.1 })], layers: [
+    { color: [0.52, 0.5, 0.32], opacity: 0.6, mask: [term("noise", { scale: 5, octaves: 4, lo: 0.25, hi: 0.4 })] },
+    { color: [0.93, 0.95, 0.98], rough: 0.5, height: 0.04, mask: [term("up", { lo: 0.35, hi: 0.6 }), term("noise", { scale: 2, octaves: 4, lo: -0.4, hi: -0.1 })] }], normalStrength: 1.4 },
+  "Slime": { base: { color: [0.32, 0.78, 0.24], rough: 0.08, vary: { scale: 2, amount: 0.2 } }, detail: [term("noise", { scale: 3, octaves: 3, warp: 2, amp: 0.05 })], layers: [
+    { color: [0.12, 0.42, 0.1], mask: [term("noise", { scale: 3, octaves: 3, warp: 2, lo: 0.1, hi: 0.4 })] },
+    { color: [0.7, 1, 0.55], height: 0.03, mask: [term("voronoi", { scale: 6, field: "f1", lo: 0.22, hi: 0.12 }), term("noise", { scale: 4, octaves: 2, lo: 0, hi: 0.3 })] }], normalStrength: 1.2 },
+  "Rune stone": { base: { color: [0.3, 0.3, 0.33], rough: 0.9, vary: { scale: 2, amount: 0.15 } }, detail: [term("voronoi", { scale: 2, lo: 0, hi: 0.12, amp: 0.06 }), term("noise", { scale: 10, octaves: 3, amp: 0.015 })], layers: [
+    { color: [0.15, 0.15, 0.17], mask: [term("voronoi", { scale: 2, lo: 0.05, hi: 0 })] },
+    { color: [0.35, 0.95, 1], rough: 0.4, height: -0.025, mask: [term("wave", { dir: [1, 0.3, 0.7], scale: 3, warp: 0.8, warpScale: 4, lo: 0.93, hi: 0.99 }), term("voronoi", { scale: 2, lo: 0.12, hi: 0.2 })] }], normalStrength: 1.3 },
+  "Carbon fibre": { base: { color: [0.1, 0.1, 0.11], rough: 0.15 }, detail: [term("wave", { dir: [1, 1, 0], scale: 30, amp: 0.002 }), term("wave", { dir: [1, -1, 0], scale: 30, amp: 0.002 })], layers: [
+    { color: [0.34, 0.34, 0.37], mask: [term("wave", { dir: [1, 1, 0.3], scale: 14, lo: 0.2, hi: 0.9 })] },
+    { color: [0.2, 0.2, 0.23], mask: [term("wave", { dir: [1, -1, -0.3], scale: 14, lo: 0.2, hi: 0.9 })] }], normalStrength: 0.6 },
+  "Copper patina": { base: { color: [0.72, 0.42, 0.26], rough: 0.35, metal: 1, vary: { scale: 4, amount: 0.1 } }, layers: [
+    { color: [0.32, 0.66, 0.56], rough: 0.9, metal: 0, height: 0.015, vary: { scale: 12, amount: 0.2 }, mask: [term("ao", { lo: 0.95, hi: 0.6 }), term("noise", { scale: 4, octaves: 4, warp: 1, lo: -0.3, hi: 0.1 })] },
+    { color: [0.38, 0.62, 0.52], rough: 0.85, metal: 0, mask: [term("wave", { dir: [1, 0, 0.3], scale: 9, warp: 0.6, warpScale: 3, lo: 0.6, hi: 0.95 }), term("noise", { scale: 1.5, octaves: 3, lo: 0, hi: 0.3 })] },
+    { color: [0.9, 0.58, 0.4], rough: 0.2, metal: 1, mask: [term("edge", { lo: 0.05, hi: 0 })] }], normalStrength: 0.8 },
+});
+const MESHES = { "Crate": () => box(1, 0.75, 0.85, 4), "Barrel": () => barrel(0.8, 1.9, 40), "Torus": () => torus(1, 0.42, 48, 24), "Sphere": () => sphere(1, 48, 24) };
+
+
+function lut() { const t = []; for (let k = 0; k < 256; k++) { const a = k / 256 * 2 * Math.PI; t.push(Math.min(1, Math.max(0, fbm(Math.cos(a) * 2, Math.sin(a) * 2, 0.5, 4) * 0.6 + 0.5))); } return t; }
+const LUT = lut();
+
+
+// ================================================================= shared: scheduler, renderer
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const loops = [];
+function every(canvas, fn) { loops.push({ canvas, fn, vis: false, t: 0 }); }
+const io = new IntersectionObserver(es => { for (const e of es) { const l = loops.find(x => x.canvas === e.target); if (l) l.vis = e.isIntersecting; } });
+let lastTs = 0;
+function frame(ts) {
+  if (!window.__capturing) {
+    const dt = lastTs ? Math.min(0.08, (ts - lastTs) / 1000) : 1 / 30;
+    if (ts - lastTs > 30) { lastTs = ts; for (const l of loops) if (l.vis && !REDUCED) { l.t += dt; l.fn(l.t, dt); } }
+  }
+  requestAnimationFrame(frame);
+}
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+function pointerOn(c) {
+  const p = { x: 0, y: 0, over: false, down: false, vx: 0, lastX: 0, taps: [] };
+  c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); const nx = (e.clientX - r.left) / r.width; p.vx = (nx - p.x * 0.5 - 0.5) * 30; p.x = nx * 2 - 1; p.y = (e.clientY - r.top) / r.height * 2 - 1; p.over = true; });
+  c.addEventListener("pointerleave", () => { p.over = false; p.down = false; });
+  c.addEventListener("pointerdown", e => { p.down = true; p.sx = e.clientX; p.sy = e.clientY; const r = c.getBoundingClientRect(); p.x = (e.clientX - r.left) / r.width * 2 - 1; p.y = (e.clientY - r.top) / r.height * 2 - 1; c.setPointerCapture(e.pointerId); p.multi = (p.multi || 0) + 1; });
+  c.addEventListener("pointerup", e => {
+    if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 7) { const r = c.getBoundingClientRect(); const touchAlt = e.pointerType === "touch" && (p.tapN = (p.tapN || 0) + 1) % 2 === 0; p.taps.push({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height, alt: e.shiftKey || e.altKey || p.multi > 1 || touchAlt }); }
+    p.down = false; p.multi = Math.max(0, (p.multi || 1) - 1);
+  });
+  return p;
+}
+
+// A lit, normal-mapped, z-buffered software renderer. tex(ti, o) fills o for texel ti:
+// o.r o.g o.b (0..255), o.ro (roughness 0..1), o.me (metal 0..1), o.ao, o.tx o.ty o.tz (tangent-space normal), o.cut (true = see-through)
+function makeRenderer(canvas, R, zoom) {
+  canvas.width = canvas.height = R;
+  const ctx = canvas.getContext("2d"), img = ctx.createImageData(R, R), zb = new Float32Array(R * R), pick = new Int32Array(R * R);
+  const o = { r: 0, g: 0, b: 0, ro: 0.5, me: 0, ao: 1, tx: 0, ty: 0, tz: 1, cut: false };
+  function draw(mesh, S, tex, yaw, pitch, bg, extra) {
+    const { P, tris, UV, N } = mesh, d = img.data;
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const rot = (x, y, z) => { const x1 = x * cy - z * sy, z1 = x * sy + z * cy; return [x1, y * cp - z1 * sp, y * sp + z1 * cp]; };
+    const camZ = 4.4, f = R * (zoom || 1), L = norm(-0.45, 0.72, -0.55);
+    bg(d, R); zb.fill(Infinity); pick.fill(-1);
+    const nt = tris.length / 3;
+    for (let t = 0; t < nt; t++) {
+      const vs = [], ws = [];
+      for (let k = 0; k < 3; k++) { const v = tris[t * 3 + k], p = rot(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]), z = camZ + p[2]; vs.push([R / 2 + p[0] * f / z, R / 2 - p[1] * f / z, z]); ws.push(rot(N[t * 9 + k * 3], N[t * 9 + k * 3 + 1], N[t * 9 + k * 3 + 2])); }
+      const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+      const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]];
+      const du1 = UV[t * 6 + 2] - UV[t * 6], dv1 = UV[t * 6 + 3] - UV[t * 6 + 1], du2 = UV[t * 6 + 4] - UV[t * 6], dv2 = UV[t * 6 + 5] - UV[t * 6 + 1], det = du1 * dv2 - du2 * dv1, rr = Math.abs(det) < 1e-14 ? 0 : 1 / det;
+      const T = rot(...norm(...[0, 1, 2].map(k => (e1[k] * dv2 - e2[k] * dv1) * rr))), Bv = rot(...norm(...[0, 1, 2].map(k => (e2[k] * du1 - e1[k] * du2) * rr)));
+      const [p0, p1, p2] = vs, area = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]); if (Math.abs(area) < 1e-9) continue;
+      const x0 = Math.max(0, Math.floor(Math.min(p0[0], p1[0], p2[0]))), x1 = Math.min(R - 1, Math.ceil(Math.max(p0[0], p1[0], p2[0])));
+      const y0 = Math.max(0, Math.floor(Math.min(p0[1], p1[1], p2[1]))), y1 = Math.min(R - 1, Math.ceil(Math.max(p0[1], p1[1], p2[1]))), inv = 1 / area;
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const px = x + 0.5, py = y + 0.5;
+        const w0 = ((p1[0] - px) * (p2[1] - py) - (p2[0] - px) * (p1[1] - py)) * inv, w1 = ((p2[0] - px) * (p0[1] - py) - (p0[0] - px) * (p2[1] - py)) * inv, w2 = 1 - w0 - w1;
+        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+        const iz = w0 / p0[2] + w1 / p1[2] + w2 / p2[2], z = 1 / iz, i = y * R + x; if (z >= zb[i]) continue;
+        const q0 = w0 / p0[2] * z, q1 = w1 / p1[2] * z, q2 = w2 / p2[2] * z;
+        const u = q0 * UV[t * 6] + q1 * UV[t * 6 + 2] + q2 * UV[t * 6 + 4], v = q0 * UV[t * 6 + 1] + q1 * UV[t * 6 + 3] + q2 * UV[t * 6 + 5];
+        const ti = Math.min(S - 1, Math.max(0, (v * S) | 0)) * S + Math.min(S - 1, Math.max(0, (u * S) | 0));
+        o.cut = false; tex(ti, o); if (o.cut) continue;
+        zb[i] = z; pick[i] = ti;
+        let n = norm(q0 * ws[0][0] + q1 * ws[1][0] + q2 * ws[2][0], q0 * ws[0][1] + q1 * ws[1][1] + q2 * ws[2][1], q0 * ws[0][2] + q1 * ws[1][2] + q2 * ws[2][2]);
+        n = norm(T[0] * o.tx - Bv[0] * o.ty + n[0] * o.tz, T[1] * o.tx - Bv[1] * o.ty + n[1] * o.tz, T[2] * o.tx - Bv[2] * o.ty + n[2] * o.tz);
+        const pv = [(px - R / 2) * z / f, -(py - R / 2) * z / f, z - camZ], V = norm(-pv[0], -pv[1], -camZ - pv[2]);
+        if (n[0] * V[0] + n[1] * V[1] + n[2] * V[2] < 0) n = [-n[0], -n[1], -n[2]];
+        const alb = [o.r / 255, o.g / 255, o.b / 255].map(c2 => c2 * c2), nl = Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]);
+        const H = norm(L[0] + V[0], L[1] + V[1], L[2] + V[2]), nh = Math.max(0, n[0] * H[0] + n[1] * H[1] + n[2] * H[2]);
+        const shin = 2 / Math.max(0.002, o.ro ** 4) - 2, spec = (shin + 8) / 25 * Math.pow(nh, shin) * nl, sky = 0.33 + 0.25 * n[1];
+        const rim = Math.pow(1 - Math.max(0, n[0] * V[0] + n[1] * V[1] + n[2] * V[2]), 3) * 0.25;
+        const di = i * 4;
+        for (let k = 0; k < 3; k++) {
+          const F0 = 0.04 * (1 - o.me) + alb[k] * o.me;
+          let c2 = alb[k] * (1 - o.me) * (nl * 1.55 + sky * o.ao * 0.9) + F0 * (spec * 1.4 + sky * o.ao * (0.45 + 0.8 * (1 - o.ro))) + rim * (k === 2 ? 0.9 : 0.6);
+          if (extra) c2 += extra[k];
+          d[di + k] = Math.sqrt(c2 / (1 + c2)) * 270;
+        }
+        d[di + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  return { draw, pick, R, ctx };
+}
+function vignetteBG(top, bottom) { return (d, R) => { for (let y = 0; y < R; y++) { const g = y / R; for (let x = 0; x < R; x++) { const q = (y * R + x) * 4, rx = x / R - 0.5, ry = g - 0.55, v = 1 - Math.min(1, (rx * rx + ry * ry) * 2.2); d[q] = (top[0] + (bottom[0] - top[0]) * g) * v; d[q + 1] = (top[1] + (bottom[1] - top[1]) * g) * v; d[q + 2] = (top[2] + (bottom[2] - top[2]) * g) * v; d[q + 3] = 255; } } }; }
+
+// ================================================================= 1. Metamorph relic (hero)
+// Bakes several materials onto one mesh, then dissolves from each into the next along a baked
+// noise field with a molten rim. Taps add heat and a ripple (React), shaded only where visible.
+const relic = (function () {
+  const canvas = document.getElementById("relic"), R = 320, rd = makeRenderer(canvas, R, 1.75), S = 192, nameEl = document.getElementById("relicName");
+  const mesh = sphere(1.05, 44, 22), order = ["Rune stone", "Lava rock", "Ice", "Gold", "Marble", "Copper patina", "Sci-fi panel"];
+  const mats = [], noiseF = new Float32Array(S * S), heat = new Float32Array(S * S); let pos = null, hits = [];
+  let yaw = 0.6, pitch = -0.25, spinV = 0.35, dragYaw = null;
+  const p = pointerOn(canvas);
+  function bakeNext() {
+    if (mats.length >= order.length) return;
+    const b = bake(mesh, RECIPES[order[mats.length]], S); b.name = order[mats.length];
+    if (!pos) { pos = b.pos; for (let i = 0; i < S * S; i++) if (b.cover[i]) noiseF[i] = clamp01(fbm(pos[i * 3] * 2.6, pos[i * 3 + 1] * 2.6, pos[i * 3 + 2] * 2.6, 4) * 0.55 + 0.5); }
+    mats.push(b);
+    if (mats.length === 1) draw(0, 0);
+    setTimeout(bakeNext, 30);
+  }
+  const HOLD = 2.4, MORPH = 1.7, RIM = 0.07;
+  let state = { a: 0, b: 1, q: 0 };
+  function phase(t) {
+    const n = mats.length; if (n < 2) return { a: 0, b: 0, q: 0 };
+    const cyc = HOLD + MORPH, k = Math.floor(t / cyc), f = t - k * cyc, a = k % n, b = (k + 1) % n;
+    return { a, b, q: f < HOLD ? 0 : (f - HOLD) / MORPH };
+  }
+  function tex(ti, o) {
+    const A = mats[state.a], B = mats[state.b], th = state.q * (1 + RIM * 2) - RIM, nz = noiseF[ti];
+    const M = state.q > 0 && nz < th ? B : A, m = M.maps, q = ti * 4;
+    o.r = m.albedo[q]; o.g = m.albedo[q + 1]; o.b = m.albedo[q + 2]; o.ro = m.roughness[q] / 255; o.me = m.metalness[q] / 255; o.ao = m.ao[q] / 255;
+    o.tx = m.normal[q] / 127.5 - 1; o.ty = m.normal[q + 1] / 127.5 - 1; o.tz = m.normal[q + 2] / 127.5 - 1;
+    // molten rim on the dissolve front, and heat from strikes
+    let glow = 0;
+    if (state.q > 0) { const e = Math.abs(nz - th) / RIM; if (e < 1) glow = (1 - e) * (1 - e) * 1.4; }
+    const h = heat[ti]; if (h > 0.02) glow += Math.min(1.2, h);
+    for (const hh of hits) { const dx = pos[ti * 3] - hh.x, dy = pos[ti * 3 + 1] - hh.y, dz = pos[ti * 3 + 2] - hh.z, e = (Math.sqrt(dx * dx + dy * dy + dz * dz) - hh.age * 2.3) / 0.07; if (e > -3 && e < 3) glow += Math.exp(-e * e) * (1 - hh.age / 1.1) * 0.9; }
+    if (glow > 0) { const g = Math.min(1, glow); o.r += (255 - o.r) * g; o.g += (150 + 90 * (glow > 1 ? 1 : 0) - o.g) * g * 0.85; o.b += (60 - o.b) * g * 0.6; o.ro = o.ro * (1 - g) + 0.5 * g; o.me *= 1 - g; }
+  }
+  function strike(px, py) {
+    const ti = rd.pick[Math.floor(py * R) * R + Math.floor(px * R)]; if (ti < 0 || !pos) return;
+    const x = pos[ti * 3], y = pos[ti * 3 + 1], z = pos[ti * 3 + 2];
+    hits.push({ x, y, z, age: 0 }); if (hits.length > 6) hits.shift();
+    for (let i = 0; i < S * S; i++) { if (!mats[0].cover[i]) continue; const d2 = (pos[i * 3] - x) ** 2 + (pos[i * 3 + 1] - y) ** 2 + (pos[i * 3 + 2] - z) ** 2; if (d2 < 0.36) heat[i] += 1.1 * Math.exp(-d2 / 0.04); }
+  }
+  function draw(t, dt) {
+    if (!mats.length) return;
+    state = phase(t);
+    if (p.down) { if (dragYaw === null) dragYaw = { x: p.x, yaw }; yaw = dragYaw.yaw + (p.x - dragYaw.x) * 2.4; pitch = Math.max(-1.2, Math.min(1.2, p.y * -0.8)); }
+    else { if (dragYaw) dragYaw = null; yaw += spinV * dt; }
+    for (const tp of p.taps.splice(0)) strike(tp.x, tp.y);
+    const decay = Math.exp(-0.7 * dt); for (let i = 0; i < heat.length; i++) if (heat[i] > 0.001) heat[i] *= decay;
+    for (const h of hits) h.age += dt; hits = hits.filter(h => h.age < 1.1);
+    rd.draw(mesh, S, tex, yaw, pitch, (d, R2) => { for (let i = 0; i < d.length; i += 4) { d[i] = 17; d[i + 1] = 19; d[i + 2] = 23; d[i + 3] = 0; } });
+    const nm = state.q > 0 ? `${mats[state.a].name} → ${mats[state.b].name}` : mats[state.a].name;
+    nameEl.textContent = `Metamorph · ${nm}${mats.length < order.length ? " · baking " + (mats.length + 1) + "/" + order.length : ""}`;
+  }
+  every(canvas, draw);
+  return { bakeNext, draw, setT: t => draw(t, 1 / 30) };
+})();
+
+// ================================================================= 2. Thermal shock (heat vs frost on rusted iron)
+const shock = (function () {
+  const canvas = document.getElementById("shock"), R = 240, rd = makeRenderer(canvas, R, 1.35), S = 192, msEl = document.getElementById("shockMs");
+  const mesh = box(1, 0.8, 0.9, 4); let B = null, heat, frost, scar, cry, comp, hits = [], seeds = [], auto = 0, k = 0, yaw = 0.75, ms = 0;
+  const p = pointerOn(canvas);
+  let rs = 7; const rnd = () => (rs = (Math.imul(rs, 1664525) + 1013904223) >>> 0) / 4294967296;
+  function init() {
+    B = bake(mesh, RECIPES["Painted metal"], S); const n = S * S;
+    heat = new Float32Array(n); frost = new Float32Array(n); scar = new Float32Array(n); cry = new Float32Array(n); comp = new Uint8ClampedArray(B.maps.albedo);
+    for (let i = 0; i < n; i++) if (B.cover[i]) { const x = B.pos[i * 3] * 9, y = B.pos[i * 3 + 1] * 9, z = B.pos[i * 3 + 2] * 9, [f1, f2] = voronoi(x, y, z); cry[i] = 0.78 + 0.4 * (1 - Math.min(1, (f2 - f1) / 0.12)); }
+  }
+  function hitAt(ti, isFrost, t) {
+    if (ti < 0 || !B.cover[ti]) return;
+    const x = B.pos[ti * 3], y = B.pos[ti * 3 + 1], z = B.pos[ti * 3 + 2];
+    if (isFrost) { seeds.push({ x, y, z, t }); if (seeds.length > 5) seeds.shift(); }
+    else {
+      hits.push({ x, y, z, t, steam: false }); if (hits.length > 8) hits.shift();
+      for (let i = 0; i < S * S; i++) { if (!B.cover[i]) continue; const d2 = (B.pos[i * 3] - x) ** 2 + (B.pos[i * 3 + 1] - y) ** 2 + (B.pos[i * 3 + 2] - z) ** 2; if (d2 < 0.5) heat[i] += 1.3 * Math.exp(-d2 / 0.05); }
+    }
+  }
+  function visibleTexel() { for (let a = 0; a < 300; a++) { const t = rd.pick[Math.floor(rnd() * R * R)]; if (t >= 0) return t; } return -1; }
+  function step(t, dt) {
+    const n = S * S, A = B.maps.albedo, hd = Math.exp(-0.5 * dt); let steamAt = null, steamMax = 0;
+    const live = hits.filter(h => t - h.t < 1.2);
+    for (let i = 0; i < n; i++) {
+      const q = i * 4; if (!A[q + 3]) continue;
+      let r = A[q], g = A[q + 1], b = A[q + 2], h = heat[i] * hd, f = frost[i];
+      const px = B.pos[i * 3], py = B.pos[i * 3 + 1], pz = B.pos[i * 3 + 2];
+      let grow = 0;
+      for (const s of seeds) { const d = Math.hypot(px - s.x, py - s.y, pz - s.z), radius = Math.min(0.85, 0.6 * (t - s.t)); if ((radius < 0.85 || d > radius - 0.14) && d > radius - 0.21) grow = Math.max(grow, clamp01((radius - d) / 0.07)); }
+      f = Math.max(f, grow);
+      // thermal shock: heat meeting frost melts it, leaves a crack scar and throws steam
+      if (h > 0.15 && f > 0.15) { const m = Math.min(h, f) * dt * 2.2; f -= m * 1.4; h -= m * 0.6; scar[i] = Math.min(1, scar[i] + m * 3); if (m > steamMax) { steamMax = m; steamAt = i; } }
+      f = clamp01(f); heat[i] = h < 0.002 ? 0 : h; frost[i] = f;
+      if (scar[i] > 0) { const s = scar[i] * (cry[i] > 1 ? 1 : 0.35); r *= 1 - s * 0.6; g *= 1 - s * 0.62; b *= 1 - s * 0.55; }
+      if (f > 0) { const c = cry[i], ff = f * 0.88; r += (205 * c - r) * ff; g += (232 * c - g) * ff; b += (255 * c - b) * ff; }
+      if (h > 0.02) { const k2 = Math.min(1, h * 1.3), h1 = Math.min(1, h); r += (255 - r) * k2; g += (60 + 195 * h1 * h1 - g) * k2; b += (20 + 200 * Math.max(0, h - 0.8) - b) * k2; }
+      for (const hh of live) { const age = t - hh.t, d = Math.hypot(px - hh.x, py - hh.y, pz - hh.z), e = (d - age * 2.2) / (hh.steam ? 0.09 : 0.06), kk = Math.exp(-e * e) * (1 - age / 1.2); if (kk > 0.01) { const col = hh.steam ? [235, 240, 245] : [255, 160, 70]; r += (col[0] - r) * Math.min(1, kk); g += (col[1] - g) * Math.min(1, kk); b += (col[2] - b) * Math.min(1, kk); } }
+      comp[q] = r; comp[q + 1] = g; comp[q + 2] = b;
+    }
+    if (steamAt !== null && steamMax > 0.004 && !hits.some(h => h.steam && t - h.t < 0.5)) hits.push({ x: B.pos[steamAt * 3], y: B.pos[steamAt * 3 + 1], z: B.pos[steamAt * 3 + 2], t, steam: true });
+  }
+  function tex(ti, o) {
+    const m = B.maps, q = ti * 4, f = frost[ti];
+    o.r = comp[q]; o.g = comp[q + 1]; o.b = comp[q + 2];
+    o.ro = (m.roughness[q] / 255) * (1 - f) + 0.25 * f; o.me = (m.metalness[q] / 255) * (1 - f); o.ao = m.ao[q] / 255;
+    o.tx = m.normal[q] / 127.5 - 1; o.ty = m.normal[q + 1] / 127.5 - 1; o.tz = m.normal[q + 2] / 127.5 - 1;
+  }
+  function draw(t, dt) {
+    if (!B) init();
+    const t0 = performance.now();
+    if (p.down) yaw += (p.x * 2.2 - yaw) * 0.15; else yaw += 0.18 * dt;
+    for (const tp of p.taps.splice(0)) hitAt(rd.pick[Math.floor(tp.y * R) * R + Math.floor(tp.x * R)], tp.alt, t);
+    auto += dt; if (auto > 0.9) { auto = 0; k++; hitAt(visibleTexel(), k % 3 !== 0, t); }
+    step(t, dt);
+    rd.draw(mesh, S, tex, yaw, -0.42, vignetteBG([20, 23, 28], [12, 13, 16]));
+    ms = ms * 0.9 + (performance.now() - t0) * 0.1; msEl.textContent = ms.toFixed(1) + " ms/frame";
+  }
+  every(canvas, draw);
+  return { draw };
+})();
+
+// ================================================================= 3. Abyss portal (POM ring + infinite zoom core)
+const portal = (function () {
+  const canvas = document.getElementById("portal"), O = 240, ctx = (canvas.width = canvas.height = O, canvas.getContext("2d")), img = ctx.createImageData(O, O), msEl = document.getElementById("portalMs");
+  const HW = 192, H = new Float32Array(HW * HW), COL = new Uint8ClampedArray(HW * HW * 4), RUNE = new Float32Array(HW * HW), HOLE = new Uint8Array(HW * HW);
+  for (let y = 0; y < HW; y++) for (let x = 0; x < HW; x++) {
+    const u = x / HW - 0.5, v = y / HW - 0.5, r = Math.hypot(u, v), a = Math.atan2(v, u), i = y * HW + x;
+    const n = fbm(u * 9, v * 9, 0.7, 4), bricks = voronoi(a * 3.2, r * 14, 0.5), seam = 1 - clamp01((bricks[1] - bricks[0]) / 0.14);
+    let h;
+    if (r < 0.2) { h = 0; HOLE[i] = 1; }
+    else if (r < 0.36) { const s = (r - 0.2) / 0.16; h = 0.3 + 0.6 * Math.sqrt(s) - 0.18 * seam + 0.05 * n; }   // the rim slopes down into the hole
+    else { h = 0.9 - 0.25 * seam + 0.06 * n - 0.15 * clamp01((r - 0.46) / 0.1); }
+    H[i] = clamp01(h);
+    const tint = 0.72 + 0.28 * bricks[2] + 0.12 * n, rune = r > 0.25 && r < 0.33 ? clamp01(1 - Math.abs(Math.sin(a * 9 + Math.sin(a * 3) * 1.5)) * 6) : 0;
+    RUNE[i] = rune;
+    COL.set([94 * tint, 90 * tint, 88 * tint, 255], i * 4);
+  }
+  const TW = 96, tile = new Uint8ClampedArray(TW * TW * 4);
+  for (let y = 0; y < TW; y++) for (let x = 0; x < TW; x++) { const sx = Math.floor(x / TW * RD.w), sy = Math.floor(y / TW * RD.h), v = RD.img[(sy * RD.w + sx) * 4] / 255; tile.set([20 + 235 * v, 40 + 150 * v * v, 70 + 120 * (1 - v) * 0.6 + 60 * v, 255], (y * TW + x) * 4); }
+  const p = pointerOn(canvas); let ms = 0, vx0 = 0, vy0 = 0;
+  function zoomAt(px, py, z) {
+    const K = 5, f = z - Math.floor(z); let r = 0, g = 0, b = 0, ws = 0;
+    for (let k = 0; k < K; k++) {
+      const x = k - f, s = 0.55 * 2 ** x, a = 0.4 * x, ca = Math.cos(a), sa = Math.sin(a), w = Math.sin(Math.PI * (x + 1) / K) ** 2;
+      const u = (px * ca - py * sa) * s, v = (px * sa + py * ca) * s, tx = ((Math.floor(u * TW) % TW) + TW) % TW, ty = ((Math.floor(v * TW) % TW) + TW) % TW, q = (ty * TW + tx) * 4;
+      r += tile[q] * w; g += tile[q + 1] * w; b += tile[q + 2] * w; ws += w;
+    }
+    const fall = Math.min(1, Math.hypot(px, py) * 3.2); // darker toward the walls of the tunnel
+    return [r / ws * (1 - 0.6 * fall), g / ws * (1 - 0.6 * fall), b / ws * (1 - 0.5 * fall)];
+  }
+  function draw(t, dt) {
+    const t0 = performance.now();
+    const tvx = p.over ? p.x * 0.75 : Math.cos(t * 0.3) * 0.45, tvy = p.over ? -p.y * 0.75 : Math.sin(t * 0.3) * 0.35;
+    vx0 += (tvx - vx0) * 0.12; vy0 += (tvy - vy0) * 0.12;
+    const vz = Math.sqrt(Math.max(0.06, 1 - vx0 * vx0 - vy0 * vy0)), depth = 0.16, dU = -vx0 / vz * depth, dV = vy0 / vz * depth, steps = Math.floor(14 * (1 + (1 - vz) * 1.5)), st = 1 / steps, d = img.data, z = t * 0.32;
+    const pulse = 0.5 + 0.5 * Math.sin(t * 2.2);
+    for (let oy = 0; oy < O; oy++) for (let ox = 0; ox < O; ox++) {
+      let u = (ox + 0.5) / O, v = (oy + 0.5) / O, dd = 0;
+      const hAt = (uu, vv) => H[Math.min(HW - 1, Math.max(0, Math.floor(vv * HW))) * HW + Math.min(HW - 1, Math.max(0, Math.floor(uu * HW)))];
+      let surf = 1 - hAt(u, v), pd = 0, ps = surf;
+      while (dd < surf && dd < 1) { pd = dd; ps = surf; dd += st; u += dU * st; v += dV * st; surf = 1 - hAt(u, v); }
+      const a = ps - pd, b = dd - surf, ff = a + b > 1e-6 ? a / (a + b) : 0, fu = u - dU * st * (1 - ff), fv = v - dV * st * (1 - ff), hit = pd + (dd - pd) * ff;
+      const gx = Math.min(HW - 1.001, Math.max(0, fu * HW - 0.5)), gy = Math.min(HW - 1.001, Math.max(0, fv * HW - 0.5)), x0 = Math.floor(gx), y0 = Math.floor(gy), ax = gx - x0, ay = gy - y0;
+      const q = (oy * O + ox) * 4, ti = y0 * HW + x0;
+      if (HOLE[ti] && hit > 0.97) {
+        // fell into the hole: look down the tunnel, offset by the same view so it sits behind the stone
+        const c = zoomAt(fu - 0.5 + vx0 * 0.25, fv - 0.5 - vy0 * 0.25, z); d[q] = c[0]; d[q + 1] = c[1]; d[q + 2] = c[2]; d[q + 3] = 255; continue;
+      }
+      let cr = 0, cg = 0, cb = 0, ru = 0;
+      for (const [dx, dy, w] of [[0, 0, (1 - ax) * (1 - ay)], [1, 0, ax * (1 - ay)], [0, 1, (1 - ax) * ay], [1, 1, ax * ay]]) { const j = (y0 + dy) * HW + x0 + dx; cr += COL[j * 4] * w; cg += COL[j * 4 + 1] * w; cb += COL[j * 4 + 2] * w; ru += RUNE[j] * w; }
+      const k = 1 - 0.62 * hit, glow = ru * (0.55 + 0.45 * pulse);
+      d[q] = cr * k + glow * 120; d[q + 1] = cg * k + glow * 215; d[q + 2] = cb * k + glow * 255; d[q + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    ms = ms * 0.9 + (performance.now() - t0) * 0.1; msEl.textContent = ms.toFixed(1) + " ms/frame";
+  }
+  every(canvas, draw);
+  return { draw };
+})();
+
+// ================================================================= 4. Ember pelt (shell fur + lava flow + spring)
+const pelt = (function () {
+  const canvas = document.getElementById("pelt"), R = 240, ctx = (canvas.width = canvas.height = R, canvas.getContext("2d")), img = ctx.createImageData(R, R), zb = new Float32Array(R * R), msEl = document.getElementById("peltMs");
+  const NSH = 16, segs = 30, rings = 15, V0 = [], T = [];
+  for (let j = 0; j <= rings; j++) for (let i = 0; i <= segs; i++) { const u = i / segs, v = j / rings, th = u * 2 * Math.PI, ph = v * Math.PI; V0.push([Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th), u, v]); }
+  for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = j * (segs + 1) + i, b = a + 1, c = a + segs + 1, d = c + 1; T.push([a, c, b], [b, c, d]); }
+  const cells = 64, strand = new Float32Array(cells * 2 * cells * 3); // per cell: keep, height, jitter
+  for (let cy = 0; cy < cells; cy++) for (let cx = 0; cx < cells * 2; cx++) { const q = (cy * cells * 2 + cx) * 3; strand[q] = hash3(cx, cy, 5, 1) < 0.78 ? 1 : 0; strand[q + 1] = 0.35 + 0.65 * hash3(cx, cy, 5, 2); strand[q + 2] = hash3(cx, cy, 5, 3); }
+  const p = pointerOn(canvas); let yaw = 0, prevYaw = 0, prevVel = 0, spring = 0, springV = 0, ms = 0, drag = null;
+  function draw(t, dt) {
+    const t0 = performance.now();
+    if (p.down) { if (!drag) drag = { x: p.x, yaw }; yaw = drag.yaw + (p.x - drag.x) * 3; } else { drag = null; yaw += 0.5 * dt + Math.sin(t * 1.5) ** 5 * 1.8 * dt; }
+    const vel = (yaw - prevYaw) / dt, acc = (vel - prevVel) / dt; prevYaw = yaw; prevVel = vel;
+    springV += (-acc * 0.018 - 70 * spring - 6 * springV) * dt; spring += springV * dt;
+    const lag = Math.max(-0.7, Math.min(0.7, spring)), cy = Math.cos(yaw), sy = Math.sin(yaw), pitch = -0.3, cp = Math.cos(pitch), sp = Math.sin(pitch), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { const y = (i / 4 / R) | 0; d[i] = 13 + y * 0.02; d[i + 1] = 14 + y * 0.02; d[i + 2] = 18 + y * 0.03; d[i + 3] = 255; }
+    zb.fill(Infinity);
+    const camZ = 3.6, f = R * 0.95, L = [-0.45, 0.75, -0.5], len = 0.24;
+    for (let s = 0; s < NSH; s++) {
+      const h = s / (NSH - 1), off = len * h, bend = h * h;
+      const V = V0.map(([x, y, z, u, v]) => {
+        const px = x * (1 + off) - z * lag * bend, py = y * (1 + off) - 0.1 * bend, pz = z * (1 + off) + x * lag * bend;
+        const x1 = px * cy - pz * sy, z1 = px * sy + pz * cy, y2 = py * cp - z1 * sp, z2 = py * sp + z1 * cp, Z = camZ + z2;
+        return [R / 2 + x1 * f / Z, R / 2 - y2 * f / Z, Z, u, v, x1, y2, z2];
+      });
+      for (const [ia, ib, ic] of T) {
+        const a = V[ia], b = V[ib], c = V[ic], area = (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]); if (area >= 0) continue;
+        const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0]))), x1 = Math.min(R - 1, Math.ceil(Math.max(a[0], b[0], c[0]))), y0 = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1]))), y1 = Math.min(R - 1, Math.ceil(Math.max(a[1], b[1], c[1]))), inv = 1 / area;
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+          const px = x + 0.5, py = y + 0.5, w0 = ((b[0] - px) * (c[1] - py) - (c[0] - px) * (b[1] - py)) * inv, w1 = ((c[0] - px) * (a[1] - py) - (a[0] - px) * (c[1] - py)) * inv, w2 = 1 - w0 - w1;
+          if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+          const z = w0 * a[2] + w1 * b[2] + w2 * c[2], i = y * R + x; if (z >= zb[i]) continue;
+          const u = w0 * a[3] + w1 * b[3] + w2 * c[3], v = w0 * a[4] + w1 * b[4] + w2 * c[4];
+          if (s > 0) {
+            const gx = u * cells * 2, gy = v * cells, cx = Math.floor(gx), cyy = Math.min(cells - 1, Math.floor(gy)), q = (cyy * cells * 2 + (cx % (cells * 2))) * 3;
+            if (!strand[q] || h > strand[q + 1]) continue;
+            const jx = 0.5 + (strand[q + 2] - 0.5) * 0.4; if (Math.hypot(gx - cx - jx, gy - cyy - 0.5) > 0.5 * (1 - h / strand[q + 1])) continue;
+          }
+          zb[i] = z;
+          const nx = w0 * a[5] + w1 * b[5] + w2 * c[5], ny = w0 * a[6] + w1 * b[6] + w2 * c[6], nz = w0 * a[7] + w1 * b[7] + w2 * c[7], nl = Math.hypot(nx, ny, nz) || 1;
+          const lam = Math.max(0, (nx * L[0] + ny * L[1] + nz * L[2]) / nl) * 0.7 + 0.3;
+          // embers flow through the roots (a looping lava table along v), ash-grey at the tips
+          const sj = h > 0 ? 0 : 0, gxx = Math.floor(u * cells * 2), gyy = Math.min(cells - 1, Math.floor(v * cells)), jit = strand[(gyy * cells * 2 + (gxx % (cells * 2))) * 3 + 2], fl = LUT[Math.floor(((v * 1.3 + u * 0.7 + jit * 0.45 - t * 0.22) % 1 + 1) % 1 * 256) % 256], ember = Math.max(0, (fl - 0.45) * 2.2) * (1 - h) ** 1.4;
+          const ash = 0.25 + 0.55 * h, q2 = i * 4;
+          d[q2] = Math.min(255, (40 + 150 * ash) * lam + ember * 255); d[q2 + 1] = Math.min(255, (36 + 140 * ash) * lam + ember * 120); d[q2 + 2] = Math.min(255, (34 + 130 * ash) * lam + ember * 30);
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    ms = ms * 0.9 + (performance.now() - t0) * 0.1; msEl.textContent = ms.toFixed(0) + " ms/frame";
+  }
+  every(canvas, draw);
+  return { draw };
+})();
+
+// ================================================================= 5. Hierarchy lens (salience + scanpath on a shop screen)
+const lens = (function () {
+  const canvas = document.getElementById("lens"), W = 480, Hh = 480, ctx = (canvas.width = W, canvas.height = Hh, canvas.getContext("2d"));
+  const fixBtn = document.getElementById("lensFix"), heatBtn = document.getElementById("lensHeat");
+  let fixed = false, showHeat = true, lastVerdict = null;
+  function rr(x, y, w, h, r, fill) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); }
+  function scene() {
+    ctx.fillStyle = "#15181d"; ctx.fillRect(0, 0, W, Hh);
+    // top bar: coins and gems
+    // fixed layout: the HUD steps back while the shop owns the screen (one loud element per panel)
+    const q = fixed;
+    rr(18, 18, 150, 40, 10, "#20252c"); ctx.fillStyle = q ? "#8a8065" : "#ffd24a"; ctx.beginPath(); ctx.arc(40, 38, 10, 0, 7); ctx.fill(); ctx.fillStyle = q ? "#9aa0a8" : "#e9e7e2"; ctx.font = "600 18px system-ui"; ctx.fillText("12.4K", 58, 45);
+    rr(178, 18, 110, 40, 10, "#20252c"); ctx.fillStyle = q ? "#6e6480" : "#b25cff"; ctx.fillRect(193, 29, 16, 16); ctx.fillStyle = q ? "#9aa0a8" : "#e9e7e2"; ctx.fillText("320", 218, 45);
+    ctx.fillStyle = "#e9e7e2"; ctx.font = "700 24px system-ui"; ctx.fillText("Shop", 22, 98);
+    // three item cards
+    const cards = [["Rare blade", "#5ab4ff", "2.5K"], ["Epic shield", "#b25cff", "7.0K"], ["Legend bow", "#ffb02e", "20K"]];
+    cards.forEach(([n, col, price], k) => {
+      const x = 18 + k * 152, sel = fixed && k === 2; rr(x, 116, 140, 190, 14, "#1d2127"); ctx.strokeStyle = col; ctx.globalAlpha = fixed && !sel ? 0.45 : 1; ctx.lineWidth = sel ? 3 : 2; ctx.beginPath(); ctx.roundRect(x + 1, 117, 138, 188, 13); ctx.stroke();
+      ctx.fillStyle = col; ctx.globalAlpha = fixed && !sel ? 0.4 : 0.85; ctx.beginPath(); ctx.moveTo(x + 70, 140); ctx.lineTo(x + 102, 200); ctx.lineTo(x + 70, 238); ctx.lineTo(x + 38, 200); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = "#e9e7e2"; ctx.font = "600 15px system-ui"; ctx.fillText(n, x + 14, 270); ctx.fillStyle = "#9aa0a8"; ctx.font = "500 14px system-ui"; ctx.fillText(price, x + 14, 292);
+    });
+    if (!fixed) {
+      // the broken version: two equally loud calls to action fight for the eye
+      rr(18, 330, 216, 64, 16, "#ff4d6d"); ctx.fillStyle = "#fff"; ctx.font = "800 22px system-ui"; ctx.fillText("SALE -50%", 54, 370);
+      rr(246, 330, 216, 64, 16, "#34d17a"); ctx.fillStyle = "#06180d"; ctx.fillText("BUY NOW", 296, 370);
+      rr(18, 410, 444, 52, 14, "#ffb02e"); ctx.fillStyle = "#1a1206"; ctx.font = "700 18px system-ui"; ctx.fillText("Daily deal ends in 02:14:09", 92, 443);
+    } else {
+      // one loud element per panel: a single CTA, the rest steps back
+      rr(18, 330, 444, 70, 18, "#ff9a3c"); ctx.fillStyle = "#1a1206"; ctx.font = "800 24px system-ui"; ctx.fillText("Buy Legend bow · 20K", 108, 373);
+      ctx.fillStyle = "#9aa0a8"; ctx.font = "500 15px system-ui"; ctx.fillText("Sale −50% on rares · daily deal 02:14:09", 74, 436);
+    }
+  }
+  function salience() {
+    // the auditor's model in miniature: luminance + colour opponency, centre-surround at two scales,
+    // few-peaks weighting, squared; then a scanpath with inhibition of return
+    const s = 96, small = document.createElement("canvas"); small.width = small.height = s; const sc = small.getContext("2d"); sc.drawImage(canvas, 0, 0, s, s);
+    const px = sc.getImageData(0, 0, s, s).data, L = new Float32Array(s * s), RG = new Float32Array(s * s), BY = new Float32Array(s * s);
+    for (let i = 0; i < s * s; i++) { const r = px[i * 4] / 255, g = px[i * 4 + 1] / 255, b = px[i * 4 + 2] / 255; L[i] = 0.3 * r + 0.59 * g + 0.11 * b; RG[i] = r - g; BY[i] = b - (r + g) / 2; }
+    const blur = (a, rad) => { const o = new Float32Array(s * s), tmp = new Float32Array(s * s); for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { let acc = 0, n = 0; for (let k = -rad; k <= rad; k++) { const xx = x + k; if (xx >= 0 && xx < s) { acc += a[y * s + xx]; n++; } } tmp[y * s + x] = acc / n; } for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { let acc = 0, n = 0; for (let k = -rad; k <= rad; k++) { const yy = y + k; if (yy >= 0 && yy < s) { acc += tmp[yy * s + x]; n++; } } o[y * s + x] = acc / n; } return o; };
+    const sal = new Float32Array(s * s);
+    for (const ch of [L, RG, BY]) {
+      const c1 = blur(ch, 1), s1 = blur(ch, 6), s2 = blur(ch, 12), m = new Float32Array(s * s); let mx = 0;
+      for (let i = 0; i < s * s; i++) { m[i] = Math.abs(c1[i] - s1[i]) + Math.abs(c1[i] - s2[i]); mx = Math.max(mx, m[i]); }
+      let loud = 0; for (let i = 0; i < s * s; i++) { m[i] /= mx || 1; if (m[i] > 0.5) loud++; }
+      const w = 1 - Math.min(0.9, loud / (s * s) * 4); for (let i = 0; i < s * s; i++) sal[i] += m[i] * w;
+    }
+    let mx = 0; for (let i = 0; i < s * s; i++) mx = Math.max(mx, sal[i]); for (let i = 0; i < s * s; i++) sal[i] = (sal[i] / mx) ** 2;
+    const path = [], work = sal.slice();
+    for (let k = 0; k < 4; k++) { let bi = 0; for (let i = 0; i < s * s; i++) if (work[i] > work[bi]) bi = i; const bx = bi % s, by = (bi / s) | 0; path.push([bx / s * W, by / s * Hh]); for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) { const d2 = (x - bx) ** 2 + (y - by) ** 2; work[y * s + x] *= 1 - Math.exp(-d2 / (2 * 7 * 7)); } }
+    return { sal, s, path };
+  }
+  function draw() {
+    scene();
+    const { sal, s, path } = salience();
+    if (showHeat) {
+      const hm = ctx.getImageData(0, 0, W, Hh), d = hm.data;
+      for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+        const v = sal[Math.min(s - 1, (y / Hh * s) | 0) * s + Math.min(s - 1, (x / W * s) | 0)], q = (y * W + x) * 4, grey = 0.3 * d[q] + 0.59 * d[q + 1] + 0.11 * d[q + 2];
+        const hr = Math.min(1, v * 3), hg = Math.min(1, Math.max(0, v * 3 - 1)), hb = Math.min(1, Math.max(0, v * 3 - 2)), a = 0.25 + 0.6 * v;
+        d[q] = grey * 0.45 * (1 - a) + hr * 255 * a; d[q + 1] = grey * 0.45 * (1 - a) + hg * 255 * a; d[q + 2] = grey * 0.5 * (1 - a) + hb * 255 * a;
+      }
+      ctx.putImageData(hm, 0, 0);
+    }
+    path.forEach(([x, y], k) => {
+      ctx.strokeStyle = k === 0 ? "#8fd8ff" : "rgba(236,234,229,0.85)"; ctx.lineWidth = k === 0 ? 4 : 2.5; ctx.beginPath(); ctx.arc(x, y, k === 0 ? 24 : 18, 0, 7); ctx.stroke();
+      ctx.fillStyle = k === 0 ? "#8fd8ff" : "#eceae5"; ctx.font = "700 20px system-ui"; ctx.fillText(String(k + 1), x + (k === 0 ? 28 : 22), y - 14);
+    });
+    // the verdict is measured, not assumed: do fixations 1 and 2 follow the decision path
+    // (the item you're buying, then its buy button)?
+    const zones = fixed ? [[322, 116, 140, 190], [18, 330, 444, 70]] : [[246, 330, 216, 64]];
+    const inZone = ([x, y]) => zones.some(([zx, zy, zw, zh]) => x >= zx - 6 && x <= zx + zw + 6 && y >= zy - 6 && y <= zy + zh + 6);
+    const onCta = inZone(path[0]) && inZone(path[1]);
+    ctx.fillStyle = "rgba(17,19,23,0.82)"; ctx.fillRect(0, Hh - 34, W, 34); ctx.fillStyle = onCta ? "#8fd8ff" : "#ff9a3c"; ctx.font = "600 15px ui-monospace, monospace";
+    ctx.fillText(onCta ? "eye path: the item, then its buy button" : "fixation 1 goes to the HUD; three panels compete", 16, Hh - 12);
+    lastVerdict = onCta;
+  }
+  fixBtn.addEventListener("click", () => { fixed = !fixed; fixBtn.setAttribute("aria-pressed", String(fixed)); fixBtn.textContent = fixed ? "Break it again" : "Fix the hierarchy"; draw(); });
+  heatBtn.addEventListener("click", () => { showHeat = !showHeat; heatBtn.setAttribute("aria-pressed", String(showHeat)); draw(); });
+  draw();
+  return { draw, setFixed: v => { fixed = v; draw(); }, verdict: () => lastVerdict };
+})();
+
+// ================================================================= boot
+for (const l of loops) io.observe(l.canvas);
+relic.bakeNext();
+// draw one still frame of everything so the page is complete at rest (and under reduced motion)
+setTimeout(() => { shock.draw(0.5, 1 / 30); portal.draw(1.2, 1 / 30); pelt.draw(0.2, 1 / 30); }, 60);
+requestAnimationFrame(frame);
+window.__show = { relic, shock, portal, pelt, lens };
+</script>
