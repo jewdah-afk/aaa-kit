@@ -1,7 +1,7 @@
 {
   "$schema": "./lexicon.schema.json",
   "version": 1,
-  "count": 442,
+  "count": 444,
   "terms": [
     {
       "term": "loudness tier",
@@ -3008,6 +3008,33 @@
       ],
       "prompt-phrase": "dissolve the enemy over 0.8 s with an orange 0.08-wide burning rim",
       "source": "aaa-kit/lib/surfacebake/Animate.luau",
+      "starter": false
+    },
+    {
+      "term": "reactive surface",
+      "tier": "T2 combat",
+      "domain": "materials",
+      "meaning": "A texture with per-texel state (heat, frost) that hits, other effects and the object's motion change over time.",
+      "use-when": "Impacts that leave marks, elemental fights on a surface, shields that respond.",
+      "pairs-with": [
+        "baked-field animation",
+        "effect coupling"
+      ],
+      "prompt-phrase": "make the boss armour a reactive surface: hits heat it, ice spells freeze it, heat melts the ice",
+      "source": "aaa-kit/lib/surfacebake/React.luau",
+      "starter": false
+    },
+    {
+      "term": "effect coupling",
+      "tier": "all",
+      "domain": "materials",
+      "meaning": "One effect's state feeding another's (frost suppresses lava flow, flow heat melts frost) so effects interact instead of stacking.",
+      "use-when": "Making elemental systems feel physical.",
+      "pairs-with": [
+        "reactive surface"
+      ],
+      "prompt-phrase": "couple the lava flow to the frost field so ice visibly stops the flow",
+      "source": "aaa-kit/lib/surfacebake/React.luau",
       "starter": false
     },
     {

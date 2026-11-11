@@ -18,7 +18,7 @@ The front door to my game development: one place that holds the design hierarchy
 | **[tools/hierarchy](tools/hierarchy/README.md)** | The hierarchy auditor: predicted scanpath and focus lift on any screenshot, APCA contrast, colour-blind checks, WCAG flash safety on effect GIFs |
 | **[tools/figma](tools/figma/README.md) · [lib/figma-ui](lib/figma-ui/README.md) · [tools/icons](tools/icons/README.md)** | The Figma kit and exporter, the in-game renderer that rebuilds Figma frames node for node, and the icon cutter/QA tools |
 | **[.claude/agents/](.claude/agents/)** | Review agents: `ui-qa` (zoomed QA), `style-guard`, `visual-hierarchy`, `roblox-feasibility` |
-| **[media/gifs/](media/gifs/)** | Looping GIFs of every tier 5 (materials) and tier 6 (engines) effect; record more with `node tools/capture_gifs.mjs --tier N` |
+| **[media/gifs/](media/gifs/)** | Looping GIFs of every tier 5 (materials) and tier 6 (engines) effect (`node tools/capture_gifs.mjs --tier N`), plus the [surface effects reel](media/gifs/surfaces/index.html): dissolve and frost on four surfaces each, runes, lava flow, scans, reactive hits, ice vs lava, a spin-reactive shield, and depth tricks (`node tools/capture_surface_gifs.mjs`) |
 | **[tools/](tools/)** | The kit doctor, checkers (Luau compile, links, skills, lexicon, web pages), the GIF recorder, and the research and economy calculators |
 
 ## Use it with Claude

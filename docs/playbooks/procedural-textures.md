@@ -90,6 +90,23 @@ How to ship it:
 4. Budget: 128² full refresh or 256² at 32 rows per frame (about 0.7–1.6 ms headless). Measure on a phone.
 5. Calm by default (HIERARCHY §6): ambient pulses stay slow (≥ 2 s cycles) and dim. Only tier 1–2 events (dissolve on death, spread on a frost hit) get bright, fast motion. Run `tools/hierarchy/hierarchy.py flash` on a capture of any glow that flickers.
 
+### Reactive surfaces
+
+`React.luau` keeps a little state per texel (heat, frost) that changes with hits, with other effects and with the object's motion. See the reel in [media/gifs/surfaces](../../media/gifs/surfaces/index.html), or tap the model in the [surface bake lab](../../examples/web/surface-bake.html).
+
+| Reaction | Driven by | Use for |
+|---|---|---|
+| **Heat** builds up, glows dark red → orange → white, cools | `React.hit` (raycast point → mesh space) | Weapon impacts, a forge, overheating machines, boss weak points |
+| **Ripple** rings travel over the surface in 3D | `React.hit` | Shields, water and slime, magic barriers |
+| **Frost vs heat** | frost seeds grow; heat (from hits or lava) melts them | Elemental fights on a surface: freeze the lava, burn the ice back |
+| **Flow freezes** | lava/plasma flow is multiplied by (1 − frost) | Ice spells stopping a lava floor or a power conduit |
+| **Shimmer from spin** | the object's angular speed | Shields and energy cores that flare when they move fast |
+| **Spring lag** | the body's acceleration → `React.spring` | Fur shells, hair cards, cloth, jelly bodies (offset each shell's CFrame by spring × h²) |
+
+Costs (headless): 2.5–3.4 ms per frame at 128², 10–23 ms at 256². **Reactive surfaces run at 128²**, one hero object at a time. Hits are events, so the heat splat costs one pass over the texels per hit, not per frame.
+
+**Flash safety is a design input.** Thin, high-contrast bright features that move under a changing view (lava cracks in a parallax window) alias into frame-to-frame flicker, and the first capture failed `tools/hierarchy/hierarchy.py flash` at 4.25% of the screen. Slowing the camera and adding POM steps didn't fix it; soft feature edges plus a bilinear colour fetch did (0%). `Parallax.pom` now fetches bilinearly. Every GIF in `media/gifs` is flash-checked in `tools/check_all.sh`.
+
 ## 6. Depth tricks (no shaders)
 
 ([`Parallax.luau`](../../lib/surfacebake/Parallax.luau), live in the [depth lab](../../examples/web/depth-lab.html).)

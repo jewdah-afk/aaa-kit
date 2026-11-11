@@ -80,6 +80,7 @@ figcaption { font-family: var(--mono); font-size: 11px; color: var(--dim); }
     <div class="panel">
       <div style="display:grid;gap:8px"><div class="label">Material recipe</div><div class="chips" id="recipes"></div></div>
       <div style="display:grid;gap:8px"><div class="label">Motion (realtime, from pre-baked fields)</div><div class="chips" id="motions"></div></div>
+      <div style="display:grid;gap:8px"><div class="label">Reactive (tap the model to hit it)</div><div class="chips" id="reactives"></div></div>
       <div style="display:grid;gap:8px"><div class="label">Model</div><div class="chips" id="meshes"></div></div>
       <div style="display:grid;gap:8px"><div class="label">Texture size</div><div class="chips" id="sizes"></div></div>
       <div class="row">
@@ -460,9 +461,15 @@ function prepareMotion(spec) {
     phase[i] = spec.phase === "seed" ? Math.hypot(c.px - spec.seed[0], c.py - spec.seed[1], c.pz - spec.seed[2]) : field(spec.phase ?? term("y"), c, c.px, c.py, c.pz);
     nz[i] = Math.min(1, Math.max(0, field(spec.noise ?? term("noise", { scale: 4, octaves: 3 }), c, c.px, c.py, c.pz) * 0.5 + 0.5));
   }
-  return { spec, base: baked.maps.albedo.slice(), mask, phase, nz };
+  return { spec, base: baked.maps.albedo.slice(), mask, phase, nz, cry: crystalField() };
 }
 function mask_(terms, c) { return mask(terms, c, c.px, c.py, c.pz); }
+// frost crystals: bright facet edges from a fine Voronoi, plus a little noise (0.75 .. 1.25)
+function crystalField() {
+  const n = baked.S * baked.S, out = new Float32Array(n);
+  for (let i = 0; i < n; i++) { if (!baked.cover[i]) continue; const x = baked.pos[i * 3] * 9, y = baked.pos[i * 3 + 1] * 9, z = baked.pos[i * 3 + 2] * 9, [f1, f2] = voronoi(x, y, z), e = Math.min(1, (f2 - f1) / 0.12); out[i] = 0.78 + 0.4 * (1 - e) + 0.08 * noise3(x * 0.7, y * 0.7, z * 0.7); }
+  return out;
+}
 function stepMotion(t) {
   if (!anim) return 0;
   const t0 = performance.now(), sp = anim.spec, B = anim.base, O = baked.maps.albedo, n = baked.S * baked.S;
@@ -476,8 +483,64 @@ function stepMotion(t) {
     else if (sp.effect === "flow") { const fi = ((p * freq + t * speed) % 1 + 1) % 1 * 256, i0 = Math.floor(fi), fr = fi - i0; k = m * (LUT[i0 % 256] + (LUT[(i0 + 1) % 256] - LUT[i0 % 256]) * fr) ** sharp; }
     else if (sp.effect === "dissolve") { const d = anim.nz[i] - progress; if (d < 0) a = 0; else if (d < width) k = 1 - d / width; }
     else if (sp.effect === "scan") { const d = (p - scanC) / width; k = m * Math.exp(-d * d); }
-    else if (sp.effect === "spread") { const d = front - p; if (d > 0) { const mm = Math.min(1, d / (width * 4)); r += (ar - r) * mm; g += (ag - g) * mm; b += (ab - b) * mm; } const e = d / width; k = Math.exp(-e * e); }
+    else if (sp.effect === "spread") { const d = front - p; if (d > 0) { const mm = Math.min(1, d / (width * 4)) * 0.85, cry = anim.cry[i]; r += (ar * cry - r) * mm; g += (ag * cry - g) * mm; b += (ab * cry - b) * mm; } const e = d / width; k = Math.exp(-e * e); }
     if (k > 0) { const kk = Math.min(1, k); r += (cr - r) * kk + cr * k * 0.35; g += (cg - g) * kk + cg * k * 0.35; b += (cb - b) * kk + cb * k * 0.35; }
+    O[q] = r; O[q + 1] = g; O[q + 2] = b; O[q + 3] = a;
+  }
+  return performance.now() - t0;
+}
+
+// ---------------------------------------------------------------- reactive surfaces (port of React.luau)
+const REACTIVES = {
+  "Off": null,
+  "Molten hits": { recipe: "Rusted iron", heat: { gain: 1, radius: 0.28, decay: 0.55 }, ripple: { speed: 2.2, width: 0.07, life: 1.1, color: [1, 0.55, 0.2] }, autoEvery: 0.55 },
+  "Ice vs lava": { recipe: "Lava rock", flow: { mask: [term("voronoi", { scale: 4, lo: 0.12, hi: 0 })], phase: term("y", { scale: 1 }), speed: 0.35, freq: 1.2, color: [1, 0.5, 0.1], heat: 0.35 },
+    frost: { speed: 0.55, max: 0.75, width: 0.07, melt: 0.5, color: [0.82, 0.93, 1] }, autoEvery: 1.6 },
+  "Force field": { recipe: "Sci-fi panel", shimmer: { mask: [term("voronoi", { scale: 3, lo: 0.16, hi: 0.02 })], phase: term("voronoi", { scale: 3, field: "f1" }), color: [0.35, 0.95, 1], gain: 1.4 },
+    ripple: { speed: 2.8, width: 0.06, life: 0.9, color: [0.35, 0.9, 1] }, autoEvery: 0.9 },
+};
+let react = null, lastUserHit = -1e9, autoT = 0, rng = 99;
+const rand = () => (rng = (Math.imul(rng, 1664525) + 1013904223) >>> 0) / 4294967296;
+function prepareReactive(p) {
+  if (!p || !baked) return null;
+  const S = baked.S, n = S * S, c = {};
+  const pair = spec => { const m = new Float32Array(n), ph = new Float32Array(n); for (let i = 0; i < n; i++) { if (!baked.cover[i]) continue; c.px = baked.pos[i * 3]; c.py = baked.pos[i * 3 + 1]; c.pz = baked.pos[i * 3 + 2]; c.nx = baked.nrm[i * 3]; c.ny = baked.nrm[i * 3 + 1]; c.nz = baked.nrm[i * 3 + 2]; c.ao = baked.aoT[i]; c.edge = baked.edgeT[i]; m[i] = mask_(spec.mask, c); ph[i] = field(spec.phase ?? term("y"), c, c.px, c.py, c.pz); } return [m, ph]; };
+  const st = { profile: p, heat: new Float32Array(n), frost: new Float32Array(n), hits: [], t: 0, spin: 0, cry: p.frost ? crystalField() : null };
+  if (p.flow) [st.flowM, st.flowP] = pair(p.flow);
+  if (p.shimmer) [st.shimM, st.shimP] = pair(p.shimmer);
+  return st;
+}
+function hitTexel(t, frost) {
+  if (!react || !baked.cover[t]) return;
+  const x = baked.pos[t * 3], y = baked.pos[t * 3 + 1], z = baked.pos[t * 3 + 2], p = react.profile;
+  react.hits.push({ x, y, z, t: react.t, s: 1, frost: !!frost }); if (react.hits.length > 12) react.hits.shift();
+  if (p.heat && !frost) { const r2 = p.heat.radius ** 2, n = baked.S * baked.S; for (let i = 0; i < n; i++) { if (!baked.cover[i]) continue; const d2 = (baked.pos[i * 3] - x) ** 2 + (baked.pos[i * 3 + 1] - y) ** 2 + (baked.pos[i * 3 + 2] - z) ** 2; if (d2 < r2 * 9) react.heat[i] += p.heat.gain * Math.exp(-d2 / r2); } }
+}
+// a random texel that is visible right now (from the last frame's pick buffer), so hits land in view
+function randomTexel() { for (let k = 0; k < 400; k++) { const t = pick[Math.floor(rand() * RES * RES)]; if (t >= 0 && baked.cover[t] === 1) return t; } return -1; }
+function stepReactive(dt, spin) {
+  if (!react) return 0;
+  const t0 = performance.now(), st = react, p = st.profile, B = baked.base0, O = baked.maps.albedo, n = baked.S * baked.S;
+  st.t += dt; st.spin += (spin - st.spin) * Math.min(1, dt * 4);
+  const t = st.t, hd = p.heat ? Math.exp(-p.heat.decay * dt) : 1, rp = p.ripple, fr = p.frost, fl = p.flow, sh = p.shimmer;
+  const rips = [], seeds = [];
+  for (const h of st.hits) { const age = t - h.t; if (h.frost) seeds.push(h); else if (rp && age < rp.life) rips.push([h.x, h.y, h.z, rp.speed * age, h.s * (1 - age / rp.life)]); }
+  const shAmt = sh ? Math.min(1.5, st.spin * sh.gain) : 0;
+  for (let i = 0; i < n; i++) {
+    const q = i * 4, a = B[q + 3]; if (!a) continue;
+    let r = B[q], g = B[q + 1], b = B[q + 2];
+    const px = baked.pos[i * 3], py = baked.pos[i * 3 + 1], pz = baked.pos[i * 3 + 2];
+    let heat = p.heat ? st.heat[i] * hd : 0, frost = fr ? st.frost[i] : 0;
+    if (fl) { const m = st.flowM[i]; if (m > 0) { const u = ((st.flowP[i] * fl.freq + t * fl.speed) % 1 + 1) % 1, fi = u * 256, i0 = Math.floor(fi), k = m * (LUT[i0 % 256] + (LUT[(i0 + 1) % 256] - LUT[i0 % 256]) * (fi - i0)) ** 2 * (1 - frost); r += (fl.color[0] * 255 - r) * k + fl.color[0] * 90 * k; g += (fl.color[1] * 255 - g) * k + fl.color[1] * 90 * k; b += (fl.color[2] * 255 - b) * k + fl.color[2] * 90 * k; heat = Math.max(heat, m * fl.heat * (1 - frost)); } }
+    if (fr) {
+      let grow = 0;
+      for (const s of seeds) { const d = Math.hypot(px - s.x, py - s.y, pz - s.z), reach = fr.max * s.s, radius = Math.min(reach, fr.speed * (t - s.t) * s.s); if ((radius < reach || d > radius - fr.width * 2) && d > radius - fr.width * 3) grow = Math.max(grow, Math.min(1, Math.max(0, (radius - d) / fr.width))); }
+      frost = Math.min(1, Math.max(0, Math.max(frost, grow) - heat * fr.melt * dt)); st.frost[i] = frost;
+      if (frost > 0) { const sp = st.cry[i], f = frost * 0.88; r += (fr.color[0] * 255 * sp - r) * f; g += (fr.color[1] * 255 * sp - g) * f; b += (fr.color[2] * 255 * sp - b) * f; }
+    }
+    if (p.heat) { st.heat[i] = heat < 0.002 ? 0 : heat; if (heat > 0.02) { const h1 = Math.min(1, heat), k = Math.min(1, heat * 1.3); r += (255 - r) * k; g += (60 + 195 * h1 * h1 - g) * k; b += (20 + 200 * Math.max(0, heat - 0.8) - b) * k; } }
+    for (const rr of rips) { const d = Math.hypot(px - rr[0], py - rr[1], pz - rr[2]), e = (d - rr[3]) / rp.width, k = rr[4] * Math.exp(-e * e); if (k > 0.01) { const kk = Math.min(1, k); r += (rp.color[0] * 255 - r) * kk + rp.color[0] * 60 * k; g += (rp.color[1] * 255 - g) * kk + rp.color[1] * 60 * k; b += (rp.color[2] * 255 - b) * kk + rp.color[2] * 60 * k; } }
+    if (sh && shAmt > 0.01) { const m = st.shimM[i]; if (m > 0) { const w = 0.5 + 0.5 * Math.sin((st.shimP[i] * 6 - t * 3) * Math.PI), k = Math.min(1, m * shAmt * w); r += (sh.color[0] * 255 - r) * k; g += (sh.color[1] * 255 - g) * k; b += (sh.color[2] * 255 - b) * k; } }
     O[q] = r; O[q + 1] = g; O[q + 2] = b; O[q + 3] = a;
   }
   return performance.now() - t0;
@@ -498,9 +561,17 @@ function chips(id, items, key, onPick) {
   }
 }
 chips("recipes", RECIPES, "recipe", n => { state.recipe = n; rebake(); });
-state.motion = "Still";
+state.motion = "Still"; state.reactive = "Off";
+function pressChip(id, name) { for (const o of document.getElementById(id).children) o.setAttribute("aria-pressed", String(o.textContent === name)); }
+chips("reactives", REACTIVES, "reactive", n => {
+  state.reactive = n; const r = REACTIVES[n];
+  if (r) { state.motion = "Still"; pressChip("motions", "Still"); anim = null; }
+  if (r && r.recipe !== state.recipe) { state.recipe = r.recipe; pressChip("recipes", r.recipe); rebake(); }
+  else { react = prepareReactive(r); if (!r && baked) { baked.maps.albedo.set(baked.base0); paintMaps(); draw(); } }
+});
 chips("motions", MOTIONS, "motion", n => {
   state.motion = n; const m = MOTIONS[n];
+  if (m) { state.reactive = "Off"; pressChip("reactives", "Off"); react = null; }
   if (m && m.recipe && m.recipe !== state.recipe) {
     state.recipe = m.recipe;
     for (const o of document.getElementById("recipes").children) o.setAttribute("aria-pressed", String(o.textContent === m.recipe));
@@ -511,28 +582,34 @@ chips("meshes", MESHES, "mesh", n => { state.mesh = n; mesh = null; rebake(); })
 chips("sizes", SIZES, "size", n => { state.size = SIZES[n]; rebake(); });
 const readout = document.getElementById("readout");
 function paintMaps(only) { for (const k of only ?? MAPKEYS) { const c = mapCanvas[k]; if (c.width !== baked.S) c.width = c.height = baked.S; c.getContext("2d").putImageData(new ImageData(baked.maps[k], baked.S, baked.S), 0, 0); } }
-function rebake() {
-  readout.textContent = "baking…";
-  setTimeout(() => {
-    if (!mesh) mesh = MESHES[state.mesh]();
-    baked = bake(mesh, RECIPES[state.recipe], state.size);
-    baked.base0 = baked.maps.albedo.slice();
-    anim = prepareMotion(MOTIONS[state.motion]);
-    paintMaps();
-    const ms = baked.ms;
-    readout.textContent = `${baked.S}² · ${mesh.tris.length / 3} tris · raster ${ms.raster.toFixed(0)} ms · surface ${ms.surface.toFixed(0)} ms · shade ${ms.shade.toFixed(0)} ms`;
-    draw();
-  }, 20);
+function doBake() {
+  if (!mesh) mesh = MESHES[state.mesh]();
+  baked = bake(mesh, RECIPES[state.recipe], state.size);
+  baked.base0 = baked.maps.albedo.slice();
+  anim = prepareMotion(MOTIONS[state.motion]);
+  react = prepareReactive(REACTIVES[state.reactive]);
+  paintMaps();
+  const ms = baked.ms;
+  readout.textContent = `${baked.S}² · ${mesh.tris.length / 3} tris · raster ${ms.raster.toFixed(0)} ms · surface ${ms.surface.toFixed(0)} ms · shade ${ms.shade.toFixed(0)} ms`;
+  draw();
 }
+function rebake() { readout.textContent = "baking…"; setTimeout(doBake, 20); }
 
 // ---------------------------------------------------------------- software renderer: lit, normal-mapped, z-buffered
 const view = document.getElementById("view"), vctx = view.getContext("2d");
 let yaw = 0.7, pitch = -0.45, drag = null;
 const RES = 420; view.width = view.height = RES;
-const frame = vctx.createImageData(RES, RES), zbuf = new Float32Array(RES * RES);
+const frame = vctx.createImageData(RES, RES), zbuf = new Float32Array(RES * RES), pick = new Int32Array(RES * RES).fill(-1);
 view.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw, pitch }; view.setPointerCapture(e.pointerId); view.style.cursor = "grabbing"; });
 view.addEventListener("pointermove", e => { if (!drag) return; yaw = drag.yaw + (e.clientX - drag.x) * 0.01; pitch = Math.max(-1.4, Math.min(1.4, drag.pitch + (e.clientY - drag.y) * 0.01)); draw(); });
-view.addEventListener("pointerup", () => { drag = null; view.style.cursor = "grab"; });
+view.addEventListener("pointerup", e => {
+  if (drag && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6 && react) {
+    // a tap, not a drag: hit the surface texel under the pointer
+    const r = view.getBoundingClientRect(), x = Math.floor((e.clientX - r.left) / r.width * RES), y = Math.floor((e.clientY - r.top) / r.height * RES), t = pick[y * RES + x];
+    if (t >= 0) { hitTexel(t, react.profile.frost && !e.shiftKey); lastUserHit = performance.now(); }
+  }
+  drag = null; view.style.cursor = "grab";
+});
 const spinEl = document.getElementById("spin"), nmapEl = document.getElementById("nmap");
 nmapEl.addEventListener("change", () => draw());
 function sample(map, S, u, v) { const x = Math.min(S - 1, Math.max(0, (u * S) | 0)), y = Math.min(S - 1, Math.max(0, (v * S) | 0)); return (y * S + x) * 4; }
@@ -543,7 +620,7 @@ function draw() {
   const rot = (x, y, z) => { const x1 = x * cy - z * sy, z1 = x * sy + z * cy; return [x1, y * cp - z1 * sp, y * sp + z1 * cp]; };
   const camZ = 4.2, f = RES * 0.95;
   const d = frame.data; for (let i = 0; i < d.length; i += 4) { const g = 11 + ((i / 4 / RES) | 0) * 0.02; d[i] = g; d[i + 1] = g + 2; d[i + 2] = g + 5; d[i + 3] = 255; }
-  zbuf.fill(Infinity);
+  zbuf.fill(Infinity); pick.fill(-1);
   const L = norm(-0.5, 0.75, -0.6), useN = nmapEl.checked, nt = tris.length / 3;
   for (let t = 0; t < nt; t++) {
     const vs = [], ws = [];
@@ -587,18 +664,27 @@ function draw() {
         if (RECIPES[state.recipe].emissive) c2 += alb[k] * (k === 0 ? 1.2 : 0.5) * Math.max(0, (alb[0] - 0.5) * 2);
         return Math.sqrt(c2 / (1 + c2)) * 255 * 1.08;
       });
-      const di = i * 4; d[di] = out[0]; d[di + 1] = out[1]; d[di + 2] = out[2];
+      const di = i * 4; d[di] = out[0]; d[di + 1] = out[1]; d[di + 2] = out[2]; pick[i] = o >> 2;
     }
   }
   vctx.putImageData(frame, 0, 0);
 }
-let last = 0, frames = 0, motionMs = 0;
+let last = 0, frames = 0, motionMs = 0, lastYaw = yaw;
 function tick(ts) {
-  const moving = anim && baked;
+  if (window.__capturing) return;
+  const moving = (anim || react) && baked;
   if (baked && ts - last > 40 && ((spinEl.checked && !drag) || moving)) {
     if (spinEl.checked && !drag) yaw += 0.012;
+    const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0.04;
     last = ts;
-    if (moving) {
+    if (react) {
+      const spin = Math.abs(yaw - lastYaw) / dt; lastYaw = yaw;
+      autoT += dt;
+      if (ts - lastUserHit > 3000 && autoT > react.profile.autoEvery) { autoT = 0; const tx = randomTexel(); if (tx >= 0) hitTexel(tx, !!react.profile.frost); }
+      motionMs = motionMs * 0.9 + stepReactive(dt, spin) * 0.1;
+      if (++frames % 6 === 0) paintMaps(["albedo"]);
+      readout.textContent = `${state.reactive} · tap to hit${react.profile.frost ? " (frost; shift-tap for heat)" : ""} · spin ${react.spin.toFixed(1)} rad/s · ${motionMs.toFixed(1)} ms/frame (JS)`;
+    } else if (moving) {
       motionMs = motionMs * 0.9 + stepMotion(ts / 1000) * 0.1;
       if (++frames % 6 === 0) paintMaps(["albedo"]);
       readout.textContent = `${state.motion} · ${baked.S}² texels re-shaded per frame in ${motionMs.toFixed(1)} ms (JS)`;
@@ -607,6 +693,26 @@ function tick(ts) {
   }
   requestAnimationFrame(tick);
 }
+// Deterministic capture hook for tools/capture_surface_gifs.mjs: fixed clock, scripted hits.
+window.__sb = {
+  setup(o) {
+    window.__capturing = true;
+    Object.assign(state, { recipe: o.recipe ?? state.recipe, mesh: o.mesh ?? state.mesh, size: o.size ?? 256, motion: o.motion ?? "Still", reactive: o.reactive ?? "Off" });
+    yaw = o.yaw ?? 0.7; pitch = o.pitch ?? -0.45; mesh = null; rng = o.seed ?? 99; nmapEl.checked = true;
+    doBake(); this.o = o; this.t = 0; this.yaw0 = yaw;
+  },
+  frame(dt) {
+    const o = this.o; this.t += dt; const t = this.t;
+    const prevYaw = yaw; yaw = this.yaw0 + (o.spin ?? 0.35) * t + (o.wobble ? Math.sin(t * 2.4) * o.wobble : 0);
+    if (anim) stepMotion(t + (o.t0 ?? 0));
+    if (react) {
+      for (const h of o.hits ?? []) if (!h.done && t >= h.t) { h.done = true; const tx = randomTexel(); if (tx >= 0) hitTexel(tx, h.frost); }
+      stepReactive(dt, Math.abs(yaw - prevYaw) / dt);
+    }
+    draw();
+    return view.toDataURL("image/png");
+  },
+};
 rebake();
 requestAnimationFrame(tick);
 </script>
