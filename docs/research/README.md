@@ -48,6 +48,20 @@ research agent against primary sources, with unverifiable claims marked
 | 64 | [QA & verification](64-qa-and-verification-methodology.md) | Golden-master testing, property tests, CI, the review rubric |
 | 65 | [Adversarial QA loops](65-adversarial-qa-loops.md) | Critic agents, staged gauntlets, what the evidence supports |
 
+## Part V — Hierarchy science
+
+Why HIERARCHY.md works, with the perception, timing and audio research behind each rule, and the numbers to measure it. Tool: [`tools/hierarchy`](../../tools/hierarchy/README.md). Skill: [`hierarchy-audit`](../../.claude/skills/hierarchy-audit/SKILL.md).
+
+| # | Chapter | Answers |
+|---|---------|---------|
+| 70 | [HUD hierarchy survey](70-game-hud-hierarchy.md) | How strategy HUDs and Roblox lobbies rank information; touch and thumb zones |
+| 80 | [Attention and salience](80-attention-and-salience.md) | Pre-attentive features, salience maps, onsets and looming, inhibition of return, the attentional blink, crowding, inattentional and change blindness |
+| 81 | [Contrast, colour, colour blindness](81-contrast-colour-and-colour-blindness.md) | APCA Lc floors, OKLab, the Machado CVD model, the WCAG flash limit |
+| 82 | [Time, motion and cue timing](82-time-motion-and-cue-timing.md) | The response chain, the telegraph budget, spacing cues, motion per tier |
+| 83 | [Audio hierarchy](83-audio-hierarchy.md) | Priority, ducking (AudioCompressor sidechain), masking, loudness targets, tiers as buses |
+| 84 | [Grouping, density and choice](84-grouping-density-and-choice.md) | Common region, about four chunks, Hick and Fitts, touch targets, clutter |
+| 85 | [Measuring hierarchy](85-measuring-hierarchy.md) | The auditor's checks and thresholds, how the model fails, validating with people |
+
 ## Method
 
 `create.roblox.com`, `devforum.roblox.com` and `luau.org` are unreachable from
