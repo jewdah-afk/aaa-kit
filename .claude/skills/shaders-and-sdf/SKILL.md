@@ -56,6 +56,10 @@ Roblox has no custom shaders. This skill gives you the maths, then the three way
 - **Thin-film / iridescence:** hue = `fract(k * thickness * cosθ)` run through a spectral palette. In Roblox UI, approximate it with a rainbow `UIGradient` whose `Offset` follows the tilt.
 - **Dithering:** an ordered Bayer 8×8 threshold keeps hard pixels for pixel art, and interleaved gradient noise works for smooth gradients.
 
+## Process
+
+Roblox has no custom shaders, so shader-style surface maths (noise, Voronoi, triplanar, height-to-normal) is baked into textures instead: [procedural textures playbook](../../../docs/playbooks/procedural-textures.md), [`lib/surfacebake`](../../../lib/surfacebake/README.md).
+
 ## Example
 
 `examples/Sdf.luau` provides circle, rounded box, ring, union, subtract, smooth union, AA coverage, glow and a rasteriser into an 8-bit alpha buffer (tested in `examples/Sdf.test.luau`). The WebGL raymarcher (smooth-union blobs, soft shadows, AO) is the SDF tile in [effects-gallery.html](../../../examples/web/effects-gallery.html).

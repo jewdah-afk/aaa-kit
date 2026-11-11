@@ -64,6 +64,10 @@ The full 57-chapter compendium and 1,361 idea cards live in the ObsidianVault re
 
 **Web.** Typed arrays on the CPU for ≤ 256², and WebGL ping-pong framebuffers for anything larger or animated.
 
+## Process
+
+To put an algorithm render on a model (not just a flat canvas), evaluate it in 3D at each texel's surface point, or project a tiling 2D render triplanar: [procedural textures playbook §2](../../../docs/playbooks/procedural-textures.md#2-getting-2d-algorithm-renders-onto-the-model).
+
 ## Example
 
 `examples/Chain.luau` runs fBm noise → domain warp → threshold → chamfer distance transform → quantised bands. It's deterministic per seed and tested in `examples/Chain.test.luau`.

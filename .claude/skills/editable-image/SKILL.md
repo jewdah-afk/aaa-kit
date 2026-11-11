@@ -67,6 +67,10 @@ A phone is roughly 4–5× slower and hasn't been measured. Plan the first cuts 
 - [`lib/pixelfx`](../../../lib/pixelfx/README.md): 15 ready effects (lightning, dissolve, bloom, outlines, crowd) writing `WritePixelsBuffer`-ready RGBA8.
 - Research: [EditableImage API](../../../docs/research/20-roblox-editableimage-api.md), [technique cookbook](../../../docs/research/40-editableimage-technique-cookbook.md), [Luau performance](../../../docs/research/22-luau-performance-engineering.md).
 
+## Process
+
+Texturing a 3D asset with EditableImage: rasterise its UVs into a G-buffer, shade per texel in 3D and dilate the islands. See the [procedural textures playbook](../../../docs/playbooks/procedural-textures.md) and [`lib/surfacebake`](../../../lib/surfacebake/README.md) (`Apply.bakeMeshPart` for the runtime route).
+
 ## Example
 
 `examples/PixelFrame.luau` holds the colour and owner buffers, the `CAN` table, pixel snapping, clipped rects and coverage (for FX budgets). It's tested in `examples/PixelFrame.test.luau`.

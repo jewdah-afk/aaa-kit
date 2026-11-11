@@ -1,7 +1,7 @@
 {
   "$schema": "./lexicon.schema.json",
   "version": 1,
-  "count": 428,
+  "count": 434,
   "terms": [
     {
       "term": "loudness tier",
@@ -2818,6 +2818,89 @@
       ],
       "prompt-phrase": "shade the icon with a chrome matcap for a cheap metal look",
       "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "UV-space bake",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Rasterising a mesh into its own UV layout and computing every texel from the 3D surface point behind it.",
+      "use-when": "Putting any algorithm texture on a real model asset.",
+      "pairs-with": [
+        "triplanar projection",
+        "edge wear",
+        "gutter padding",
+        "normal map"
+      ],
+      "prompt-phrase": "bake the recipe onto the mesh's UVs with surfacebake, evaluated in object space so seams vanish",
+      "source": "aaa-kit/lib/surfacebake",
+      "starter": false
+    },
+    {
+      "term": "triplanar projection",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Sampling a tiling 2D texture three times along X, Y and Z and blending by the surface normal.",
+      "use-when": "Wrapping a 2D algorithm render (reaction-diffusion, CA) onto any mesh without UV seams.",
+      "pairs-with": [
+        "UV-space bake"
+      ],
+      "prompt-phrase": "project the reaction-diffusion tile triplanar at scale 0.5 with sharpness 4",
+      "source": "aaa-kit/lib/surfacebake/Noise.luau",
+      "starter": false
+    },
+    {
+      "term": "edge wear",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Chipped paint, bare metal or polish along sharp edges, keyed on distance to the edge in studs and broken up by noise.",
+      "use-when": "Props that should look handled and used.",
+      "pairs-with": [
+        "UV-space bake",
+        "roughness"
+      ],
+      "prompt-phrase": "chip the paint within 0.09 studs of sharp edges, multiplied by noise so it is irregular",
+      "source": "aaa-kit/docs/playbooks/procedural-textures.md",
+      "starter": false
+    },
+    {
+      "term": "gutter padding",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Copying border texels outward around every UV island so mipmaps and filtering never pull in background colour.",
+      "use-when": "Every baked texture.",
+      "pairs-with": [
+        "UV-space bake"
+      ],
+      "prompt-phrase": "dilate each island by 4 texels at 512 before uploading",
+      "source": "aaa-kit/lib/surfacebake/Raster.luau",
+      "starter": false
+    },
+    {
+      "term": "texel density",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Texels per stud on the surface; uneven density makes some faces blurry and others sharp.",
+      "use-when": "Choosing texture size and UV layouts.",
+      "pairs-with": [
+        "UV-space bake"
+      ],
+      "prompt-phrase": "keep texel density even: 256 px per 2-stud prop, 1024 only for hero props",
+      "source": "industry",
+      "starter": false
+    },
+    {
+      "term": "height-to-normal",
+      "tier": "T5 materials",
+      "domain": "materials",
+      "meaning": "Deriving a tangent-space normal map from a height field by finite differences along the tangent frame.",
+      "use-when": "Making painted detail catch the light.",
+      "pairs-with": [
+        "normal map",
+        "UV-space bake"
+      ],
+      "prompt-phrase": "give rust +height and chips -height and derive an OpenGL normal map from it",
+      "source": "aaa-kit/lib/surfacebake/Bake.luau",
       "starter": false
     },
     {

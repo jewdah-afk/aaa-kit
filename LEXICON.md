@@ -1,6 +1,6 @@
 # Lexicon
 
-428 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
+434 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
 
 ## Starter pack (40 terms)
 
@@ -51,7 +51,7 @@ The highest-leverage terms. Know these and most briefs write themselves.
 
 ## Domains
 
-[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (25) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
+[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (31) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
 
 ## Hierarchy
 
@@ -1714,6 +1714,54 @@ Lighting looked up from a sphere image by surface normal. **Use when:** Cheap st
 > shade the icon with a chrome matcap for a cheap metal look
 
 Tier: T5 materials · Pairs with: [chrome](#chrome) · Source: industry
+
+### UV-space bake
+
+Rasterising a mesh into its own UV layout and computing every texel from the 3D surface point behind it. **Use when:** Putting any algorithm texture on a real model asset.
+
+> bake the recipe onto the mesh's UVs with surfacebake, evaluated in object space so seams vanish
+
+Tier: T5 materials · Pairs with: [triplanar projection](#triplanar-projection), [edge wear](#edge-wear), [gutter padding](#gutter-padding), [normal map](#normal-map) · Source: aaa-kit/lib/surfacebake
+
+### triplanar projection
+
+Sampling a tiling 2D texture three times along X, Y and Z and blending by the surface normal. **Use when:** Wrapping a 2D algorithm render (reaction-diffusion, CA) onto any mesh without UV seams.
+
+> project the reaction-diffusion tile triplanar at scale 0.5 with sharpness 4
+
+Tier: T5 materials · Pairs with: [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Noise.luau
+
+### edge wear
+
+Chipped paint, bare metal or polish along sharp edges, keyed on distance to the edge in studs and broken up by noise. **Use when:** Props that should look handled and used.
+
+> chip the paint within 0.09 studs of sharp edges, multiplied by noise so it is irregular
+
+Tier: T5 materials · Pairs with: [UV-space bake](#uv-space-bake), [roughness](#roughness) · Source: aaa-kit/docs/playbooks/procedural-textures.md
+
+### gutter padding
+
+Copying border texels outward around every UV island so mipmaps and filtering never pull in background colour. **Use when:** Every baked texture.
+
+> dilate each island by 4 texels at 512 before uploading
+
+Tier: T5 materials · Pairs with: [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Raster.luau
+
+### texel density
+
+Texels per stud on the surface; uneven density makes some faces blurry and others sharp. **Use when:** Choosing texture size and UV layouts.
+
+> keep texel density even: 256 px per 2-stud prop, 1024 only for hero props
+
+Tier: T5 materials · Pairs with: [UV-space bake](#uv-space-bake) · Source: industry
+
+### height-to-normal
+
+Deriving a tangent-space normal map from a height field by finite differences along the tangent frame. **Use when:** Making painted detail catch the light.
+
+> give rust +height and chips -height and derive an OpenGL normal map from it
+
+Tier: T5 materials · Pairs with: [normal map](#normal-map), [UV-space bake](#uv-space-bake) · Source: aaa-kit/lib/surfacebake/Bake.luau
 
 
 ## Shaders & SDF

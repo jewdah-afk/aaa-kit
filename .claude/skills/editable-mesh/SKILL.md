@@ -51,6 +51,10 @@ EditableMesh lets a game build and change triangles at runtime. Use it when Part
 - [`lib/frontier/mesh`](../../../lib/README.md): `HeightfieldMesh` (paint-to-terrain with LOD, geomorphing, skirts and incremental vertex updates) and `ContourMesh` (destructible 2D terrain: marching squares → simplify → earcut → extrude, one tile per carve), plus `combo/SandTable`, `combo/Lightmap` and `combo/Fracture`.
 - Research: [EditableMesh API](../../../docs/research/21-roblox-editablemesh-api.md) (all methods, limits: 20k triangles / 60k vertices per mesh), [technique cookbook](../../../docs/research/41-editablemesh-technique-cookbook.md), [3D math toolkit](../../../docs/research/43-roblox-3d-math-toolkit.md).
 
+## Process
+
+Reading an asset's geometry to texture it: `Apply.fromEditableMesh` in [`lib/surfacebake`](../../../lib/surfacebake/README.md) turns an EditableMesh into positions, per-corner UVs and normals for UV-space baking ([procedural textures playbook](../../../docs/playbooks/procedural-textures.md)).
+
 ## Example
 
 `examples/GridMesh.luau` builds a heightfield (positions, central-difference normals, UVs, CCW triangles), picks a LOD by distance, and includes a Roblox adapter that creates the EditableMesh and MeshPart. It's tested in `examples/GridMesh.test.luau`.
