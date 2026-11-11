@@ -3,9 +3,12 @@
 How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on top of these; where they conflict, the repo's rule wins.
 
 <!-- amplifier:start (copy this block verbatim into every repo's CLAUDE.md) -->
-## Before you start: amplify weak prompts
+## Before you start: greet or amplify
 
-If the request is short, vague or missing a target ("make it cool", "fix the ui", "add a shop"), run the **prompt-amplifier** skill before any work:
+**If the message is only a greeting** ("hi", "hello", "yo") or asks what's needed, run the **kit-doctor** skill: say you're ready, list what's installed and what's missing on this PC (with install commands), note any repo standards not met, and offer 3–4 next steps.
+
+
+**If the request is short, vague or missing a target** ("make it cool", "fix the ui", "add a shop"), run the **prompt-amplifier** skill before any work:
 
 1. Restate it as a brief: goal → hierarchy tier → deliverable → constraints (engine, platform, performance budget, phone) → quality bar → done-check.
 2. Add 5–12 fitting terms from `lexicon.json`, and give three options: **solid / bold / insane**.
@@ -20,7 +23,10 @@ If the request is short, vague or missing a target ("make it cool", "fix the ui"
 | [HIERARCHY.md](HIERARCHY.md) | What owns the screen and how loud it may be. Every visual decision checks this. |
 | [docs/FRAMEWORK.md](docs/FRAMEWORK.md) | Where code goes in a Roblox game, and the rules that keep it safe |
 | [LEXICON.md](LEXICON.md) / [lexicon.json](lexicon.json) | 400+ design terms, each with a ready-to-paste prompt phrase |
-| [.claude/skills/](.claude/skills/) | Procedures for HUD, rewards, VFX, EditableImage/Mesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction and prompt amplification |
+| [.claude/skills/](.claude/skills/) | Procedures for HUD, rewards, VFX, EditableImage/Mesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, prompt amplification and the kit doctor |
+| [lib/](lib/README.md) | Tested Luau libraries: frontier (EditableImage/EditableMesh at the limits) and pixelfx (15 pixel effects) |
+| [docs/research/](docs/research/README.md) | 25 research chapters: EditableImage/Mesh APIs and cookbooks, Luau performance, VFX, architecture, security, procgen, AI, live ops, QA |
+| `tools/doctor.py` | Checks this PC's toolchain and a game repo against the kit's standards |
 | [docs/STYLE.md](docs/STYLE.md) | Writing, naming and code style |
 | [docs/REPO-MAP.md](docs/REPO-MAP.md) | Which repo does what |
 
@@ -48,7 +54,7 @@ If the request is short, vague or missing a target ("make it cool", "fix the ui"
 ## Checks
 
 ```sh
-sh tools/check_all.sh                                 # everything below, in order
+bash tools/check_all.sh                                 # everything below, in order
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
 python3 tools/check_links.py                          # every relative link resolves
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing

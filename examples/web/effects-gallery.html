@@ -1244,7 +1244,9 @@ const USE = {
 };
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const ALL = new URLSearchParams(location.search).has("all"); // test mode: run every tile, visible or not
+const QS = new URLSearchParams(location.search);
+const ALL = QS.has("all"); // test mode: run every tile, visible or not
+const ONLY = QS.get("only"); // capture mode: run just this effect id
 const host = document.getElementById("tiers"), ladder = document.getElementById("ladder");
 const tiles = [];
 function pointer(cv) {
@@ -1278,10 +1280,11 @@ for (const T of TIERS) {
     row.append(el("span", "tag", d.frag ? "GPU shader" : "Canvas 2D"), el("span", "use", USE[id] || ""));
     meta.append(row, el("h3", null, d.name), el("p", null, d.note));
     card.append(stage, meta); grid.append(card);
-    tiles.push({ d, cv, g: cv.getContext("2d"), S: {}, P: pointer(cv), visible: ALL });
+    cv.dataset.id = id;
+    tiles.push({ d, cv, g: cv.getContext("2d"), S: {}, P: pointer(cv), visible: ONLY ? id === ONLY : ALL });
   });
 }
-const io = new IntersectionObserver(es => { for (const e of es) { const tl = tiles.find(x => x.cv === e.target); if (tl && !ALL) tl.visible = e.isIntersecting; } }, { rootMargin: "120px" });
+const io = new IntersectionObserver(es => { for (const e of es) { const tl = tiles.find(x => x.cv === e.target); if (tl && !ALL && !ONLY) tl.visible = e.isIntersecting; } }, { rootMargin: "120px" });
 tiles.forEach(tl => io.observe(tl.cv));
 document.querySelectorAll(".bar button").forEach(b => b.addEventListener("click", () => {
   QUALITY.mode = b.dataset.q; document.querySelectorAll(".bar button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));

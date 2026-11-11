@@ -32,6 +32,7 @@ SAMPLES = {
     "roblox-luau-standards": ["where should this RemoteEvent handler go", "save data with DataStore session lock"],
     "art-direction": ["the palette looks muddy and I can't see the enemies", "review the art direction"],
     "prompt-amplifier": ["make it cool", "fix the ui", "make it better"],
+    "kit-doctor": ["hi", "what do I need installed on my pc", "is my game good, audit it"],
 }
 STOP = set("a an the and or of to in for on with is it this that use when any make my me i how what which".split())
 

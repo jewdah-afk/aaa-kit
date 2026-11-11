@@ -1,0 +1,180 @@
+<title>Celestialarchy Level Render</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: the game view fills the top; a slim control bar under it; notes below. Single dark look: it frames a bright game. */
+:root{--bg:#0b0a12;--panel:#15131f;--fg:#efeef6;--mute:#9b98b3;--line:#2a2740;--accent:#ff4fd8;
+--display:"Lilita One","Arial Black",system-ui,sans-serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.5}
+main{max-width:1200px;margin:0 auto;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.stage{position:relative;border-radius:8px;overflow:hidden;background:#000}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font-family:var(--mono);font-size:.8rem;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:6px 10px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
+h2{font-family:var(--display);font-weight:400;font-size:1.25rem;margin:0 0 8px;letter-spacing:.02em}
+ol{margin:0;padding-left:1.2em;display:grid;gap:8px;max-width:78ch}
+.sub{color:var(--mute);margin:0;max-width:78ch}
+code{font-family:var(--mono);font-size:.85em}
+/* phones: never wider than the screen */
+canvas{max-width:100%;height:auto}
+table{display:block;max-width:100%;overflow-x:auto}
+</style>
+<main>
+<div class="stage"><canvas id="c" width="1280" height="720" aria-label="Falling down the voxel tunnel"></canvas></div>
+<div class="controls">
+<button id="play" aria-pressed="true">Pause</button>
+<input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Position in level">
+<button id="ov" aria-pressed="false">Tier overlay</button>
+<button id="rm" aria-pressed="false">Reduced motion</button>
+</div>
+<div class="controls" id="levels"></div>
+<section>
+<h2>How this is built</h2>
+<ol>
+<li>A replay of seed 0x5EED1 from the headless Lune sim. The lateral path, speed, obstacle gaps, near-miss boosts and deaths are the sim's own output.</li>
+<li>Wall brick colours come from <code>tiers.luau</code>: six saturated bands (lime, magenta, violet, cyan, orange, blue), all outside the reserved red, gold and green hue windows. Red, gold and green appear only on the next threat, rewards and the safe gap.</li>
+<li>The bands spiral one revolution per 128 studs of depth (the spec's spiral motif). Bricks breathe in 2-stud voxel steps at 0.25 Hz.</li>
+<li>Hierarchy: the player has a dark outline and white rim, so the silhouette never breaks. The next obstacle is the only red object, with a pale edge and chevrons. Its gap carries the green outline. Later obstacles are dark slate, and the tunnel fades to near-black past 256 studs (T6).</li>
+<li>Speed lines stay out of the central 40% of the screen and off the player and gap. Camera roll stays within ±6°. Reduced motion turns off roll, streaks and breathing.</li>
+</ol>
+<p class="sub" style="margin-top:10px">Deviation to settle: matching the game means wall bricks run far brighter than the spec's T4 band (0.16–0.28). Speed lines are white instead of T5's 0.06–0.14. The hierarchy is held by outline contrast and hue ownership instead of a luminance cap on the walls.</p>
+</section>
+</main>
+<script>
+const SIM=/*SIM*/null, TI=/*TIERS*/null;
+const cv=document.getElementById('c'),g=cv.getContext('2d'),W=1280,H=720,F=W*0.5;
+const T=Object.fromEntries(TI.tiers.map(t=>[t.id,t]));
+const S=SIM.run.samples,O=SIM.run.obstacles,EV=SIM.run.events;
+let L=4,playing=true,overlay=false,reduced=false,t0=0,tl=0.3,LS=[];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,k)=>a+(b-a)*k;
+function hash(a,b){let h=(Math.imul(a|0,374761393)+Math.imul(b|0,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return (h^(h>>>16))>>>0}
+// palette tables: band x shade x fog -> css, fog toward the level's T6 ambient
+const FOGN=16,SH=[1.0,0.9,0.8,0.62,0.46];let PAL=[],FOG=[0,0,0];
+function rgbOf(h){return [1,3,5].map(i=>parseInt(h.substr(i,2),16))}
+function buildPal(){FOG=rgbOf(TI.levels[L-1].T6.hex).map(v=>v*0.55);
+  PAL=TI.walls.map(w=>SH.map(s=>Array.from({length:FOGN},(_,f)=>{const k=f/(FOGN-1);return 'rgb('+w.rgb.map((v,i)=>Math.round(lerp(v*s,FOG[i],k))).join(',')+')'})));}
+function lvSamples(){LS=S.filter(s=>s[8]===L);buildPal();}
+function state(){const a=LS[0][0],b=LS[LS.length-1][0],t=a+tl*(b-a);let i=LS.findIndex(s=>s[0]>=t);if(i<=0)i=1;
+  const p=LS[i-1],q=LS[i],k=clamp((t-p[0])/((q[0]-p[0])||1),0,1);const jump=q[1]<p[1];
+  return {t,z:jump?p[1]:lerp(p[1],q[1],k),x:lerp(p[2],q[2],k),vx:(q[2]-p[2])/((q[0]-p[0])||1),v:lerp(p[3],q[3],k),I:p[4]};}
+let cam={x:0,y:0,z:0};
+function P(x,y,z){const d=z-cam.z;if(d<0.6)return null;const s=F/d;return [W/2+(x-cam.x)*s,H/2+(y-cam.y)*s,d];}
+function poly(pts,fill,stroke,lw){if(pts.some(p=>!p))return false;g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);g.closePath();if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw||1;g.stroke();}return true;}
+// square shaft perimeter: p in [0,256), inset r toward the axis
+function sq(p,r){p=((p%256)+256)%256;const side=Math.floor(p/64),s=p%64-32,e=32-r;
+  return side===0?[e,s]:side===1?[-s,e]:side===2?[-e,-s]:[s,-e];}
+function fogIdx(d){return Math.round(clamp((d-24)/(256-24),0,1)**0.9*(FOGN-1))}
+function drawTunnel(time){
+  const base=Math.floor(cam.z/4)*4;
+  const rows=[];for(let z=base+400;z>base+160;z-=8)rows.push([z,8,8]);for(let z=base+160;z>=base;z-=4)rows.push([z,4,4]);
+  for(const [z0,dz,bw] of rows){
+    const d=z0-cam.z;if(d+dz<0.6)continue;const fi=fogIdx(d),ri=Math.round(z0/dz);
+    const off=(ri&1)*bw/2,n=256/bw;
+    for(let i=0;i<n;i++){
+      const p0=i*bw+off,p1=p0+bw,id=hash(ri*dz,i*bw);
+      let r=(id%7===0)?2:(id%13===0)?4:0;
+      if(!reduced){const ph=Math.sin(2*Math.PI*(0.25*time+p0/256*2+z0/96));if(ph>0.55&&(id%3===0))r+=2;}
+      const frac=(p0/256+z0/128+time*0.02)%1,band=Math.floor(((frac+1)%1)*6)%6;
+      const shade=id%4===0?1:id%4===1?2:0;
+      const a=sq(p0,r),b=sq(p1,r);
+      // inner face, then the cap facing the camera (gives the voxel step)
+      poly([P(a[0],a[1],z0),P(b[0],b[1],z0),P(b[0],b[1],z0+dz),P(a[0],a[1],z0+dz)],PAL[band][shade][fi]);
+      if(r>0){const a0=sq(p0,0),b0=sq(p1,0);poly([P(a0[0],a0[1],z0),P(b0[0],b0[1],z0),P(b[0],b[1],z0),P(a[0],a[1],z0)],PAL[band][3][fi]);}
+    }
+  }
+}
+function obstacleQuads(o,isNext,d){
+  const L0=o.c-o.gap/2,R0=o.c+o.gap/2,fi=fogIdx(d),th=3;
+  const k=fi/(FOGN-1);const slate=`rgb(${[34,40,66].map((v,i)=>Math.round(lerp(v,FOG[i],k))).join(',')})`;
+  const slateCap=`rgb(${[22,26,44].map((v,i)=>Math.round(lerp(v,FOG[i],k))).join(',')})`;
+  const face=isNext?T.T1.interior.hex:slate,edge=isNext?T.T1.edge.hex:null;
+  // slot inner walls (thickness), visible faces toward the gap
+  poly([P(L0,-32,o.z),P(L0,32,o.z),P(L0,32,o.z+th),P(L0,-32,o.z+th)],isNext?'#7a0b0b':slateCap);
+  poly([P(R0,-32,o.z),P(R0,32,o.z),P(R0,32,o.z+th),P(R0,-32,o.z+th)],isNext?'#7a0b0b':slateCap);
+  // plate bricks: 8-stud voxel cells
+  for(const [x0,x1] of [[-32,L0],[R0,32]]){if(x1-x0<0.5)continue;
+    for(let y=-32;y<32;y+=8)for(let x=x0;x<x1;x+=8){const xe=Math.min(x+8,x1),c=hash(o.z,x*31+y);
+      const f=isNext?(c%3===0?'#c21010':face):(c%3===0?slateCap:slate);
+      poly([P(x,y,o.z),P(xe,y,o.z),P(xe,y+8,o.z),P(x,y+8,o.z)],f,isNext?'#8e0c0c':null,1);}
+    if(isNext){poly([P(x0,-32,o.z),P(x1,-32,o.z),P(x1,32,o.z),P(x0,32,o.z)],null,edge,3);
+      g.strokeStyle=edge;g.lineWidth=3;const m=(x0+x1)/2,w=Math.min(6,(x1-x0)/3);
+      for(let y=-22;y<=22;y+=14){const a=P(m-w,y+4,o.z),b=P(m,y-3,o.z),c=P(m+w,y+4,o.z);if(a&&b&&c){g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.lineTo(c[0],c[1]);g.stroke();}}}
+  }
+  if(isNext){g.strokeStyle=T.T2.edge.hex;g.lineWidth=4;g.shadowColor=T.T2.edge.hex;g.shadowBlur=12;
+    for(const x of [L0,R0]){const a=P(x,-32,o.z),b=P(x,32,o.z);if(a&&b){g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();}}g.shadowBlur=0;
+    const a=P(L0,-32,o.z),b=P(R0,32,o.z);return a&&b?[a[0]-12,a[1]-12,b[0]+12,b[1]+12]:null;}
+  return null;
+}
+function drawPlayer(st,time){
+  const p=P(st.x,0,st.z);if(!p)return null;const s=F/p[2];const u=s*0.62;
+  const fl=reduced?0:Math.sin(time*9)*0.18,lean=clamp(st.vx/24,-1,1)*0.35;
+  g.save();g.translate(p[0],p[1]);g.rotate(lean);
+  const ink='#120d1c',lw=Math.max(2,u*0.18);
+  const box=(x,y,w,h,c,rot)=>{g.save();g.translate(x,y);if(rot)g.rotate(rot);g.fillStyle=c;g.strokeStyle=ink;g.lineWidth=lw;g.fillRect(-w/2,-h/2,w,h);g.strokeRect(-w/2,-h/2,w,h);g.restore();};
+  // legs (nearer the camera, larger), arms spread, torso, head toward the depths
+  box(-u*0.55,u*1.5,u*0.8,u*1.9,'#5a3a24',0.35+fl);box(u*0.55,u*1.5,u*0.8,u*1.9,'#5a3a24',-0.35-fl);
+  box(-u*1.55,-u*0.35,u*2.0,u*0.7,'#3c74c4',-0.5-fl);box(u*1.55,-u*0.35,u*2.0,u*0.7,'#3c74c4',0.5+fl);
+  box(0,0,u*1.8,u*2.2,'#3c74c4');box(0,u*0.75,u*1.8,u*0.6,'#6b4a2e');
+  box(0,-u*1.55,u*1.3,u*1.2,'#7a4f30');
+  g.restore();
+  // T0 white rim: keeps the silhouette uninterrupted on bright walls
+  g.save();g.strokeStyle=T.T0.edge.hex;g.globalAlpha=0.9;g.lineWidth=2;g.beginPath();g.arc(p[0],p[1],u*3.1,Math.PI*1.1,Math.PI*1.9);g.stroke();g.restore();
+  return [p[0]-u*3-12,p[1]-u*2.4-12,p[0]+u*3+12,p[1]+u*3+12];
+}
+function drawStreaks(st,time,prot){
+  if(reduced)return;const n=Math.round(10+clamp((st.v-42)/78,0,1)*26);
+  g.strokeStyle='#ffffff';g.lineCap='round';
+  for(let i=0;i<n;i++){const h=hash(i,Math.floor(time*6+i*0.37)),ang=(h%3600)/3600*Math.PI*2;
+    const ph=((time*2.2+i*0.173)%1),r0=lerp(W*0.9,W*0.32,ph),len=lerp(140,40,ph);
+    const x1=W/2+Math.cos(ang)*r0,y1=H/2+Math.sin(ang)*r0*0.62,x2=W/2+Math.cos(ang)*(r0-len),y2=H/2+Math.sin(ang)*(r0-len)*0.62;
+    const bx=[Math.min(x1,x2),Math.min(y1,y2),Math.max(x1,x2),Math.max(y1,y2)];
+    if(prot.some(p=>p&&bx[0]<p[2]&&bx[2]>p[0]&&bx[1]<p[3]&&bx[3]>p[1]))continue;
+    g.globalAlpha=0.35+0.5*ph;g.lineWidth=1.5+3*(1-ph);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();}
+  g.globalAlpha=1;
+}
+function hud(st){
+  g.save();g.font='44px "Lilita One","Arial Black",sans-serif';g.lineJoin='round';
+  const txt=(s,x,y,al,size,col)=>{g.font=`${size}px "Lilita One","Arial Black",sans-serif`;g.textAlign=al;g.lineWidth=size*0.22;g.strokeStyle='#120d1c';g.strokeText(s,x,y);g.fillStyle=col||'#fff';g.fillText(s,x,y);};
+  txt('LEVEL '+L,28,62,'left',44);txt(Math.floor(st.z)+' m',W-28,62,'right',44);
+  txt(Math.round(st.v)+' studs/s',W-28,100,'right',24,'#ffe7fb');
+  const ev=EV.filter(e=>(e.k==='boost'||e.k==='nearmiss')&&st.t-e.t>=0&&st.t-e.t<0.9).pop();
+  if(ev){const a=1-(st.t-ev.t)/0.9;g.globalAlpha=a;txt(ev.k==='boost'?'NEAR MISS  +4':'NEAR MISS',W/2,H-60-30*(1-a),'center',40,'#fff');g.globalAlpha=1;}
+  const dv=EV.filter(e=>e.k==='death'&&st.t-e.t>=0&&st.t-e.t<0.5).pop();
+  if(dv){g.globalAlpha=1-Math.abs((st.t-dv.t)/0.25-1);g.fillStyle='#000';g.fillRect(0,0,W,H);g.globalAlpha=1;}
+  g.restore();
+}
+function frame(){
+  const st=state(),time=st.t;
+  cam={x:st.x*0.55,y:-4,z:st.z-15};
+  g.save();
+  g.fillStyle=`rgb(${FOG.join(',')})`;g.fillRect(0,0,W,H);
+  const roll=reduced?0:clamp(st.vx/24,-1,1)*6*Math.PI/180;
+  g.translate(W/2,H/2);g.rotate(roll);g.scale(1.06,1.06);g.translate(-W/2,-H/2);
+  drawTunnel(time);
+  const ahead=O.filter(o=>o.z>st.z-0.5&&o.z<cam.z+400).sort((a,b)=>b.z-a.z),next=ahead[ahead.length-1];
+  const prot=[];
+  for(const o of ahead){const d=o.z-cam.z;g.globalAlpha=o===next?clamp((d-12)/70,0.22,1):1;const pr=obstacleQuads(o,o===next,d);g.globalAlpha=1;if(pr)prot.push(pr);
+    if(hash(O.indexOf(o),7)%2===0&&d<256){const rp=P(o.c,0,o.z+16);if(rp){const s=Math.max(4,F*1.4/rp[2]);
+      g.fillStyle=T.T3.interior.hex;g.strokeStyle=T.T3.edge.hex;g.lineWidth=2;g.beginPath();g.moveTo(rp[0],rp[1]-s);g.lineTo(rp[0]+s*.7,rp[1]);g.lineTo(rp[0],rp[1]+s);g.lineTo(rp[0]-s*.7,rp[1]);g.closePath();g.fill();g.stroke();}}}
+  prot.push(drawPlayer(st,time));
+  g.restore();
+  prot.push([W*0.3,0,W*0.7,H]);
+  drawStreaks(st,time,prot);
+  if(overlay){g.setLineDash([6,6]);g.strokeStyle='#ffffffcc';g.lineWidth=1.5;for(const p of prot)if(p)g.strokeRect(p[0],p[1],p[2]-p[0],p[3]-p[1]);g.setLineDash([]);
+    g.font='14px "IBM Plex Mono",monospace';const lab=(t,x,y)=>{x=clamp(x,8,W-220);y=clamp(y,24,H-8);g.fillStyle='#000c';g.fillRect(x-4,y-14,g.measureText(t).width+8,19);g.fillStyle='#fff';g.fillText(t,x,y);};
+    lab('T0 player',W/2+80,H*0.78);if(next)lab('T1 next threat  ·  T2 green gap edges',W*0.06,H*0.22);lab('central 40%: no decoration',W*0.3+6,H-14);lab('T4 voxel walls',20,H/2);lab('T6 depth fog',W/2-50,H/2-10);}
+  hud(st);
+}
+function loop(ts){if(playing){const dur=LS[LS.length-1][0]-LS[0][0];if(t0)tl+=(ts-t0)/1000/dur;if(tl>1)tl=0;document.getElementById('scrub').value=Math.round(tl*1000);}t0=ts;frame();requestAnimationFrame(loop);}
+document.getElementById('play').onclick=e=>{playing=!playing;e.target.textContent=playing?'Pause':'Play';e.target.setAttribute('aria-pressed',playing)};
+document.getElementById('scrub').oninput=e=>{tl=e.target.value/1000;};
+document.getElementById('ov').onclick=e=>{overlay=!overlay;e.target.setAttribute('aria-pressed',overlay)};
+document.getElementById('rm').onclick=e=>{reduced=!reduced;e.target.setAttribute('aria-pressed',reduced)};
+const lvBox=document.getElementById('levels');
+for(let i=1;i<=10;i++){const b=document.createElement('button');b.textContent='L'+i;b.setAttribute('aria-pressed',i===L);b.onclick=()=>{L=i;lvSamples();tl=0.05;[...lvBox.children].forEach((c,j)=>c.setAttribute('aria-pressed',j===i-1));};lvBox.appendChild(b);}
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){reduced=true;playing=false;document.getElementById('rm').setAttribute('aria-pressed',true);document.getElementById('play').textContent='Play';document.getElementById('play').setAttribute('aria-pressed',false);}
+lvSamples();requestAnimationFrame(loop);
+</script>

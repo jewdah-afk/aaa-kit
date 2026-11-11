@@ -21,7 +21,7 @@ function walk(dir, out = []) {
     if (name === "node_modules" || name.startsWith(".git")) continue;
     const p = join(dir, name);
     if (statSync(p).isDirectory()) walk(p, out);
-    else if (name.endsWith(".html")) out.push(p);
+    else if (name.endsWith(".html") && !name.endsWith(".tpl.html")) out.push(p);
   }
   return out;
 }

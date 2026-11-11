@@ -10,15 +10,19 @@ The front door to my game development: one place that holds the design hierarchy
 | **[docs/FRAMEWORK.md](docs/FRAMEWORK.md)** | The five-layer Roblox framework (Kit hub → services → components → content → central systems) and its safety rules |
 | **[examples/framework-starter](examples/framework-starter/README.md)** | A copyable starter game on that framework, with 48 headless tests |
 | **[LEXICON.md](LEXICON.md)** | The design vocabulary, grouped by domain, with a 40-term starter pack and a prompt phrase per term |
-| **[.claude/skills](.claude/skills/)** | 13 skills Claude loads automatically: HUD, rewards, VFX, EditableImage, EditableMesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, prompt amplifier |
-| **[examples/](examples/)** | Small runnable demos that the skills point to |
-| **[tools/](tools/)** | Checkers (Luau compile, links, skills, lexicon, web examples) and the research calculator |
+| **[.claude/skills](.claude/skills/)** | 14 skills Claude loads automatically: HUD, rewards, VFX, EditableImage, EditableMesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, prompt amplifier, kit doctor |
+| **[lib/](lib/README.md)** | Tested Luau libraries: **frontier** (EditableImage/EditableMesh at the engine's limits) and **pixelfx** (15 pixel effects) |
+| **[docs/research/](docs/research/README.md)** | 25 research chapters (EditableImage/Mesh APIs and cookbooks, Luau performance, VFX and game feel, architecture, security, procgen, AI, live ops, QA) plus 400+ algorithm ideas |
+| **[examples/](examples/)** | Runnable demos: the [effects hierarchy](examples/web/effects-gallery.html) (48 effects by tier), the [algorithm lab](examples/web/algorithm-lab.html), the framework starter, big numbers, a tier simulator |
+| **[media/gifs/](media/gifs/)** | Looping GIFs of every tier 5 (materials) and tier 6 (engines) effect; record more with `node tools/capture_gifs.mjs --tier N` |
+| **[tools/](tools/)** | The kit doctor, checkers (Luau compile, links, skills, lexicon, web pages), the GIF recorder, and the research and economy calculators |
 
 ## Use it with Claude
 
-1. Open any repo of mine in Claude Code. Its `CLAUDE.md` points here.
-2. Ask for anything, even vaguely ("make the shop better"). The prompt amplifier turns it into a full brief and carries on.
-3. Skills load on their own when the request matches (say "chest opening", "damage numbers", "EditableImage"...).
+1. Open this repo in Claude Code and say **hi**. It replies ready, checks your PC (lune, selene, rojo, Studio, Blender…) and tells you exactly what to install, then offers what to build next. `python3 tools/doctor.py` does the same check by hand.
+2. Open any other repo of mine; its `CLAUDE.md` points here.
+3. Ask for anything, even vaguely ("make the shop better"). The prompt amplifier turns it into a full brief and carries on.
+4. Skills load on their own when the request matches (say "chest opening", "damage numbers", "EditableImage"...).
 
 To use the skills in another repo, copy `.claude/skills/` into it, or symlink this repo's folder into `~/.claude/skills/` so they're available everywhere.
 
@@ -31,22 +35,26 @@ See [docs/REPO-MAP.md](docs/REPO-MAP.md).
 | **aaa-kit** (this) | Hub: shared knowledge, skills, framework |
 | cursed-survivors | Game: a 2D survivors-genre game on an EditableImage pixel renderer |
 | ObsidianVault | Lab: research notes, algorithm compendium, HTML labs |
-| research-calculator | Lab: prototypes bench (its calculator and big-number library now live here) |
+| research-calculator | Archive: its calculator, big-number library, EditableImage/EditableMesh libraries and research now live here |
 | WNGU | Lab: "Genesis" web game-system experiments |
 
 ## Checks
 
 ```sh
-sh tools/check_all.sh
+bash tools/check_all.sh
 ```
 
-That runs the Luau compile check, 14 lune test files, Selene, the link, skill, lexicon and hook checkers, and the web examples in headless Chromium.
+That runs the Luau compile check, every lune test (kit examples plus the frontier and pixelfx libraries), Selene, the link, skill, lexicon and hook checkers, the doctor, and the web pages in headless Chromium.
 
 Lune 0.10.5 and Selene come from [rokit](https://github.com/rojo-rbx/rokit) (`rokit install`) or `cargo install lune --version 0.10.5 --locked`. Python 3 and Node 18+ cover the rest.
 
+## Live gallery
+
+The effects hierarchy page is also published as a private claude.ai artifact so it opens on any device: https://claude.ai/artifact/5mrPth6QohffALms7XswKK (share it from the page's Share menu).
+
 ## Status
 
-Work in progress. See [docs/INVENTORY.md](docs/INVENTORY.md) for what exists and what's left.
+Active. See [docs/INVENTORY.md](docs/INVENTORY.md) for what exists and what's left.
 
 ## License
 

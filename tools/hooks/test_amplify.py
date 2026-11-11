@@ -18,6 +18,9 @@ def run(prompt):
 
 
 CASES = [
+    ("hi", True, "Doctor report"),                      # greeting: doctor runs, ready reply
+    ("hello!", True, "Doctor report"),
+    ("hi can you fix the coin counter in Hud.luau", False, None),  # not a bare greeting: normal path
     ("make the shop better", True, "shop card"),
     ("fix the ui", True, "UI"),
     ("add juice to hits", True, "hit-stop"),

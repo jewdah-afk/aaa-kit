@@ -61,6 +61,12 @@ A phone is roughly 4–5× slower and hasn't been measured. Plan the first cuts 
 
 **Web equivalent.** `ImageData` plus `Uint32Array` views, `putImageData` once per frame, and `imageSmoothingEnabled = false`.
 
+## Library and research
+
+- [`lib/frontier`](../../../lib/README.md): `ImagePool` (byte budget, evict-and-retry on nil), `Atlas` + `Uploader` (many surfaces through one refresh per frame), `IndexedFrame` (1 byte per pixel, dirty tiles, palette cycling), `Snapshot` (save and replicate canvases), plus falling sand, radiance-cascade GI, Voxel Space and sprite stacking.
+- [`lib/pixelfx`](../../../lib/pixelfx/README.md): 15 ready effects (lightning, dissolve, bloom, outlines, crowd) writing `WritePixelsBuffer`-ready RGBA8.
+- Research: [EditableImage API](../../../docs/research/20-roblox-editableimage-api.md), [technique cookbook](../../../docs/research/40-editableimage-technique-cookbook.md), [Luau performance](../../../docs/research/22-luau-performance-engineering.md).
+
 ## Example
 
 `examples/PixelFrame.luau` holds the colour and owner buffers, the `CAN` table, pixel snapping, clipped rects and coverage (for FX budgets). It's tested in `examples/PixelFrame.test.luau`.

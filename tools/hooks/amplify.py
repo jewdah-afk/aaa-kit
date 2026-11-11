@@ -15,6 +15,7 @@ TASTE = {"cool", "better", "nicer", "pop", "juice", "juicy", "clean", "polish", 
          "insane", "awesome", "good", "fix", "improve", "amazing", "epic", "sick", "fire", "hella", "slick"}
 TARGET_HINTS = re.compile(r"(\.\w{2,5}\b|/|`|\bline \d+|\bfunction\b|\bclass\b|\bmodule\b|\bservice\b|\bcomponent\b)", re.I)
 CONSTRAINT_HINTS = re.compile(r"(\d+\s?(ms|px|fps|%|s\b)|phone|mobile|desktop|roblox|luau|webgl|canvas|budget|must|should not|don't|never)", re.I)
+GREETING = re.compile(r"^\s*(hi+|hey+|hello+|yo+|sup|hiya|howdy|gm|good (morning|afternoon|evening)|what'?s up|start|ready\??|help)[\s!.?]*$", re.I)
 QUESTION = re.compile(r"^\s*(what|why|how|where|when|who|which|is|are|does|do|can|could|explain)\b.*\?\s*$", re.I | re.S)
 
 
@@ -58,12 +59,34 @@ def terms_for(prompt: str, lexicon_path: str, limit: int = 10):
     return [(t, p) for _, _, t, p in scored[:limit]]
 
 
+def greeting_context(root: str) -> str:
+    """Runs the kit doctor (brief) so the reply can say exactly what's ready and what's missing."""
+    import subprocess
+    doctor = os.path.join(root, "tools", "doctor.py")
+    if not os.path.exists(doctor):
+        doctor = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "doctor.py")
+    try:
+        report = subprocess.run([sys.executable, doctor, "--brief"], capture_output=True, text=True, timeout=8,
+                                cwd=root).stdout.strip()
+    except Exception:
+        report = "(doctor did not run)"
+    return ("The user just greeted you. Use the kit-doctor skill's greeting format: one line saying you're ready and "
+            "what this repo is; what's installed and what's missing on their PC with the exact install command for "
+            "each missing required tool; any repo standards not met; then 3-4 concrete next things you can build "
+            "or check, and ask which. Keep it under 15 lines. Doctor report:\n" + report)
+
+
 def main() -> None:
     try:
         data = json.load(sys.stdin)
     except ValueError:
         return
     prompt = data.get("prompt") or ""
+    if GREETING.match(prompt):
+        root = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or "."
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit",
+                                                 "additionalContext": greeting_context(root)[:9000]}}))
+        return
     if not weak(prompt):
         return
     root = os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or "."

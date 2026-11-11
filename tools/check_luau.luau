@@ -11,6 +11,11 @@ local process = require("@lune/process")
 local roots = if #process.args > 0 then process.args else { "." }
 local checked, failed = 0, 0
 local SKIP = { [".git"] = true, ["node_modules"] = true, ["Packages"] = true }
+-- docs/research is a reference corpus: its Lua blocks are excerpts (API signatures, elided "...")
+-- rather than runnable code, so only the kit's own Markdown blocks are compiled.
+local function skipMarkdown(path: string): boolean
+	return path:find("docs/research/", 1, true) ~= nil
+end
 
 local function compile(label: string, source: string)
 	checked += 1
@@ -51,7 +56,7 @@ local function walk(dir: string)
 			end
 		elseif name:match("%.luau?$") then
 			compile(path, fs.readFile(path))
-		elseif name:match("%.md$") then
+		elseif name:match("%.md$") and not skipMarkdown(path) then
 			scanMarkdown(path, fs.readFile(path))
 		end
 	end

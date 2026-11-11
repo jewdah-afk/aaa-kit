@@ -1,13 +1,30 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Every check in the kit. Exit 0 only if all pass. Run from anywhere.
-set -e
+set -eo pipefail
 cd "$(dirname "$0")/.."
 echo "== luau compile";  lune run tools/check_luau.luau . | tail -1
 echo "== luau tests"
 for f in $(find examples .claude/skills -name '*.test.luau' -o -name 'test.luau' -o -path '*/tests/run.luau' | sort); do
   printf '%s: ' "$f"; lune run "$f" | tail -1
 done
-echo "== selene";        if command -v selene >/dev/null; then selene examples .claude/skills tools | tail -3; else echo "skipped (selene not installed)"; fi
+echo "== lib/frontier"
+for f in lib/frontier/qa/test_*.luau; do
+  done_line=$(cd lib/frontier/qa && lune run "$(basename "$f")" | grep -a '^@@DONE')
+  printf '%s: %s\n' "$f" "$done_line"
+  [ "$done_line" = "@@DONE 0" ] || { echo "frontier check failed: $f"; exit 1; }
+done
+echo "== lib/pixelfx";   (cd lib/pixelfx/qa && lune run run.luau > /dev/null && echo "run.luau ok")
+echo "== doctor";        python3 tools/doctor.py --brief | head -1
+echo "== selene"
+if ! command -v selene >/dev/null; then
+  echo "skipped (selene not installed)"
+elif out=$(selene examples .claude/skills tools lib 2>&1); then
+  echo "$out" | tail -3
+elif echo "$out" | grep -q "Could not collect standard library"; then
+  echo "skipped: selene needs network once to download the Roblox std (std = \"roblox\")"
+else
+  echo "$out" | tail -20; exit 1
+fi
 echo "== links";         python3 tools/check_links.py | tail -1
 echo "== skills";        python3 tools/check_skills.py | tail -1
 echo "== lexicon";       python3 tools/check_lexicon.py | tail -1
