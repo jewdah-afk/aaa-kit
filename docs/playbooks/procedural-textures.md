@@ -71,7 +71,40 @@ Craft rules:
 5. **Keep it in its tier** ([HIERARCHY.md](../../HIERARCHY.md)). World props are tier 4: muted value range, no saturated accents brighter than threats or pickups. Run [`tools/hierarchy`](../../tools/hierarchy/README.md) on a capture of the scene.
 6. **Emissive cracks (lava, runes)** are tier 2–4 depending on meaning. Bake the crack mask as a separate map and drive glow with a `SurfaceAppearance` emissive mask, or with a `PointLight` and `Highlight`, rather than a bright albedo alone.
 
-## 5. Check before you ship
+## 5. Moving surfaces (realtime)
+
+**Bake the expensive parts once, animate the cheap part every frame.** `Animate.prepare` evaluates the effect's mask, its *phase* (the coordinate the motion follows) and a noise field per texel, once. After that, each frame is a few multiplies per texel. ([`Animate.luau`](../../lib/surfacebake/Animate.luau); try them in the [surface bake lab](../../examples/web/surface-bake.html).)
+
+| Effect | Phase | Use for | Tier |
+|---|---|---|---|
+| `pulse` | height, or distance along a rune channel | Rune glow, energy veins, a heartbeat on a boss | 3–4 (2 if it telegraphs) |
+| `flow` | height or a direction | Lava rivers, plasma pipes, conveyor grime (a looping 256-entry noise table, so it never jumps) | 4 |
+| `dissolve` | — (a noise field) | Death, teleport out, reveal, with a burning rim | 2 |
+| `scan` | height | Scanner sweep, hologram build, heal wave | 3 |
+| `spread` | distance from a seed point | Frost, corruption or paint spreading from a hit | 2–4 |
+
+How to ship it:
+1. Bake once, then `Apply.toEditableImage(maps.albedo, …)` and put it on `MeshPart.TextureContent`. A `TextureContent` image can be written every frame; a `SurfaceAppearance` map can't be swapped (whether writing into its live `EditableImage` updates it is **UNVERIFIED in Studio**).
+2. Each frame call `Animate.step(st, t, budgetTexels)` and upload only the dirty rows with `WritePixelsBuffer(Vector2.new(0, y0), Vector2.new(W, rows), Animate.rows(st, y0, rows))`. The slice buffer is reused, so there's no allocation per frame.
+3. **Only one EditableImage is pushed to the GPU per frame** across the whole game, so one animated surface per frame. Round-robin several surfaces, or give the hero prop the animation and keep the rest static.
+4. Budget: 128² full refresh or 256² at 32 rows per frame (about 0.7–1.6 ms headless). Measure on a phone.
+5. Calm by default (HIERARCHY §6): ambient pulses stay slow (≥ 2 s cycles) and dim. Only tier 1–2 events (dissolve on death, spread on a frost hit) get bright, fast motion. Run `tools/hierarchy/hierarchy.py flash` on a capture of any glow that flickers.
+
+## 6. Depth tricks (no shaders)
+
+([`Parallax.luau`](../../lib/surfacebake/Parallax.luau), live in the [depth lab](../../examples/web/depth-lab.html).)
+
+| Trick | How | Cost (headless) | Roblox route |
+|---|---|---|---|
+| **Parallax occlusion mapping** | Per texel, march the view ray into a height field until it hits; nearer bumps hide farther ones | 128², 16 steps: 4.5 ms | A small `EditableImage` on a portal, grate, gem or lava pit. Recompute only when the camera's angle to the surface changes; pass the camera direction in the surface's tangent space |
+| **Interior mapping** | One ray-box intersection per texel draws a room (walls, floor, ceiling, lamp) behind each window | 128²: 2.4 ms | A city facade as one image instead of modelled rooms; update when the camera moves |
+| **Infinite zoom** | K octaves of a tile at scales 2^(k − frac(z)), weighted so octave k becomes k−1 exactly when frac(z) wraps; optional spin per octave for a spiral | 128², 5 octaves: 1.6 ms | Portals, loading screens, a "falling into the void" moment (tier 1). Any algorithm render works as the tile |
+| **Layered 2D parallax** | Layers offset by camera × nearness, composited back to front | 256×144, 4 layers: 3.3 ms | Usually just stacked `ImageLabel`s that you move (free); use the CPU composite only for procedural layers |
+| **Shell texturing** | N copies of the mesh pushed out along normals (plus gravity), each with a sparser, tapering mask of strand dots | Build once: 16 shells × 256² in 137 ms; then draw calls only | One MeshPart per shell, each with its mask on a `SurfaceAppearance` set to transparency (**UNVERIFIED in Studio: AlphaMode setup**). 8–16 shells for close-ups, 4 for distance, 0 beyond. Fur, grass, moss, velvet |
+
+Rules: depth effects are views, not gameplay. Never put a hit target where only the parallax makes it look reachable. Treat each one like a mirror: small images, updated when the camera moves, and switched off beyond a set distance.
+
+## 7. Check before you ship
 
 - [ ] `lune run lib/surfacebake/qa/test_surfacebake.luau` ends with `@@DONE 0`.
 - [ ] Contact sheet (`qa/sheet.py`) reviewed: seams invisible, gutters padded, edges chipped where expected.
@@ -79,3 +112,4 @@ Craft rules:
 - [ ] Route A (Studio bake and upload) for static props; route B only where per-player variation pays for itself.
 - [ ] Fallback texture works when `CreateEditableMeshAsync` throws or memory is exhausted.
 - [ ] Bake time measured on a phone-class device and logged in the repo's budgets doc.
+- [ ] Animated or depth effects: per-frame ms measured in Studio on a phone; one animated image pushed per frame; nothing animates at rest except slow ambience.

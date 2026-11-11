@@ -79,6 +79,7 @@ figcaption { font-family: var(--mono); font-size: 11px; color: var(--dim); }
     </div>
     <div class="panel">
       <div style="display:grid;gap:8px"><div class="label">Material recipe</div><div class="chips" id="recipes"></div></div>
+      <div style="display:grid;gap:8px"><div class="label">Motion (realtime, from pre-baked fields)</div><div class="chips" id="motions"></div></div>
       <div style="display:grid;gap:8px"><div class="label">Model</div><div class="chips" id="meshes"></div></div>
       <div style="display:grid;gap:8px"><div class="label">Texture size</div><div class="chips" id="sizes"></div></div>
       <div class="row">
@@ -304,7 +305,7 @@ function bake(m, recipe, S) {
   const maps = { albedo: new Uint8ClampedArray(n * 4), normal: new Uint8ClampedArray(n * 4), roughness: new Uint8ClampedArray(n * 4), metalness: new Uint8ClampedArray(n * 4), edge: new Uint8ClampedArray(n * 4), ao: new Uint8ClampedArray(n * 4) };
   let area = 0; for (let t = 0; t < nt; t++) { const a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2]; const e1 = [P[b * 3] - P[a * 3], P[b * 3 + 1] - P[a * 3 + 1], P[b * 3 + 2] - P[a * 3 + 2]], e2 = [P[c * 3] - P[a * 3], P[c * 3 + 1] - P[a * 3 + 1], P[c * 3 + 2] - P[a * 3 + 2]]; area += Math.hypot(e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]) / 2; }
   const eps = Math.sqrt(area / Math.max(1, covered)), strength = recipe.normalStrength ?? 1;
-  const ctx = {};
+  const ctx = {}, edgeT = new Float32Array(n), aoT = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     const q = i * 4;
     if (!cover[i]) { maps.normal.set([128, 128, 255, 255], q); maps.roughness.set([128, 128, 128, 255], q); continue; }
@@ -316,7 +317,7 @@ function bake(m, recipe, S) {
       const dx = s[3] - s[0], dy = s[4] - s[1], dz = s[5] - s[2], l2 = dx * dx + dy * dy + dz * dz, u = l2 > 0 ? Math.min(1, Math.max(0, ((ctx.px - s[0]) * dx + (ctx.py - s[1]) * dy + (ctx.pz - s[2]) * dz) / l2)) : 0;
       best = Math.min(best, Math.hypot(s[0] + dx * u - ctx.px, s[1] + dy * u - ctx.py, s[2] + dz * u - ctx.pz));
     }
-    ctx.edge = best;
+    ctx.edge = best; edgeT[i] = best; aoT[i] = ctx.ao;
     const [r, g, bb, ro, me, h0] = shade(recipe, ctx);
     const T = [tan[i * 3], tan[i * 3 + 1], tan[i * 3 + 2]], V = [bit[i * 3], bit[i * 3 + 1], bit[i * 3 + 2]];
     const ht = height(recipe, ctx, ctx.px + T[0] * eps, ctx.py + T[1] * eps, ctx.pz + T[2] * eps), hu = height(recipe, ctx, ctx.px - V[0] * eps, ctx.py - V[1] * eps, ctx.pz - V[2] * eps);
@@ -327,7 +328,7 @@ function bake(m, recipe, S) {
     const ev = (1 - best / edgeMax) * 255; maps.edge.set([ev, ev, ev, 255], q); maps.ao.set([ctx.ao * 255, ctx.ao * 255, ctx.ao * 255, 255], q);
   }
   const tShade = performance.now();
-  return { S, maps, ms: { raster: tRaster - t0, surface: tSurface - tRaster, shade: tShade - tSurface } };
+  return { S, maps, cover, pos, nrm, edgeT, aoT, ms: { raster: tRaster - t0, surface: tSurface - tRaster, shade: tShade - tSurface } };
 }
 
 // ---------------------------------------------------------------- recipe evaluation (port of Recipe.luau)
@@ -344,6 +345,9 @@ function field(term, c, px, py, pz) {
     case "up": return c.ny;
     case "y": return py;
     case "image": return triplanar(RD, px, py, pz, c.nx, c.ny, c.nz, s);
+    case "wave": { const d = term.dir ?? [1, 0, 0]; let ph = (px * d[0] + py * d[1] + pz * d[2]) * s; if (term.warp) { const ws = term.warpScale ?? 1; ph += fbm(px * ws, py * ws, pz * ws, term.octaves ?? 4) * term.warp; } return Math.sin(ph * 2 * Math.PI); }
+    case "rings": { const a = term.axis ?? "y"; const r = a === "y" ? Math.hypot(px, pz) : a === "x" ? Math.hypot(py, pz) : Math.hypot(px, py); let v = r * s; if (term.warp) { const ws = term.warpScale ?? 1; v += fbm(px * ws, py * ws, pz * ws, term.octaves ?? 3) * term.warp; } return v - Math.floor(v); }
+    case "grid": { const ax = Math.abs(c.nx), ay = Math.abs(c.ny), az = Math.abs(c.nz); let u, v; if (ax >= ay && ax >= az) { u = sy; v = sz; } else if (ay >= az) { u = sx; v = sz; } else { u = sx; v = sy; } return Math.min(Math.abs(u - Math.round(u)), Math.abs(v - Math.round(v))); }
   }
   return 1;
 }
@@ -391,8 +395,93 @@ const RECIPES = {
     { color: [0.98, 0.86, 0.7], rough: 0.5, height: 0.02, mask: [term("image", { scale: 0.55, lo: 0.25, hi: 0.6 })] },
     { color: [0.35, 0.12, 0.12], rough: 0.9, opacity: 0.8, mask: [term("ao", { lo: 0.9, hi: 0.5 })] }], normalStrength: 1.4 },
 };
+Object.assign(RECIPES, {
+  "Wood": { base: { color: [0.56, 0.36, 0.2], rough: 0.55, vary: { scale: 1.5, amount: 0.1 } }, detail: [term("wave", { dir: [0, 1, 0], scale: 18, warp: 0.6, warpScale: 2, amp: 0.004 })], layers: [
+    { color: [0.36, 0.21, 0.11], height: -0.01, mask: [term("rings", { scale: 7, warp: 1.4, warpScale: 1.2, lo: 0.55, hi: 0.85 })] },
+    { color: [0.25, 0.14, 0.07], rough: 0.7, mask: [term("voronoi", { scale: 1.5, field: "f1", lo: 0.18, hi: 0.08 }), term("noise", { scale: 3, octaves: 2, lo: 0.1, hi: 0.3 })] },
+    { color: [0.68, 0.48, 0.3], rough: 0.8, mask: [term("edge", { lo: 0.07, hi: 0.015 }), term("noise", { scale: 10, octaves: 3, lo: -0.3, hi: 0.2 })] }], normalStrength: 1 },
+  "Gold": { base: { color: [1, 0.77, 0.34], rough: 0.18, metal: 1, vary: { scale: 3, amount: 0.04 } }, layers: [
+    { color: [0.45, 0.33, 0.14], rough: 0.6, opacity: 0.9, mask: [term("ao", { lo: 0.9, hi: 0.55 }), term("noise", { scale: 5, octaves: 3, lo: -0.4, hi: 0.2 })] },
+    { rough: 0.35, opacity: 0.6, mask: [term("noise", { scale: 7, octaves: 4, warp: 1.5, lo: 0.25, hi: 0.45 })] },
+    { color: [1, 0.87, 0.55], rough: 0.08, mask: [term("edge", { lo: 0.04, hi: 0 })] }], normalStrength: 0.5 },
+  "Marble": { base: { color: [0.92, 0.91, 0.88], rough: 0.12, vary: { scale: 2, amount: 0.05 } }, layers: [
+    { color: [0.42, 0.42, 0.46], rough: 0.2, mask: [term("wave", { dir: [0.6, 0.8, 0.2], scale: 1.6, warp: 3.2, warpScale: 1.4, octaves: 5, lo: 0.86, hi: 0.97 })] },
+    { color: [0.78, 0.6, 0.3], rough: 0.15, metal: 0.6, mask: [term("wave", { dir: [-0.3, 0.9, 0.4], scale: 0.9, warp: 4, warpScale: 1, octaves: 5, lo: 0.95, hi: 0.99 })] }], normalStrength: 0.3 },
+  "Sci-fi panel": { base: { color: [0.68, 0.7, 0.74], rough: 0.4, metal: 0.8, vary: { scale: 2, amount: 0.04 } }, layers: [
+    { color: [0.58, 0.6, 0.64], opacity: 0.7, mask: [term("voronoi", { scale: 2, field: "id", lo: 0.5, hi: 0.8 })] },
+    { color: [0.12, 0.13, 0.15], rough: 0.8, height: -0.03, mask: [term("grid", { scale: 2, lo: 0.03, hi: 0 })] },
+    { color: [0.3, 0.9, 1], rough: 0.3, metal: 0, mask: [term("grid", { scale: 0.5, lo: 0.02, hi: 0 }), term("up", { lo: 0.5, hi: -0.5 })] },
+    { color: [0.85, 0.86, 0.88], rough: 0.25, mask: [term("edge", { lo: 0.05, hi: 0 }), term("noise", { scale: 14, octaves: 3, lo: -0.2, hi: 0.3 })] }], normalStrength: 1 },
+  "Camo": { base: { color: [0.42, 0.45, 0.3], rough: 0.85 }, layers: [
+    { color: [0.36, 0.27, 0.17], mask: [term("noise", { scale: 1.6, octaves: 3, warp: 0.8, lo: 0.05, hi: 0.09 })] },
+    { color: [0.16, 0.18, 0.13], mask: [term("noise", { scale: 2.2, octaves: 3, warp: 0.8, seed: 3, lo: 0.15, hi: 0.19 })] },
+    { color: [0.66, 0.6, 0.44], mask: [term("noise", { scale: 2.6, octaves: 3, warp: 0.8, seed: 7, lo: 0.3, hi: 0.34 })] }], normalStrength: 0.2 },
+  "Snow rock": { base: { color: [0.4, 0.39, 0.38], rough: 0.85, vary: { scale: 3, amount: 0.15 } }, detail: [term("ridged", { scale: 2.5, octaves: 5, amp: 0.1 })], layers: [
+    { color: [0.52, 0.5, 0.32], opacity: 0.6, mask: [term("noise", { scale: 5, octaves: 4, lo: 0.25, hi: 0.4 })] },
+    { color: [0.93, 0.95, 0.98], rough: 0.5, height: 0.04, mask: [term("up", { lo: 0.35, hi: 0.6 }), term("noise", { scale: 2, octaves: 4, lo: -0.4, hi: -0.1 })] }], normalStrength: 1.4 },
+  "Slime": { base: { color: [0.32, 0.78, 0.24], rough: 0.08, vary: { scale: 2, amount: 0.2 } }, detail: [term("noise", { scale: 3, octaves: 3, warp: 2, amp: 0.05 })], layers: [
+    { color: [0.12, 0.42, 0.1], mask: [term("noise", { scale: 3, octaves: 3, warp: 2, lo: 0.1, hi: 0.4 })] },
+    { color: [0.7, 1, 0.55], height: 0.03, mask: [term("voronoi", { scale: 6, field: "f1", lo: 0.22, hi: 0.12 }), term("noise", { scale: 4, octaves: 2, lo: 0, hi: 0.3 })] }], normalStrength: 1.2 },
+  "Rune stone": { base: { color: [0.3, 0.3, 0.33], rough: 0.9, vary: { scale: 2, amount: 0.15 } }, detail: [term("voronoi", { scale: 2, lo: 0, hi: 0.12, amp: 0.06 }), term("noise", { scale: 10, octaves: 3, amp: 0.015 })], layers: [
+    { color: [0.15, 0.15, 0.17], mask: [term("voronoi", { scale: 2, lo: 0.05, hi: 0 })] },
+    { color: [0.35, 0.95, 1], rough: 0.4, height: -0.025, mask: [term("wave", { dir: [1, 0.3, 0.7], scale: 3, warp: 0.8, warpScale: 4, lo: 0.93, hi: 0.99 }), term("voronoi", { scale: 2, lo: 0.12, hi: 0.2 })] }], normalStrength: 1.3 },
+  "Carbon fibre": { base: { color: [0.1, 0.1, 0.11], rough: 0.15 }, detail: [term("wave", { dir: [1, 1, 0], scale: 30, amp: 0.002 }), term("wave", { dir: [1, -1, 0], scale: 30, amp: 0.002 })], layers: [
+    { color: [0.34, 0.34, 0.37], mask: [term("wave", { dir: [1, 1, 0.3], scale: 14, lo: 0.2, hi: 0.9 })] },
+    { color: [0.2, 0.2, 0.23], mask: [term("wave", { dir: [1, -1, -0.3], scale: 14, lo: 0.2, hi: 0.9 })] }], normalStrength: 0.6 },
+  "Copper patina": { base: { color: [0.72, 0.42, 0.26], rough: 0.35, metal: 1, vary: { scale: 4, amount: 0.1 } }, layers: [
+    { color: [0.32, 0.66, 0.56], rough: 0.9, metal: 0, height: 0.015, vary: { scale: 12, amount: 0.2 }, mask: [term("ao", { lo: 0.95, hi: 0.6 }), term("noise", { scale: 4, octaves: 4, warp: 1, lo: -0.3, hi: 0.1 })] },
+    { color: [0.38, 0.62, 0.52], rough: 0.85, metal: 0, mask: [term("wave", { dir: [1, 0, 0.3], scale: 9, warp: 0.6, warpScale: 3, lo: 0.6, hi: 0.95 }), term("noise", { scale: 1.5, octaves: 3, lo: 0, hi: 0.3 })] },
+    { color: [0.9, 0.58, 0.4], rough: 0.2, metal: 1, mask: [term("edge", { lo: 0.05, hi: 0 })] }], normalStrength: 0.8 },
+});
 const MESHES = { "Crate": () => box(1, 0.75, 0.85, 4), "Barrel": () => barrel(0.8, 1.9, 40), "Torus": () => torus(1, 0.42, 48, 24), "Sphere": () => sphere(1, 48, 24) };
 const SIZES = { "128": 128, "256": 256, "512": 512 };
+
+// ---------------------------------------------------------------- realtime motion (port of Animate.luau)
+const MOTIONS = {
+  "Still": null,
+  "Rune pulse": { recipe: "Rune stone", effect: "pulse", color: [0.35, 1, 1], phase: term("y", { scale: 1 }), speed: 0.8, freq: 1.2, sharp: 1.5,
+    mask: [term("wave", { dir: [1, 0.3, 0.7], scale: 3, warp: 0.8, warpScale: 4, lo: 0.8, hi: 0.97 }), term("voronoi", { scale: 2, lo: 0.1, hi: 0.18 })] },
+  "Lava flow": { recipe: "Lava rock", effect: "flow", color: [1, 0.55, 0.12], phase: term("y", { scale: 1 }), speed: 0.35, freq: 1.2, sharp: 2,
+    mask: [term("voronoi", { scale: 4, lo: 0.1, hi: 0 })] },
+  "Dissolve": { effect: "dissolve", color: [1, 0.55, 0.15], speed: 0.25, width: 0.08, noise: term("noise", { scale: 3, octaves: 4 }) },
+  "Scan": { recipe: "Sci-fi panel", effect: "scan", color: [0.3, 0.95, 1], phase: term("y", { scale: 1 }), speed: 0.6, width: 0.08, range: 2.2, min: -1.1 },
+  "Frost spread": { effect: "spread", color: [0.75, 0.95, 1], phase: "seed", seed: [1, 0.8, 0.9], speed: 0.45, width: 0.06, maxRadius: 3.2, after: [0.86, 0.94, 1] },
+};
+let anim = null;
+function lut() { const t = []; for (let k = 0; k < 256; k++) { const a = k / 256 * 2 * Math.PI; t.push(Math.min(1, Math.max(0, fbm(Math.cos(a) * 2, Math.sin(a) * 2, 0.5, 4) * 0.6 + 0.5))); } return t; }
+const LUT = lut();
+function prepareMotion(spec) {
+  if (!spec || !baked) return null;
+  const S = baked.S, n = S * S, mask = new Float32Array(n), phase = new Float32Array(n), nz = new Float32Array(n), c = {};
+  for (let i = 0; i < n; i++) {
+    if (!baked.cover[i]) continue;
+    c.px = baked.pos[i * 3]; c.py = baked.pos[i * 3 + 1]; c.pz = baked.pos[i * 3 + 2]; c.nx = baked.nrm[i * 3]; c.ny = baked.nrm[i * 3 + 1]; c.nz = baked.nrm[i * 3 + 2]; c.ao = baked.aoT[i]; c.edge = baked.edgeT[i];
+    mask[i] = mask_(spec.mask, c);
+    phase[i] = spec.phase === "seed" ? Math.hypot(c.px - spec.seed[0], c.py - spec.seed[1], c.pz - spec.seed[2]) : field(spec.phase ?? term("y"), c, c.px, c.py, c.pz);
+    nz[i] = Math.min(1, Math.max(0, field(spec.noise ?? term("noise", { scale: 4, octaves: 3 }), c, c.px, c.py, c.pz) * 0.5 + 0.5));
+  }
+  return { spec, base: baked.maps.albedo.slice(), mask, phase, nz };
+}
+function mask_(terms, c) { return mask(terms, c, c.px, c.py, c.pz); }
+function stepMotion(t) {
+  if (!anim) return 0;
+  const t0 = performance.now(), sp = anim.spec, B = anim.base, O = baked.maps.albedo, n = baked.S * baked.S;
+  const [cr, cg, cb] = sp.color.map(v => v * 255), speed = sp.speed ?? 1, freq = sp.freq ?? 1, width = sp.width ?? 0.1, sharp = sp.sharp ?? 2;
+  const progress = (t * speed) % 1.25 - 0.1, scanC = (t * speed) % ((sp.range ?? 2) + width * 4) + (sp.min ?? -1) - width * 2, front = (t * speed) % (sp.maxRadius ?? 3);
+  const [ar, ag, ab] = (sp.after ?? [0.85, 0.93, 1]).map(v => v * 255);
+  for (let i = 0; i < n; i++) {
+    const q = i * 4; let a = B[q + 3]; if (!a) continue;
+    let r = B[q], g = B[q + 1], b = B[q + 2], k = 0; const m = anim.mask[i], p = anim.phase[i];
+    if (sp.effect === "pulse") k = m * (0.5 + 0.5 * Math.sin((p * freq - t * speed) * 2 * Math.PI)) ** sharp;
+    else if (sp.effect === "flow") { const fi = ((p * freq + t * speed) % 1 + 1) % 1 * 256, i0 = Math.floor(fi), fr = fi - i0; k = m * (LUT[i0 % 256] + (LUT[(i0 + 1) % 256] - LUT[i0 % 256]) * fr) ** sharp; }
+    else if (sp.effect === "dissolve") { const d = anim.nz[i] - progress; if (d < 0) a = 0; else if (d < width) k = 1 - d / width; }
+    else if (sp.effect === "scan") { const d = (p - scanC) / width; k = m * Math.exp(-d * d); }
+    else if (sp.effect === "spread") { const d = front - p; if (d > 0) { const mm = Math.min(1, d / (width * 4)); r += (ar - r) * mm; g += (ag - g) * mm; b += (ab - b) * mm; } const e = d / width; k = Math.exp(-e * e); }
+    if (k > 0) { const kk = Math.min(1, k); r += (cr - r) * kk + cr * k * 0.35; g += (cg - g) * kk + cg * k * 0.35; b += (cb - b) * kk + cb * k * 0.35; }
+    O[q] = r; O[q + 1] = g; O[q + 2] = b; O[q + 3] = a;
+  }
+  return performance.now() - t0;
+}
 
 // ---------------------------------------------------------------- UI + maps
 const state = { recipe: "Painted metal", mesh: "Crate", size: 256 };
@@ -409,15 +498,27 @@ function chips(id, items, key, onPick) {
   }
 }
 chips("recipes", RECIPES, "recipe", n => { state.recipe = n; rebake(); });
+state.motion = "Still";
+chips("motions", MOTIONS, "motion", n => {
+  state.motion = n; const m = MOTIONS[n];
+  if (m && m.recipe && m.recipe !== state.recipe) {
+    state.recipe = m.recipe;
+    for (const o of document.getElementById("recipes").children) o.setAttribute("aria-pressed", String(o.textContent === m.recipe));
+    rebake();
+  } else { anim = prepareMotion(m); if (!anim && baked) { baked.maps.albedo.set(baked.base0); paintMaps(); draw(); } }
+});
 chips("meshes", MESHES, "mesh", n => { state.mesh = n; mesh = null; rebake(); });
 chips("sizes", SIZES, "size", n => { state.size = SIZES[n]; rebake(); });
 const readout = document.getElementById("readout");
+function paintMaps(only) { for (const k of only ?? MAPKEYS) { const c = mapCanvas[k]; if (c.width !== baked.S) c.width = c.height = baked.S; c.getContext("2d").putImageData(new ImageData(baked.maps[k], baked.S, baked.S), 0, 0); } }
 function rebake() {
   readout.textContent = "baking…";
   setTimeout(() => {
     if (!mesh) mesh = MESHES[state.mesh]();
     baked = bake(mesh, RECIPES[state.recipe], state.size);
-    for (const k of MAPKEYS) { const c = mapCanvas[k]; c.width = c.height = baked.S; c.getContext("2d").putImageData(new ImageData(baked.maps[k], baked.S, baked.S), 0, 0); }
+    baked.base0 = baked.maps.albedo.slice();
+    anim = prepareMotion(MOTIONS[state.motion]);
+    paintMaps();
     const ms = baked.ms;
     readout.textContent = `${baked.S}² · ${mesh.tris.length / 3} tris · raster ${ms.raster.toFixed(0)} ms · surface ${ms.surface.toFixed(0)} ms · shade ${ms.shade.toFixed(0)} ms`;
     draw();
@@ -461,11 +562,12 @@ function draw() {
       let w0 = ((p1[0] - px) * (p2[1] - py) - (p2[0] - px) * (p1[1] - py)) * inv, w1 = ((p2[0] - px) * (p0[1] - py) - (p0[0] - px) * (p2[1] - py)) * inv, w2 = 1 - w0 - w1;
       if (w0 < 0 || w1 < 0 || w2 < 0) continue;
       // perspective-correct weights
-      const iz = w0 / p0[2] + w1 / p1[2] + w2 / p2[2], z = 1 / iz, i = y * RES + x; if (z >= zbuf[i]) continue; zbuf[i] = z;
+      const iz = w0 / p0[2] + w1 / p1[2] + w2 / p2[2], z = 1 / iz, i = y * RES + x; if (z >= zbuf[i]) continue; const prevZ = zbuf[i]; zbuf[i] = z;
       const q0 = w0 / p0[2] * z, q1 = w1 / p1[2] * z, q2 = w2 / p2[2] * z;
       const u = q0 * UV[t * 6] + q1 * UV[t * 6 + 2] + q2 * UV[t * 6 + 4], v = q0 * UV[t * 6 + 1] + q1 * UV[t * 6 + 3] + q2 * UV[t * 6 + 5];
       let n = norm(q0 * ws[0][0] + q1 * ws[1][0] + q2 * ws[2][0], q0 * ws[0][1] + q1 * ws[1][1] + q2 * ws[2][1], q0 * ws[0][2] + q1 * ws[1][2] + q2 * ws[2][2]);
       const o = sample(A, S, u, v);
+      if (A[o + 3] === 0) { zbuf[i] = prevZ; continue; } // dissolved: see through
       if (useN) {
         const tx = NM[o] / 127.5 - 1, ty = NM[o + 1] / 127.5 - 1, tz = NM[o + 2] / 127.5 - 1;
         // OpenGL map: green points to image-up = -bitangent(+v)
@@ -490,9 +592,19 @@ function draw() {
   }
   vctx.putImageData(frame, 0, 0);
 }
-let last = 0;
+let last = 0, frames = 0, motionMs = 0;
 function tick(ts) {
-  if (spinEl.checked && !drag && baked && ts - last > 40) { yaw += 0.012; last = ts; draw(); }
+  const moving = anim && baked;
+  if (baked && ts - last > 40 && ((spinEl.checked && !drag) || moving)) {
+    if (spinEl.checked && !drag) yaw += 0.012;
+    last = ts;
+    if (moving) {
+      motionMs = motionMs * 0.9 + stepMotion(ts / 1000) * 0.1;
+      if (++frames % 6 === 0) paintMaps(["albedo"]);
+      readout.textContent = `${state.motion} · ${baked.S}² texels re-shaded per frame in ${motionMs.toFixed(1)} ms (JS)`;
+    }
+    draw();
+  }
   requestAnimationFrame(tick);
 }
 rebake();

@@ -38,40 +38,52 @@ function Noise.warped(x: number, y: number, z: number, octaves: number, strength
 	return Noise.fbm(x + wx * strength, y + wy * strength, z + wz * strength, octaves)
 end
 
-local function hash3(ix: number, iy: number, iz: number, k: number): number
-	local h = bit32.bxor(ix * 73856093, iy * 19349663, iz * 83492791, k * 2654435761)
+
+-- One 32-bit hash per cell; the feature point's three offsets and the cell id are cut from it
+-- (10 bits each), which is 4x fewer hashes than hashing every coordinate separately.
+local function cellHash(ix: number, iy: number, iz: number): number
+	local h = bit32.bxor(ix * 73856093, iy * 19349663, iz * 83492791)
 	h = bit32.bxor(h, bit32.rshift(h, 13))
 	h = (h * 1274126177) % 4294967296
-	h = bit32.bxor(h, bit32.rshift(h, 16))
-	return h / 4294967296
+	return bit32.bxor(h, bit32.rshift(h, 16))
 end
+
+local lastX, lastY, lastZ, lastJ, lastF1, lastF2, lastId = math.huge, 0, 0, -1, 0, 0, 0
 
 --- 3D Voronoi (Worley). Returns F1, F2 (distances to the nearest and second-nearest feature
 --- point, in cell units) and a 0..1 id of the nearest cell. F2 - F1 ~ 0 on cell borders: cracks,
---- tiles, scales, cobbles. jitter 0..1 (1 = fully random points).
+--- tiles, scales, cobbles. jitter 0..1 (1 = fully random points). The last call is memoised, so
+--- recipe layers that ask for the same point (colour, mask, height) pay once.
 function Noise.voronoi(x: number, y: number, z: number, jitter: number?): (number, number, number)
 	local j = jitter or 1
+	if x == lastX and y == lastY and z == lastZ and j == lastJ then
+		return lastF1, lastF2, lastId
+	end
 	local cx, cy, cz = math.floor(x), math.floor(y), math.floor(z)
-	local f1, f2, id = 9, 9, 0
+	local f1, f2, id = 81, 81, 0
+	local fx, fy, fz = x - cx, y - cy, z - cz
 	for dx = -1, 1 do
 		for dy = -1, 1 do
 			for dz = -1, 1 do
-				local ix, iy, iz = cx + dx, cy + dy, cz + dz
-				local px = ix + 0.5 + (hash3(ix, iy, iz, 1) - 0.5) * j
-				local py = iy + 0.5 + (hash3(ix, iy, iz, 2) - 0.5) * j
-				local pz = iz + 0.5 + (hash3(ix, iy, iz, 3) - 0.5) * j
-				local d = math.sqrt((px - x) ^ 2 + (py - y) ^ 2 + (pz - z) ^ 2)
+				local h = cellHash(cx + dx, cy + dy, cz + dz)
+				local ox = dx + 0.5 + ((h % 1024) / 1024 - 0.5) * j - fx
+				local oy = dy + 0.5 + ((bit32.rshift(h, 10) % 1024) / 1024 - 0.5) * j - fy
+				local oz = dz + 0.5 + ((bit32.rshift(h, 20) % 1024) / 1024 - 0.5) * j - fz
+				local d = ox * ox + oy * oy + oz * oz
 				if d < f1 then
 					f2 = f1
 					f1 = d
-					id = hash3(ix, iy, iz, 4)
+					id = h
 				elseif d < f2 then
 					f2 = d
 				end
 			end
 		end
 	end
-	return f1, f2, id
+	f1, f2 = math.sqrt(f1), math.sqrt(f2)
+	local idn = ((id * 2654435761) % 4294967296) / 4294967296
+	lastX, lastY, lastZ, lastJ, lastF1, lastF2, lastId = x, y, z, j, f1, f2, idn
+	return f1, f2, idn
 end
 
 --- Triplanar sample of a tiling RGBA8 image (any 2D algorithm render: reaction-diffusion, cellular

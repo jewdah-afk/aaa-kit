@@ -1,0 +1,297 @@
+<title>Depth Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Depth without shaders: five plates, each a trick Roblox can run on the CPU into an EditableImage or with stacked geometry. */
+:root {
+  --ground: #0d0f13;
+  --plate: #161920;
+  --rim: #282d37;
+  --ink: #e9ecf1;
+  --dim: #98a1ae;
+  --accent: #5ab4ff;
+  --hot: #ffb02e;
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px;
+}
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-family: var(--display); font-size: clamp(28px, 5vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 19px; margin: 0; }
+p { margin: 0; max-width: 68ch; color: var(--dim); }
+code { font-family: var(--mono); font-size: 0.88em; color: var(--ink); }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.plate { background: var(--plate); border: 1px solid var(--rim); border-radius: 12px; padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.plate.wide { grid-column: 1 / -1; }
+.plate canvas { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; background: #08090c; touch-action: none; image-rendering: auto; }
+.plate.wide canvas { aspect-ratio: 16 / 7; }
+.meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.meta b { color: var(--hot); font-weight: 500; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font: 500 13px var(--body); color: var(--ink); background: #20252c; border: 1px solid var(--rim); border-radius: 999px; padding: 7px 12px; min-height: 36px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #07121d; }
+.chips button:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <div class="label">aaa-kit · lib/surfacebake/Parallax.luau</div>
+    <h1>Depth without shaders</h1>
+    <p>Roblox has no custom shaders, but an <code>EditableImage</code> can be redrawn every frame, and stacked geometry gets real parallax from the engine. Each plate is one technique from the Luau library, running here in JS. Move a pointer over a plate to move the eye. The orange number is this browser's frame cost; the grey one is the measured headless Luau cost for the same size.</p>
+  </header>
+
+  <section class="grid">
+    <div class="plate">
+      <h2>Parallax occlusion window</h2>
+      <canvas id="pom" width="256" height="256" aria-label="A flat square showing deep cobbles that shift and hide each other as the view moves"></canvas>
+      <div class="meta"><span>256² · <span id="pomSteps">16</span> steps</span><span><b id="pomMs">–</b> ms JS · 18 ms Luau</span></div>
+      <div class="chips" id="pomChips"></div>
+      <p>The surface is flat. Each texel marches a ray into a height field until it hits, so cobbles occlude each other and the cracks look deep. Use it for portals, grates, gem interiors and lava pits on a 128–256² image.</p>
+    </div>
+    <div class="plate">
+      <h2>Interior mapping</h2>
+      <canvas id="interior" width="256" height="256" aria-label="A building facade whose windows show 3D rooms with floors, walls and lamps"></canvas>
+      <div class="meta"><span>256² · 4×4 rooms</span><span><b id="intMs">–</b> ms JS · 11 ms Luau</span></div>
+      <p>One ray-box hit per texel puts a whole room behind every window: back wall, side walls, checker floor and a lamp. Lights are on or off at random. A city facade costs one image, not thousands of parts.</p>
+    </div>
+    <div class="plate">
+      <h2>Infinite zoom</h2>
+      <canvas id="zoom" width="256" height="256" aria-label="A pattern zooming in forever without a visible loop"></canvas>
+      <div class="meta"><span>256² · 6 octaves</span><span><b id="zoomMs">–</b> ms JS · 6–8 ms Luau</span></div>
+      <div class="chips" id="zoomChips"></div>
+      <p>Six copies of a tile at scales 2<sup>k − frac(z)</sup>, faded in at the small end and out at the large end. When one octave reaches the next, the image is identical, so it never pops. Spin turns it into a spiral. Any algorithm render works as the tile.</p>
+    </div>
+    <div class="plate">
+      <h2>Shell fur</h2>
+      <canvas id="shells" width="280" height="280" aria-label="A furry sphere built from stacked transparent shells"></canvas>
+      <div class="meta"><span><span id="shellN">16</span> shells · alpha-tested</span><span><b id="shellMs">–</b> ms JS (software render)</span></div>
+      <div class="chips" id="shellChips"></div>
+      <p>Copies of the mesh pushed out along the normals, each with a sparser mask of strand dots that taper to a point. Strands get a real silhouette and real depth from the engine. In Roblox it's one MeshPart per shell, so the cost is draw calls, not Luau.</p>
+    </div>
+    <div class="plate wide">
+      <h2>Layered 2D parallax</h2>
+      <canvas id="layers" width="512" height="224" aria-label="Five mountain layers sliding at different speeds"></canvas>
+      <div class="meta"><span>512×224 · 5 layers</span><span><b id="layMs">–</b> ms JS · 3 ms Luau (256×144, 4 layers)</span></div>
+      <p>Each layer moves by the camera offset times its nearness. In Roblox you'd normally stack <code>ImageLabel</code>s and move them, which costs nothing. The CPU composite exists for layers that are themselves procedural.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- shared noise (improved Perlin)
+const PERM = new Uint8Array(512);
+(function () { const p = Array.from({ length: 256 }, (_, i) => i); let s = 4242; for (let i = 255; i > 0; i--) { s = (Math.imul(s, 1103515245) + 12345) >>> 0; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; } for (let i = 0; i < 512; i++) PERM[i] = p[i & 255]; })();
+const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+function grad(h, x, y, z) { const u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14 ? x : z); return ((h & 1) ? -u : u) + ((h & 2) ? -v : v); }
+function noise3(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255; x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z), A = PERM[X] + Y, AA = PERM[A] + Z, AB = PERM[A + 1] + Z, B = PERM[X + 1] + Y, BA = PERM[B] + Z, BB = PERM[B + 1] + Z, l = (a, b, t) => a + t * (b - a);
+  return l(l(l(grad(PERM[AA] & 15, x, y, z), grad(PERM[BA] & 15, x - 1, y, z), u), l(grad(PERM[AB] & 15, x, y - 1, z), grad(PERM[BB] & 15, x - 1, y - 1, z), u), v), l(l(grad(PERM[AA + 1] & 15, x, y, z - 1), grad(PERM[BA + 1] & 15, x - 1, y, z - 1), u), l(grad(PERM[AB + 1] & 15, x, y - 1, z - 1), grad(PERM[BB + 1] & 15, x - 1, y - 1, z - 1), u), v), w);
+}
+function fbm(x, y, z, o) { let s = 0, a = 1, n = 0; for (let i = 0; i < o; i++) { s += noise3(x, y, z) * a; n += a; a *= 0.5; x = x * 2 + 17.3; y = y * 2 + 9.1; z = z * 2 + 3.7; } return s / n * 1.6; }
+function hashU(x, y, k) { let h = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663) ^ Math.imul(k, 83492791)) >>> 0; h ^= h >>> 13; h = Math.imul(h, 1274126177) >>> 0; h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+// 2D Voronoi on a wrapping grid of n cells (tileable)
+function vor2(x, y, n) {
+  const cx = Math.floor(x), cy = Math.floor(y); let f1 = 9, f2 = 9, id = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const ix = cx + dx, iy = cy + dy, wx = ((ix % n) + n) % n, wy = ((iy % n) + n) % n;
+    const px = ix + 0.15 + 0.7 * hashU(wx, wy, 1), py = iy + 0.15 + 0.7 * hashU(wx, wy, 2), d = Math.hypot(px - x, py - y);
+    if (d < f1) { f2 = f1; f1 = d; id = hashU(wx, wy, 3); } else if (d < f2) f2 = d;
+  }
+  return [f1, f2, id];
+}
+function chips(id, names, initial, onPick) {
+  const el = document.getElementById(id);
+  for (const n of names) { const b = document.createElement("button"); b.type = "button"; b.textContent = n; b.setAttribute("aria-pressed", String(n === initial)); b.addEventListener("click", () => { for (const o of el.children) o.setAttribute("aria-pressed", "false"); b.setAttribute("aria-pressed", "true"); onPick(n); }); el.append(b); }
+}
+function pointer(canvas) { const p = { x: 0, y: 0, active: false }; canvas.addEventListener("pointermove", e => { const r = canvas.getBoundingClientRect(); p.x = (e.clientX - r.left) / r.width * 2 - 1; p.y = (e.clientY - r.top) / r.height * 2 - 1; p.active = true; }); canvas.addEventListener("pointerleave", () => p.active = false); return p; }
+const ema = (o, v) => o === null ? v : o * 0.9 + v * 0.1;
+
+// ---------------------------------------------------------------- 1. parallax occlusion mapping (port of Parallax.pom)
+const HW = 256, H = new Float32Array(HW * HW), COL = new Uint8ClampedArray(HW * HW * 4);
+(function () {
+  for (let y = 0; y < HW; y++) for (let x = 0; x < HW; x++) {
+    const u = x / HW * 6, v = y / HW * 6, [f1, f2, id] = vor2(u, v, 6), edge = f2 - f1;
+    const dome = Math.min(1, edge / 0.35), n = fbm(x / 22, y / 22, 0.3, 4);
+    const h = edge < 0.1 ? 0.0 : 0.45 + 0.5 * Math.sqrt(dome) + 0.05 * n;
+    const i = y * HW + x; H[i] = Math.max(0, Math.min(1, h));
+    const lava = edge < 0.1;
+    const tint = 0.75 + 0.25 * id + 0.1 * n;
+    COL.set(lava ? [255, 120 + 80 * (0.5 + 0.5 * n), 30, 255] : [110 * tint, 104 * tint, 98 * tint, 255], i * 4);
+  }
+})();
+const pomC = document.getElementById("pom"), pomX = pomC.getContext("2d"), pomImg = pomX.createImageData(256, 256), pomP = pointer(pomC);
+let pomSteps = 16, pomMs = null;
+chips("pomChips", ["8 steps", "16 steps", "32 steps"], "16 steps", n => { pomSteps = parseInt(n); document.getElementById("pomSteps").textContent = pomSteps; });
+function pom(t) {
+  const t0 = performance.now();
+  let vx = pomP.active ? pomP.x * 0.8 : Math.cos(t * 0.6) * 0.55, vy = pomP.active ? -pomP.y * 0.8 : Math.sin(t * 0.6) * 0.45;
+  const vz = Math.sqrt(Math.max(0.05, 1 - vx * vx - vy * vy)), depth = 0.18, dU = -vx / vz * depth, dV = vy / vz * depth;
+  const n = Math.floor(pomSteps * (1 + (1 - vz) * 1.5)), step = 1 / n, d = pomImg.data, O = 256;
+  for (let oy = 0; oy < O; oy++) for (let ox = 0; ox < O; ox++) {
+    let u = (ox + 0.5) / O, v = (oy + 0.5) / O, dd = 0;
+    const hAt = (uu, vv) => H[((Math.floor(vv * HW) % HW + HW) % HW) * HW + ((Math.floor(uu * HW) % HW + HW) % HW)];
+    let surf = 1 - hAt(u, v), pd = 0, ps = surf;
+    while (dd < surf && dd < 1) { pd = dd; ps = surf; dd += step; u += dU * step; v += dV * step; surf = 1 - hAt(u, v); }
+    const a = ps - pd, b = dd - surf, f = a + b > 1e-6 ? a / (a + b) : 0, fu = u - dU * step * (1 - f), fv = v - dV * step * (1 - f), hit = pd + (dd - pd) * f;
+    const si = (((Math.floor(fv * HW) % HW + HW) % HW) * HW + ((Math.floor(fu * HW) % HW + HW) % HW)) * 4, k = 1 - 0.55 * hit, glow = COL[si] > 200 && COL[si + 2] < 60;
+    const q = (oy * O + ox) * 4; d[q] = COL[si] * (glow ? 1 : k); d[q + 1] = COL[si + 1] * (glow ? 1 : k); d[q + 2] = COL[si + 2] * (glow ? 1 : k); d[q + 3] = 255;
+  }
+  pomX.putImageData(pomImg, 0, 0);
+  pomMs = ema(pomMs, performance.now() - t0); document.getElementById("pomMs").textContent = pomMs.toFixed(1);
+}
+
+// ---------------------------------------------------------------- 2. interior mapping (port of Parallax.interior)
+const intC = document.getElementById("interior"), intX = intC.getContext("2d"), intImg = intX.createImageData(256, 256), intP = pointer(intC);
+let intMs = null;
+function interior(t) {
+  const t0 = performance.now(), O = 256, R = 4, depth = 1.4, d = intImg.data;
+  let vx = intP.active ? intP.x * 0.8 : Math.sin(t * 0.4) * 0.7, vy = intP.active ? -intP.y * 0.6 : Math.cos(t * 0.31) * 0.35;
+  const vz = Math.sqrt(Math.max(0.05, 1 - vx * vx - vy * vy)), dx = -vx, dy = -vy, dz = vz;
+  for (let oy = 0; oy < O; oy++) {
+    const gy = (1 - (oy + 0.5) / O) * R, cy = Math.floor(gy), fy = gy - cy;
+    for (let ox = 0; ox < O; ox++) {
+      const gx = (ox + 0.5) / O * R, cx = Math.floor(gx), fx = gx - cx, q = (oy * O + ox) * 4;
+      if (Math.min(fx, 1 - fx) < 0.08 || Math.min(fy, 1 - fy) < 0.1) { const w = 0.55 + 0.1 * hashU(cx, cy, 9); d[q] = w * 0.72 * 255; d[q + 1] = w * 0.66 * 255; d[q + 2] = w * 0.6 * 255; d[q + 3] = 255; continue; }
+      const tX = dx > 0 ? (1 - fx) / dx : dx < 0 ? -fx / dx : Infinity, tY = dy > 0 ? (1 - fy) / dy : dy < 0 ? -fy / dy : Infinity, tZ = depth / dz, tt = Math.min(tX, tY, tZ);
+      const hx = fx + dx * tt, hz = dz * tt / depth, lit = hashU(cx, cy, 3) > 0.35, tint = hashU(cx, cy, 4);
+      let r, g, b;
+      if (tt === tZ) { r = 0.75 - tint * 0.2; g = 0.68; b = 0.55 + tint * 0.25; const hy = fy + dy * tt; if (Math.abs(hx - 0.5) < 0.15 && Math.abs(hy - 0.6) < 0.12) { r = 0.25 + tint * 0.5; g = 0.3; b = 0.45; } }
+      else if (tt === tY) { if (dy < 0) { const ch = (Math.floor(hx * 4) + Math.floor(hz * 4 * depth)) & 1; r = 0.45 + ch * 0.12; g = 0.33 + ch * 0.08; b = 0.24; } else { r = 0.85; g = 0.84; b = 0.8; if ((hx - 0.5) ** 2 + (hz - 0.5) ** 2 < 0.02) { r = 1.6; g = 1.5; b = 1.2; } } }
+      else { r = 0.68 - tint * 0.15; g = 0.62 + tint * 0.1; b = 0.52; }
+      const k = (1 - hz * 0.45) * (lit ? 1 : 0.22), refl = 0.08 + 0.12 * fy;
+      d[q] = (r * k * (lit ? 1.05 : 1) + refl * 0.6) * 255; d[q + 1] = (g * k * (lit ? 0.98 : 1) + refl * 0.7) * 255; d[q + 2] = (b * k * (lit ? 0.85 : 1) + refl * 0.9) * 255; d[q + 3] = 255;
+    }
+  }
+  intX.putImageData(intImg, 0, 0);
+  intMs = ema(intMs, performance.now() - t0); document.getElementById("intMs").textContent = intMs.toFixed(1);
+}
+
+// ---------------------------------------------------------------- 3. infinite zoom (port of Parallax.zoom)
+const TW = 128;
+function makeTile(kind) {
+  const t = new Uint8ClampedArray(TW * TW * 4);
+  if (kind === "Reaction-diffusion") {
+    const N = TW, A = new Float32Array(N * N).fill(1), B = new Float32Array(N * N); let s = 11; const rnd = () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
+    for (let k = 0; k < 60; k++) { const x0 = (rnd() * N) | 0, y0 = (rnd() * N) | 0; for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) B[((y0 + y + N) % N) * N + (x0 + x + N) % N] = 1; }
+    let a = A, b = B, a2 = new Float32Array(N * N), b2 = new Float32Array(N * N);
+    for (let it = 0; it < 2600; it++) { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = y * N + x, l = y * N + (x + N - 1) % N, r = y * N + (x + 1) % N, u = ((y + N - 1) % N) * N + x, dd = ((y + 1) % N) * N + x, la = a[l] + a[r] + a[u] + a[dd] - 4 * a[i], lb = b[l] + b[r] + b[u] + b[dd] - 4 * b[i], abb = a[i] * b[i] * b[i]; a2[i] = a[i] + (la * 0.2 - abb + 0.037 * (1 - a[i])); b2[i] = b[i] + (lb * 0.1 + abb - 0.097 * b[i]); } [a, a2] = [a2, a]; [b, b2] = [b2, b]; }
+    for (let i = 0; i < N * N; i++) { const v = Math.min(1, b[i] * 3.5); t.set([30 + 225 * v, 40 + 120 * v * v, 90 + 60 * (1 - v), 255], i * 4); }
+  } else if (kind === "Cells") {
+    for (let y = 0; y < TW; y++) for (let x = 0; x < TW; x++) { const [f1, f2, id] = vor2(x / TW * 8, y / TW * 8, 8), e = Math.min(1, (f2 - f1) * 6); t.set([40 + 200 * id * e, 60 + 150 * e, 160 + 90 * (1 - id) * e, 255], (y * TW + x) * 4); }
+  } else {
+    for (let y = 0; y < TW; y++) for (let x = 0; x < TW; x++) { const u = x / TW * 2 * Math.PI, v = y / TW * 2 * Math.PI, w = Math.sin(u * 2 + Math.sin(v * 3) * 1.2) * Math.cos(v * 2 + Math.sin(u) * 0.8); t.set([140 + 110 * w, 70 + 60 * Math.sin(u * 3), 160 - 90 * w, 255], (y * TW + x) * 4); }
+  }
+  return t;
+}
+const tiles = {}; let tileName = "Reaction-diffusion", spin = 0.35;
+chips("zoomChips", ["Reaction-diffusion", "Cells", "Waves", "Spiral on", "Spiral off"], "Reaction-diffusion", n => { if (n === "Spiral on") spin = 0.35; else if (n === "Spiral off") spin = 0; else tileName = n; });
+const zC = document.getElementById("zoom"), zX = zC.getContext("2d"), zImg = zX.createImageData(256, 256);
+let zMs = null;
+function zoom(t) {
+  const tile = tiles[tileName] ??= makeTile(tileName), t0 = performance.now(), O = 256, K = 6, z = t * 0.35, f = z - Math.floor(z), d = zImg.data;
+  const sc = [], co = [], si = [], wg = []; let ws = 0;
+  for (let k = 0; k < K; k++) { const x = k - f; sc.push(0.6 * 2 ** x); co.push(Math.cos(spin * x)); si.push(Math.sin(spin * x)); const w = Math.sin(Math.PI * (x + 1) / K) ** 2; wg.push(w); ws += w; }
+  for (let y = 0; y < O; y++) { const py = (y + 0.5) / O - 0.5; for (let x = 0; x < O; x++) {
+    const px = (x + 0.5) / O - 0.5; let r = 0, g = 0, b = 0;
+    for (let k = 0; k < K; k++) { const u = (px * co[k] - py * si[k]) * sc[k], v = (px * si[k] + py * co[k]) * sc[k], tx = ((Math.floor(u * TW) % TW) + TW) % TW, ty = ((Math.floor(v * TW) % TW) + TW) % TW, q = (ty * TW + tx) * 4, w = wg[k]; r += tile[q] * w; g += tile[q + 1] * w; b += tile[q + 2] * w; }
+    const vig = 1 - 1.2 * (px * px + py * py), q = (y * O + x) * 4; d[q] = r / ws * vig; d[q + 1] = g / ws * vig; d[q + 2] = b / ws * vig; d[q + 3] = 255;
+  } }
+  zX.putImageData(zImg, 0, 0);
+  zMs = ema(zMs, performance.now() - t0); document.getElementById("zoomMs").textContent = zMs.toFixed(1);
+}
+
+// ---------------------------------------------------------------- 4. shell fur (port of Parallax.shells), software-rendered
+const shC = document.getElementById("shells"), shX = shC.getContext("2d"), SR = 280, shImg = shX.createImageData(SR, SR), shZ = new Float32Array(SR * SR), shP = pointer(shC);
+let NSH = 16, shMs = null, shYaw = 0;
+chips("shellChips", ["8 shells", "16 shells", "24 shells"], "16 shells", n => { NSH = parseInt(n); document.getElementById("shellN").textContent = NSH; });
+const SPH = (function () { const P = [], T = [], segs = 28, rings = 14; for (let j = 0; j <= rings; j++) for (let i = 0; i <= segs; i++) { const u = i / segs, v = j / rings, th = u * 2 * Math.PI, ph = v * Math.PI; P.push([Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th), u, v]); } for (let j = 0; j < rings; j++) for (let i = 0; i < segs; i++) { const a = j * (segs + 1) + i, b = a + 1, c = a + segs + 1, d = c + 1; T.push([a, c, b], [b, c, d]); } return { P, T }; })();
+function strand(u, v, h) {
+  const cells = 70, gx = u * cells * 2, gy = v * cells, cx = Math.floor(gx), cy = Math.floor(gy);
+  if (hashU(cx, cy, 1) > 0.75) return false;
+  const hgt = 0.35 + 0.65 * hashU(cx, cy, 2); if (h > hgt) return false;
+  const jx = 0.5 + (hashU(cx, cy, 3) - 0.5) * 0.4, jy = 0.5 + (hashU(cx, cy, 4) - 0.5) * 0.4;
+  return Math.hypot(gx - cx - jx, gy - cy - jy) < 0.48 * (1 - h / hgt);
+}
+function shells(t) {
+  const t0 = performance.now(); shYaw = shP.active ? shP.x * 2.2 : shYaw + 0.01;
+  const pitch = shP.active ? shP.y * 0.9 : -0.35, cy = Math.cos(shYaw), sy = Math.sin(shYaw), cp = Math.cos(pitch), sp = Math.sin(pitch), d = shImg.data;
+  for (let i = 0; i < d.length; i += 4) { d[i] = 10; d[i + 1] = 11; d[i + 2] = 15; d[i + 3] = 255; }
+  shZ.fill(Infinity);
+  const L = [-0.5, 0.7, -0.5], camZ = 3.4, f = SR * 0.9, len = 0.22, sway = Math.sin(t * 1.3) * 0.05;
+  for (let s = 0; s < NSH; s++) {
+    const h = s / (NSH - 1), off = len * h, bend = h * h;
+    const V = SPH.P.map(([x, y, z, u, v]) => {
+      let px = x * (1 + off) + sway * bend, py = y * (1 + off) - 0.08 * bend, pz = z * (1 + off);
+      const x1 = px * cy - pz * sy, z1 = px * sy + pz * cy, y2 = py * cp - z1 * sp, z2 = py * sp + z1 * cp, Z = camZ + z2;
+      return [SR / 2 + x1 * f / Z, SR / 2 - y2 * f / Z, Z, u, v, x1, y2, z2];
+    });
+    const shadeBase = 0.35 + 0.65 * h;
+    for (const [ia, ib, ic] of SPH.T) {
+      const a = V[ia], b = V[ib], c = V[ic], area = (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]); if (area >= 0) continue; // back-face cull (front faces are clockwise here)
+      const x0 = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0]))), x1 = Math.min(SR - 1, Math.ceil(Math.max(a[0], b[0], c[0]))), y0 = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1]))), y1 = Math.min(SR - 1, Math.ceil(Math.max(a[1], b[1], c[1]))), inv = 1 / area;
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const px = x + 0.5, py = y + 0.5, w0 = ((b[0] - px) * (c[1] - py) - (c[0] - px) * (b[1] - py)) * inv, w1 = ((c[0] - px) * (a[1] - py) - (a[0] - px) * (c[1] - py)) * inv, w2 = 1 - w0 - w1;
+        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+        const z = w0 * a[2] + w1 * b[2] + w2 * c[2], i = y * SR + x; if (z >= shZ[i]) continue;
+        const u = w0 * a[3] + w1 * b[3] + w2 * c[3], v = w0 * a[4] + w1 * b[4] + w2 * c[4];
+        if (s > 0 && !strand(u, v, h)) continue;
+        shZ[i] = z;
+        const nx = w0 * a[5] + w1 * b[5] + w2 * c[5], ny = w0 * a[6] + w1 * b[6] + w2 * c[6], nz = w0 * a[7] + w1 * b[7] + w2 * c[7], nl = Math.hypot(nx, ny, nz);
+        const lam = Math.max(0, (nx * L[0] + ny * L[1] + nz * L[2]) / nl) * 0.75 + 0.3, k = lam * shadeBase, q = i * 4;
+        d[q] = (90 + 150 * h) * k; d[q + 1] = (55 + 120 * h) * k; d[q + 2] = (30 + 70 * h) * k;
+      }
+    }
+  }
+  shX.putImageData(shImg, 0, 0);
+  shMs = ema(shMs, performance.now() - t0); document.getElementById("shellMs").textContent = shMs.toFixed(0);
+}
+
+// ---------------------------------------------------------------- 5. layered parallax (port of Parallax.layers)
+const lyC = document.getElementById("layers"), lyX = lyC.getContext("2d"), LW = 512, LH = 224, lyImg = lyX.createImageData(LW, LH), lyP = pointer(lyC);
+const LAYERS = [0, 1, 2, 3, 4].map(i => {
+  // i = 0 is the farthest: tallest, palest (aerial perspective); nearer layers sit lower and darker
+  const w = 1024, ridge = new Float32Array(w), depth = 1 - i / 5, base = 0.5 - i * 0.09, amp = 0.34 - i * 0.03;
+  // sample noise around a circle so the ridge wraps seamlessly at x = w
+  for (let x = 0; x < w; x++) { const a = x / w * 2 * Math.PI, r = 0.5 + i * 0.35; ridge[x] = base + amp * (0.5 + 0.5 * fbm(Math.cos(a) * r, Math.sin(a) * r, i * 7.7, 5)); }
+  const fog = depth, col = [24 + 150 * fog, 22 + 110 * fog, 40 + 120 * fog];
+  return { ridge, w, depth, col };
+});
+let lyMs = null;
+function layers(t) {
+  const t0 = performance.now(), d = lyImg.data, camX = lyP.active ? lyP.x * 140 : t * 40, camY = lyP.active ? lyP.y * 10 : 0;
+  for (let y = 0; y < LH; y++) { const g = y / LH; for (let x = 0; x < LW; x++) { const q = (y * LW + x) * 4; d[q] = 230 - 120 * g; d[q + 1] = 150 - 60 * g; d[q + 2] = 120 + 40 * g; d[q + 3] = 255; } }
+  for (const Lr of LAYERS) {
+    const near = 1 - Lr.depth;
+    for (let x = 0; x < LW; x++) {
+      const sx = ((Math.floor(x + camX * near * 3) % Lr.w) + Lr.w) % Lr.w, top = Math.floor((1 - Lr.ridge[sx]) * LH + camY * near);
+      for (let y = Math.max(0, top); y < LH; y++) { const q = (y * LW + x) * 4; d[q] = Lr.col[0]; d[q + 1] = Lr.col[1]; d[q + 2] = Lr.col[2]; }
+    }
+  }
+  lyX.putImageData(lyImg, 0, 0);
+  lyMs = ema(lyMs, performance.now() - t0); document.getElementById("layMs").textContent = lyMs.toFixed(1);
+}
+
+// ---------------------------------------------------------------- loop: only draw plates that are on screen
+const plates = [[pomC, pom], [intC, interior], [zC, zoom], [shC, shells], [lyC, layers]], visible = new Set();
+const io = new IntersectionObserver(es => { for (const e of es) e.isIntersecting ? visible.add(e.target) : visible.delete(e.target); });
+for (const [c] of plates) io.observe(c);
+let lastT = 0;
+function loop(ts) {
+  if (ts - lastT > 33) { lastT = ts; for (const [c, f] of plates) if (visible.has(c)) f(ts / 1000); }
+  requestAnimationFrame(loop);
+}
+for (const [, f] of plates) f(0);
+requestAnimationFrame(loop);
+</script>

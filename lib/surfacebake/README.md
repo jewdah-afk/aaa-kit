@@ -10,9 +10,11 @@ Pure Luau except `Apply.luau`. Tested headless in lune. The process is in the [p
 | `Raster` | UV-space G-buffer: per texel the triangle, barycentrics, object-space position, normal, tangent (+u) and bitangent (+v). `dilate(px)` pads islands so mipmaps never bleed |
 | `Surface` | Per-vertex mean curvature and AO (hemisphere rays with a grid), sharp-edge extraction, and **edge distance in studs** (wear width independent of tessellation) |
 | `Noise` | fBm, ridged, domain-warped (on `math.noise`), 3D Voronoi F1/F2/id, triplanar sampling of any RGBA8 tile |
-| `Recipe` | A material as data: base plus masked layers (noise, ridged, voronoi, curvature, ao, edge, up, y, image). Layers mix colour, roughness, metalness and height |
+| `Recipe` | A material as data: base plus masked layers (noise, ridged, voronoi, wave, rings, grid, curvature, ao, edge, up, y, image). Layers mix colour, roughness, metalness and height |
 | `Bake` | Mesh + recipe → `albedo`, `normal`, `roughness`, `metalness`, plus `edge` and `ao` maps; normals from 3D height differences (seamless) |
-| `Presets` | `paintedMetal`, `rustedIron`, `mossyStone`, `lavaRock`, `ice` |
+| `Presets` | 15 recipes: `paintedMetal`, `rustedIron`, `mossyStone`, `lavaRock`, `ice`, `wood`, `gold`, `marble`, `sciFiPanel`, `camo`, `snowRock`, `slime`, `runeStone`, `carbonFiber`, `copperPatina` |
+| `Animate` | Realtime moving surfaces from pre-baked per-texel fields: `pulse`, `flow`, `dissolve`, `scan`, `spread`. A texel budget per frame with round-robin rows, and a reused upload slice (no per-frame allocation) |
+| `Parallax` | Depth without shaders: parallax occlusion mapping, interior mapping (rooms behind windows), layered 2D parallax, infinite zoom (octave blend, optional spiral) and shell texturing (fur/grass meshes and masks) |
 | `Apply` | Roblox only: read a `MeshPart` through `EditableMesh`, bake over several frames, and apply as `TextureContent` or a `SurfaceAppearance` |
 
 ```lua
@@ -30,14 +32,53 @@ local moldyCrate = table.clone(Presets.paintedMetal)
 moldyCrate.base = { color = { 0.42, 0.3, 0.18 }, rough = 0.8 }
 ```
 
+## Moving and depth
+
+```lua
+-- realtime rune glow on a baked crate: prepare once, then a fixed texel budget per frame
+local maps = Bake.run(mesh, Presets.runeStone, { size = 256 })
+local img = Apply.toEditableImage(maps.albedo, 256, 256)
+part.TextureContent = Content.fromObject(img)
+local anim = Animate.prepare(maps, { effect = "pulse", color = { 0.35, 1, 1 }, phase = { "y", scale = 1 },
+	mask = Presets.runeStone.layers[2].mask })
+RunService.RenderStepped:Connect(function()
+	local y0, rows = Animate.step(anim, os.clock(), 256 * 32)          -- ~0.7 ms headless
+	img:WritePixelsBuffer(Vector2.new(0, y0), Vector2.new(256, rows), Animate.rows(anim, y0, rows))
+end)
+```
+
+`Parallax.pom`, `Parallax.interior` and `Parallax.zoom` write into an RGBA8 buffer you upload the same way: a portal, a facade or a screen on a `SurfaceGui`. `Parallax.shells` returns offset meshes and alpha masks for fur and grass. The [depth lab](../../examples/web/depth-lab.html) runs all of them live.
+
 ## Tests and timings
 
 ```sh
-cd lib/surfacebake/qa && lune run test_surfacebake.luau | grep -a '^@@'   # 28 checks
-python3 lib/surfacebake/qa/sheet.py                                          # qa/out/sheet.png of every map
+cd lib/surfacebake/qa && lune run test_surfacebake.luau | grep -a '^@@'   # 28 checks: bake
+cd lib/surfacebake/qa && lune run test_motion.luau | grep -a '^@@'        # 26 checks: Animate + Parallax
+cd lib/surfacebake/qa && lune run bench.luau                              # latency tables (BENCH.md)
+python3 lib/surfacebake/qa/sheet.py                                       # qa/out/sheet.png of every map
 ```
 
-Headless lune timings (this container, single thread): 256² painted-metal box, 432 triangles: raster 22 ms, surface (curvature, AO, edge distance) 78 ms, shade 122 ms (about 220 ms total). 128² rusted-iron sphere with warped noise and Voronoi pitting: about 250 ms. Shade time grows with texels × layers × noise octaves; 512² is about 4× the 256² time. Roblox client timings: **not measured yet**. Run it in Studio before committing to runtime bakes; `opts.yield = task.wait` spreads the work over frames.
+Full numbers are in [BENCH.md](BENCH.md). Headless lune, one thread:
+
+| Work | Cost |
+|---|---|
+| Bake 256², most presets (one-off) | 180–380 ms |
+| Bake 256², Voronoi-heavy presets (moss, lava, rune, slime, ice, rust) | 570–690 ms |
+| Bake 1024² (one-off) | about 3.3 s |
+| Animate, full 128² frame | 1.0–1.6 ms |
+| Animate, full 256² frame | 3.6–6.5 ms |
+| Animate, 256² budgeted to 32 rows/frame | 0.7 ms |
+| POM 128², 16 steps | 4.5 ms |
+| Interior mapping 128² | 2.4 ms |
+| Infinite zoom 128², 5 octaves | 1.6 ms |
+| Shells, 16 × 256² masks (one-off) | 137 ms |
+
+**Frame budget rule (kit default: phones about 4–5× slower, not measured).** Per-frame work on a client should stay under about 2 ms headless:
+- Animate at 128² full, or 256² budgeted
+- infinite zoom at 128²
+- POM and interiors at 96–128², updated only when the camera moves (or every 2nd–3rd frame)
+
+Bakes are one-offs: do them at load with `opts.yield`, or in Studio (route A). Native codegen (`--!native`) may speed up the per-texel loops; **not measured here**.
 
 Verified headless:
 - texel positions lie on the surface

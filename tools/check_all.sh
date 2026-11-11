@@ -16,6 +16,8 @@ done
 echo "== lib/surfacebake"
 done_line=$(cd lib/surfacebake/qa && lune run test_surfacebake.luau | grep -a '^@@DONE')
 echo "test_surfacebake.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "surfacebake check failed"; exit 1; }
+done_line=$(cd lib/surfacebake/qa && lune run test_motion.luau | grep -a '^@@DONE')
+echo "test_motion.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "surfacebake motion check failed"; exit 1; }
 echo "== lib/pixelfx";   (cd lib/pixelfx/qa && lune run run.luau > /dev/null && echo "run.luau ok")
 echo "== doctor";        python3 tools/doctor.py --brief | head -1
 echo "== selene"
