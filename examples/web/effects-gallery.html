@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Effects Hierarchy</title>
+<style>
+/* The page is the hierarchy: six sections, loudest first (HIERARCHY.md §2). Each section states its
+   budget, then holds the effects that live in that tier. Dark on purpose: the effects carry the colour. */
+:root { --ink:#0b0a10; --bench:#14121c; --raise:#1b1826; --edge:#2a2538; --fg:#ece8f4; --muted:#9d95b3;
+  --t1:#ff3d7f; --t2:#ffb02e; --t3:#ffd24a; --t4:#6fd6ff; --t5:#b25cff; --t6:#7fd1a3; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { background: var(--ink); scroll-padding-top: 64px; }
+body { margin: 0; background: var(--ink); color: var(--fg); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 24px 16px 80px; }
+.wrap { max-width: 1680px; margin: 0 auto; display: grid; gap: 44px; }
+header h1 { margin: 0; font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1; letter-spacing: -.02em; }
+header p { margin: 10px 0 0; color: var(--muted); max-width: 78ch; }
+.ladder { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 18px; }
+.ladder a { display: grid; gap: 4px; padding: 10px; background: var(--bench); border: 1px solid var(--edge); border-radius: 8px; color: var(--fg); text-decoration: none; min-width: 0; }
+.ladder a:hover { border-color: var(--c); }
+.ladder b { font: 700 1.4rem/1 ui-monospace, monospace; color: var(--c); }
+.ladder span { font-size: .78rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meter { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--c) var(--w), var(--edge) var(--w)); }
+.bar { position: sticky; top: 0; z-index: 5; background: var(--ink); padding: 10px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: -30px 0 -24px; }
+.bar button { font: 600 .78rem ui-monospace, monospace; color: var(--muted); background: var(--bench); border: 1px solid var(--edge); padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+.bar button[aria-pressed="true"] { color: var(--ink); background: var(--fg); border-color: var(--fg); }
+.bar .stat { margin-left: auto; font: .78rem ui-monospace, monospace; color: var(--muted); }
+section.tier { display: grid; gap: 16px; }
+.thead { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--edge); }
+.tnum { font: 800 3.4rem/.9 ui-monospace, monospace; color: var(--c); grid-row: span 2; }
+.thead h2 { margin: 0; font-size: clamp(1.3rem, 3.2vw, 2rem); }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 6px 18px; margin: 4px 0 0; font-size: .86rem; color: var(--muted); }
+.rules div b { display: block; font: 600 .66rem ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.card { background: var(--bench); border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.card.lead { grid-column: span 2; }
+.stage { position: relative; aspect-ratio: 4 / 3; background: #07060b; touch-action: none; }
+.card.lead .stage { aspect-ratio: 16 / 9; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.meta { padding: 10px 12px 12px; display: grid; gap: 4px; align-content: start; }
+.mrow { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.meta h3 { margin: 0; font-size: 1.02rem; }
+.meta p { margin: 0; color: var(--muted); font-size: .85rem; }
+.tag { font: 600 .66rem ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
+.use { font: 600 .66rem ui-monospace, monospace; color: var(--fg); opacity: .75; }
+@media (max-width: 760px) { .card.lead { grid-column: auto; } .card.lead .stage { aspect-ratio: 4 / 3; } .ladder { grid-template-columns: repeat(3, 1fr); } .bar .stat { margin-left: 0; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Effects Hierarchy</h1>
+  <p>48 live effects plus an SDF raymarcher, sorted by how loud they are on screen. Tier 1 owns the screen for a beat; tier 6 runs quietly underneath and makes content. Each section states its budget from <code>HIERARCHY.md</code>. Tap or drag any tile. Tiles only render while visible.</p>
+  <nav class="ladder" id="ladder" aria-label="Tiers"></nav>
+</header>
+<div class="bar" role="group" aria-label="Render quality">
+  <button type="button" data-q="ultra" aria-pressed="true">Ultra (native res)</button>
+  <button type="button" data-q="high" aria-pressed="false">High (1.5×)</button>
+  <button type="button" data-q="phone" aria-pressed="false">Phone (1×)</button>
+  <span class="stat" id="stat"></span>
+</div>
+<div id="tiers" style="display:grid;gap:56px;width:100%;min-width:0"></div>
+</div>
+<script>
+"use strict";
+const QUALITY = { mode: "ultra", scale() { const d = devicePixelRatio || 1; return this.mode === "ultra" ? Math.min(3, Math.max(1, d)) : this.mode === "high" ? Math.min(1.5, d) : 1; } };
+const DEMOS = [];
+function D(id, name, cat, note, run) { DEMOS.push({ id, name, cat, note, run }); }
+function SH(id, name, note, frag) { DEMOS.push({ id, name, cat: "Shader", note, frag, run: function (g, W, H, t, dt, S, P) { GL.draw(g, W, H, t, P, frag); } }); }
+
+/* ========================= MATERIALS ========================= */
+
+D("brushed", "Brushed Metal", "Materials", "Streak texture plus an anisotropic highlight that follows your finger.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.tex) {
+    S.tex = document.createElement("canvas"); S.tex.width = 512; S.tex.height = 256;
+    const x = S.tex.getContext("2d");
+    const grd = x.createLinearGradient(0, 0, 0, 256);
+    grd.addColorStop(0, "#8d939c"); grd.addColorStop(.5, "#c3c8cf"); grd.addColorStop(1, "#6f747c");
+    x.fillStyle = grd; x.fillRect(0, 0, 512, 256);
+    for (let i = 0; i < 6000; i++) {
+      const y = Math.random() * 256, l = 30 + Math.random() * 260;
+      x.fillStyle = Math.random() < .5 ? `rgba(255,255,255,${Math.random() * .12})` : `rgba(0,0,0,${Math.random() * .12})`;
+      x.fillRect(Math.random() * 512 - 40, y, l, Math.random() < .8 ? .6 : 1.2);
+    }
+  }
+  g.drawImage(S.tex, 0, 0, W, H);
+  const hx = P.active ? P.x : W * (.5 + .4 * Math.sin(t * .8));
+  g.save(); g.globalCompositeOperation = "lighter";
+  g.translate(hx, H / 2); g.scale(.18, 1.6);
+  const r = g.createRadialGradient(0, 0, 0, 0, 0, H * .6);
+  r.addColorStop(0, "rgba(255,250,240,.55)"); r.addColorStop(.4, "rgba(200,220,255,.18)"); r.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = r; g.fillRect(-H, -H, H * 2, H * 2); g.restore();
+  for (const [cx, cy] of [[24, 24], [W - 24, 24], [24, H - 24], [W - 24, H - 24]]) {
+    const rv = g.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 9);
+    rv.addColorStop(0, "#fff"); rv.addColorStop(.5, "#9aa0a8"); rv.addColorStop(1, "#3a3d42");
+    g.fillStyle = rv; g.beginPath(); g.arc(cx, cy, 8, 0, 7); g.fill();
+  }
+});
+
+D("glass", "Liquid Glass Lens", "Materials", "Per-pixel refraction with chromatic split and a Fresnel rim. Drag the lens.",
+function (g, W, H, t, dt, S, P) {
+  const w = 260, h = Math.round(260 * H / W);
+  if (!S.o || S.h !== h) { S.o = document.createElement("canvas"); S.o.width = w; S.o.height = h; S.h = h; S.c = S.o.getContext("2d"); S.img = S.c.createImageData(w, h); }
+  const d = S.img.data, k = w / W;
+  const cx = (P.active ? P.x : W * (.5 + .3 * Math.cos(t * .7))) * k, cy = (P.active ? P.y : H * (.5 + .25 * Math.sin(t * 1.1))) * k, R = h * .34;
+  const bg = (x, y, ch) => {
+    const s = ((Math.floor(x / 10) + Math.floor(y / 10)) & 1) ? 1 : 0;
+    const band = .5 + .5 * Math.sin((x + y) * .09 + t);
+    return ch === 0 ? 40 + s * 120 * band + 60 : ch === 1 ? 30 + s * 90 + 40 * band : 90 + s * 140 * (1 - band) + 30;
+  };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4, dx = (x - cx) / R, dy = (y - cy) / R, r2 = dx * dx + dy * dy;
+    if (r2 < 1) {
+      const nz = Math.sqrt(1 - r2), bend = (1 - nz) * 22, fres = Math.pow(1 - nz, 3);
+      for (let ch = 0; ch < 3; ch++) {
+        const s = bend * (1 + ch * .08);
+        d[i + ch] = Math.min(255, bg(x - dx * s, y - dy * s, ch) * (.85 + .2 * nz) + fres * 230 + (dx < -.3 && dy < -.3 ? 40 * nz : 0));
+      }
+    } else { d[i] = bg(x, y, 0) * .8; d[i + 1] = bg(x, y, 1) * .8; d[i + 2] = bg(x, y, 2) * .8; }
+    d[i + 3] = 255;
+  }
+  S.c.putImageData(S.img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(S.o, 0, 0, W, H);
+});
+
+D("gem", "Faceted Gem", "Materials", "A brilliant cut whose facets light up as it turns, with star glints.",
+function (g, W, H, t, dt, S, P) {
+  g.fillStyle = "#0b0912"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .36, n = 8, rot = t * .6, L = P.active ? Math.atan2(P.y - cy, P.x - cx) : t * 1.3;
+  const shade = (a, base) => { const v = .5 + .5 * Math.cos(a - L); return `hsl(${190 + 40 * v},90%,${base + 45 * Math.pow(v, 3)}%)`; };
+  const pt = (r, a) => [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+  for (let i = 0; i < n * 2; i++) {
+    const a0 = rot + i * Math.PI / n, a1 = rot + (i + 1) * Math.PI / n, am = (a0 + a1) / 2;
+    const p = [pt(R, a0), pt(R, a1), pt(R * .55, am)];
+    g.fillStyle = shade(am * 2, 18); g.beginPath(); g.moveTo(...p[0]); g.lineTo(...p[1]); g.lineTo(...p[2]); g.fill();
+    const q = [pt(R * .55, am), pt(R * .55, am + Math.PI / n), pt(R, a1)];
+    g.fillStyle = shade(am * 3 + 1, 12); g.beginPath(); g.moveTo(...q[0]); g.lineTo(...q[1]); g.lineTo(...q[2]); g.fill();
+  }
+  g.fillStyle = shade(rot * 2, 25); g.beginPath();
+  for (let i = 0; i < n; i++) g.lineTo(...pt(R * .55, rot + (i + .5) * 2 * Math.PI / n)); g.fill();
+  g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 1; g.stroke();
+  g.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 3; i++) {
+    const ph = (t * .7 + i / 3) % 1, a = rot + i * 2.1, [sx, sy] = pt(R * (.3 + .5 * ((i * .37) % 1)), a), s = Math.sin(ph * Math.PI) * 18;
+    g.strokeStyle = "rgba(255,255,255,.9)"; g.lineWidth = 1.5; g.beginPath();
+    g.moveTo(sx - s, sy); g.lineTo(sx + s, sy); g.moveTo(sx, sy - s); g.lineTo(sx, sy + s); g.stroke();
+  }
+  g.globalCompositeOperation = "source-over";
+});
+
+D("molten", "Molten Core", "Materials", "Plasma noise through a black-body heat ramp, with a cooling crust.",
+function (g, W, H, t, dt, S, P) {
+  const w = 220, h = Math.round(220 * H / W);
+  if (!S.o || S.h !== h) { S.o = document.createElement("canvas"); S.o.width = w; S.o.height = h; S.h = h; S.c = S.o.getContext("2d"); S.img = S.c.createImageData(w, h); }
+  const d = S.img.data;
+  const ramp = v => { v = Math.max(0, Math.min(1, v)); return [255 * Math.min(1, v * 2.2), 255 * Math.max(0, Math.min(1, v * 2 - .5)), 255 * Math.max(0, v * 3 - 2)]; };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let v = Math.sin(x * .09 + t) + Math.sin(y * .11 - t * 1.3) + Math.sin((x + y) * .06 + t * .7) + Math.sin(Math.hypot(x - w / 2, y - h / 2) * .15 - t * 2);
+    v = (v + 4) / 8;
+    const crack = Math.abs(Math.sin(x * .21 + Math.sin(y * .13 + t * .3) * 2)) * Math.abs(Math.sin(y * .19 + Math.cos(x * .1) * 2));
+    const heat = crack < .12 ? .55 + v * .5 : v * .45 * (1 - crack * .6);
+    const c = ramp(heat), i = (y * w + x) * 4;
+    d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+  }
+  S.c.putImageData(S.img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(S.o, 0, 0, W, H);
+});
+
+D("holo", "Holographic Foil", "Materials", "A trading-card foil: rainbow shifts with tilt, a sheen band sweeps across.",
+function (g, W, H, t, dt, S, P) {
+  g.fillStyle = "#0c0a12"; g.fillRect(0, 0, W, H);
+  const cw = Math.min(W * .56, H * .62), ch = cw * 1.4 > H * .88 ? H * .88 : cw * 1.4, x0 = (W - cw) / 2, y0 = (H - ch) / 2;
+  const tx = P.active ? (P.x / W - .5) * 2 : Math.sin(t * .9), ty = P.active ? (P.y / H - .5) * 2 : Math.cos(t * .6) * .5;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+  g.save(); rr(x0, y0, cw, ch, 12); g.clip();
+  const lg = g.createLinearGradient(x0, y0, x0 + cw, y0 + ch);
+  for (let i = 0; i <= 6; i++) lg.addColorStop(i / 6, `hsl(${(i * 60 + tx * 120 + ty * 60 + 360) % 360},85%,62%)`);
+  g.fillStyle = lg; g.fillRect(x0, y0, cw, ch);
+  g.globalCompositeOperation = "overlay";
+  for (let i = -20; i < 40; i++) { g.fillStyle = i % 2 ? "rgba(255,255,255,.18)" : "rgba(0,0,0,.18)"; g.fillRect(x0 + i * 8 + tx * 10, y0, 4, ch); }
+  g.globalCompositeOperation = "lighter";
+  const sx = x0 + cw * (.5 + tx * .7);
+  const sh = g.createLinearGradient(sx - 50, y0, sx + 50, y0 + ch * .2);
+  sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.55)"); sh.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = sh; g.fillRect(x0, y0, cw, ch);
+  g.globalCompositeOperation = "source-over";
+  g.fillStyle = "rgba(10,8,20,.55)"; rr(x0 + 14, y0 + 14, cw - 28, ch * .55, 8); g.fill();
+  g.fillStyle = "#fff"; g.font = `700 ${cw * .09}px Space Grotesk, sans-serif`; g.textAlign = "center";
+  g.fillText("FOIL ✦ 07", x0 + cw / 2, y0 + ch * .78);
+  g.restore();
+  g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = 2; rr(x0, y0, cw, ch, 12); g.stroke();
+});
+
+/* ========================= VFX ========================= */
+
+D("dissolve", "Ember Dissolve", "VFX", "Noise-threshold burn-away with a glowing ember edge.",
+function (g, W, H, t, dt, S, P) {
+  const w = 240, h = Math.round(240 * H / W);
+  if (!S.o || S.h !== h) {
+    S.o = document.createElement("canvas"); S.o.width = w; S.o.height = h; S.h = h; S.c = S.o.getContext("2d"); S.img = S.c.createImageData(w, h);
+    const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+    const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      return (hash(xi, yi) * (1 - u) + hash(xi + 1, yi) * u) * (1 - v) + (hash(xi, yi + 1) * (1 - u) + hash(xi + 1, yi + 1) * u) * v; };
+    S.n = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) S.n[y * w + x] = vn(x / 14, y / 14) * .6 + vn(x / 5, y / 5) * .3 + vn(x / 2, y / 2) * .1;
+  }
+  const d = S.img.data, ph = (t % 4) / 3.2, th = Math.min(1.05, ph) * 1.1 - .05;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4, n = S.n[y * w + x], dx = x - w / 2, dy = y - h / 2, inside = Math.abs(dx) + Math.abs(dy) * 1.2 < h * .42;
+    if (!inside || n < th) { d[i] = 12; d[i + 1] = 10; d[i + 2] = 18; }
+    else if (n < th + .05) { const e = 1 - (n - th) / .05; d[i] = 255; d[i + 1] = 120 + 135 * e; d[i + 2] = 40 * e; }
+    else { const s = ((x >> 3) + (y >> 3)) & 1; d[i] = 70 + s * 30; d[i + 1] = 110 + s * 30; d[i + 2] = 200; }
+    d[i + 3] = 255;
+  }
+  S.c.putImageData(S.img, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(S.o, 0, 0, W, H);
+});
+
+D("whip", "Verlet Whip", "VFX", "A rope of Verlet points cracked from a moving hand, with ghost trails.",
+function (g, W, H, t, dt, S, P) {
+  const N = 26, seg = Math.min(W, H) * .028;
+  if (!S.p) { S.p = []; for (let i = 0; i < N; i++) S.p.push({ x: W / 2 + i * seg, y: H / 2, ox: W / 2 + i * seg, oy: H / 2 }); S.trail = []; }
+  g.fillStyle = "rgba(10,9,16,.35)"; g.fillRect(0, 0, W, H);
+  const a = Math.sin(t * 5) * 1.6 + (P.active ? Math.atan2(P.y - H / 2, P.x - W / 2) : 0);
+  const p = S.p; p[0].x = W / 2 + Math.cos(a) * seg * 2; p[0].y = H / 2 + Math.sin(a) * seg * 2;
+  for (let i = 1; i < N; i++) { const q = p[i], vx = (q.x - q.ox) * .97, vy = (q.y - q.oy) * .97; q.ox = q.x; q.oy = q.y; q.x += vx; q.y += vy; }
+  for (let k = 0; k < 10; k++) for (let i = 1; i < N; i++) {
+    const A = p[i - 1], B = p[i], dx = B.x - A.x, dy = B.y - A.y, dd = Math.hypot(dx, dy) || 1, f = (dd - seg) / dd;
+    if (i > 1) { A.x += dx * f * .5; A.y += dy * f * .5; B.x -= dx * f * .5; B.y -= dy * f * .5; } else { B.x -= dx * f; B.y -= dy * f; }
+  }
+  S.trail.push(p.map(q => [q.x, q.y])); if (S.trail.length > 8) S.trail.shift();
+  S.trail.forEach((tr, j) => { g.strokeStyle = `rgba(255,170,80,${j / 40})`; g.lineWidth = 2; g.beginPath(); tr.forEach(([x, y]) => g.lineTo(x, y)); g.stroke(); });
+  for (let i = 1; i < N; i++) { g.strokeStyle = `hsl(${30 + i * 2},90%,${50 + i}%)`; g.lineWidth = 7 * (1 - i / N) + 1; g.lineCap = "round"; g.beginPath(); g.moveTo(p[i - 1].x, p[i - 1].y); g.lineTo(p[i].x, p[i].y); g.stroke(); }
+  g.fillStyle = "#ffe3b0"; g.beginPath(); g.arc(W / 2, H / 2, 10, 0, 7); g.fill();
+});
+
+D("lightning", "Branching Lightning", "VFX", "Midpoint-displacement bolts with forks, glow and a screen flash. Tap to strike.",
+function (g, W, H, t, dt, S, P) {
+  const make = (x1, y1, x2, y2, dep, out) => {
+    if (dep === 0) { out.push([x1, y1, x2, y2]); return; }
+    const mx = (x1 + x2) / 2 + (Math.random() - .5) * Math.hypot(x2 - x1, y2 - y1) * .35, my = (y1 + y2) / 2 + (Math.random() - .5) * 10;
+    make(x1, y1, mx, my, dep - 1, out); make(mx, my, x2, y2, dep - 1, out);
+    if (Math.random() < .18 * dep / 5) make(mx, my, mx + (Math.random() - .5) * W * .4, my + H * .25, dep - 2 > 0 ? dep - 2 : 0, out);
+  };
+  S.next ??= 0;
+  if (t > S.next || P.tap) { S.bolt = []; const x = P.tap ? P.x : W * (.2 + Math.random() * .6); make(W * (.3 + Math.random() * .4), 0, x, H * .95, 7, S.bolt); S.flash = 1; S.next = t + .6 + Math.random() * .9; }
+  S.flash = Math.max(0, (S.flash || 0) - dt * 1.6);
+  g.fillStyle = `rgba(${12 + S.flash * 90},${12 + S.flash * 100},${24 + S.flash * 140},.6)`; g.fillRect(0, 0, W, H);
+  if (S.bolt && S.flash > 0) {
+    g.lineCap = "round"; g.globalCompositeOperation = "lighter";
+    for (const [w, c] of [[12, `rgba(90,160,255,${.15 * S.flash})`], [5, `rgba(150,200,255,${.5 * S.flash})`], [1.6, `rgba(255,255,255,${S.flash})`]]) {
+      g.strokeStyle = c; g.lineWidth = w; g.beginPath(); for (const [a, b, c2, d2] of S.bolt) { g.moveTo(a, b); g.lineTo(c2, d2); } g.stroke();
+    }
+    g.globalCompositeOperation = "source-over";
+  }
+});
+
+D("aura", "Automaton Aura", "VFX", "A polar cellular automaton ring that breathes around a center.",
+function (g, W, H, t, dt, S, P) {
+  const R = 7, C = 56;
+  if (!S.c) { S.c = Array.from({ length: R }, () => Array.from({ length: C }, () => Math.random() < .4 ? 1 : 0)); S.acc = 0; }
+  S.acc += dt;
+  if (S.acc > .09) {
+    S.acc = 0; const n = S.c.map(r => r.slice());
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      let s = 0; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) if (dr || dc) { const rr = r + dr; if (rr >= 0 && rr < R) s += S.c[rr][(c + dc + C) % C]; }
+      n[r][c] = s === 3 || (S.c[r][c] && s === 2) ? 1 : 0; if (r === 0 && Math.random() < .25) n[r][c] = 1;
+    }
+    S.c = n;
+  }
+  g.fillStyle = "rgba(8,10,14,.4)"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, r0 = Math.min(W, H) * .12, step = Math.min(W, H) * .045, pulse = 1 + .05 * Math.sin(t * 3);
+  g.globalCompositeOperation = "lighter";
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (S.c[r][c]) {
+    const a0 = c / C * Math.PI * 2 + t * .2, a1 = a0 + Math.PI * 2 / C * .85, rad = (r0 + r * step) * pulse;
+    g.strokeStyle = `hsla(${95 + r * 8},90%,${60 - r * 4}%,${.9 - r * .1})`; g.lineWidth = step * .7;
+    g.beginPath(); g.arc(cx, cy, rad, a0, a1); g.stroke();
+  }
+  g.globalCompositeOperation = "source-over";
+  g.fillStyle = "#e7ffd8"; g.beginPath(); g.arc(cx, cy, r0 * .6, 0, 7); g.fill();
+});
+
+D("vortex", "Magnet Vortex", "VFX", "Pickups spiral into a magnet point with stretched streaks. Drag the magnet.",
+function (g, W, H, t, dt, S, P) {
+  const tx = P.active ? P.x : W / 2, ty = P.active ? P.y : H / 2;
+  const spawn = q => { const a = Math.random() * 7, r = Math.max(W, H) * (.5 + Math.random() * .3); q.x = tx + Math.cos(a) * r; q.y = ty + Math.sin(a) * r; q.vx = 0; q.vy = 0; q.h = Math.random() < .7 ? 200 : 140; };
+  if (!S.q) { S.q = Array.from({ length: 260 }, () => { const q = {}; spawn(q); q.x = Math.random() * W; q.y = Math.random() * H; return q; }); }
+  g.fillStyle = "rgba(8,8,16,.3)"; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = "lighter";
+  for (const q of S.q) {
+    const dx = tx - q.x, dy = ty - q.y, d = Math.hypot(dx, dy) + 1;
+    q.vx += (dx / d * 1300 - dy / d * 420) * dt / Math.sqrt(d * .05 + 1); q.vy += (dy / d * 1300 + dx / d * 420) * dt / Math.sqrt(d * .05 + 1);
+    q.vx *= .96; q.vy *= .96; q.x += q.vx * dt; q.y += q.vy * dt;
+    if (d < 30) spawn(q);
+    g.strokeStyle = `hsla(${q.h},90%,65%,.8)`; g.lineWidth = 2.5; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - q.vx * .03, q.y - q.vy * .03); g.stroke();
+  }
+  const gl = g.createRadialGradient(tx, ty, 0, tx, ty, 40); gl.addColorStop(0, "rgba(160,220,255,.9)"); gl.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = gl; g.fillRect(tx - 40, ty - 40, 80, 80);
+  g.globalCompositeOperation = "source-over";
+});
+
+D("shatter", "Pane Shatter", "VFX", "A panel splits into jittered triangles that fly from the impact point. Tap to aim the hit.",
+function (g, W, H, t, dt, S, P) {
+  const cyc = 2.8;
+  if (S.cy !== Math.floor(t / cyc) || P.tap) {
+    S.cy = Math.floor(t / cyc); S.t0 = t; S.ix = P.tap ? P.x : W * (.3 + Math.random() * .4); S.iy = P.tap ? P.y : H * (.3 + Math.random() * .4); S.sh = [];
+    const nx = 9, ny = 7, x0 = W * .12, y0 = H * .12, cw = W * .76 / nx, chh = H * .76 / ny, pts = [];
+    for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) pts.push([x0 + i * cw + (i % nx ? (Math.random() - .5) * cw * .7 : 0), y0 + j * chh + (j % ny ? (Math.random() - .5) * chh * .7 : 0)]);
+    const P2 = (i, j) => pts[j * (nx + 1) + i];
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) for (const tri of [[P2(i, j), P2(i + 1, j), P2(i, j + 1)], [P2(i + 1, j), P2(i + 1, j + 1), P2(i, j + 1)]]) {
+      const cx = (tri[0][0] + tri[1][0] + tri[2][0]) / 3, cy = (tri[0][1] + tri[1][1] + tri[2][1]) / 3, dx = cx - S.ix, dy = cy - S.iy, d = Math.hypot(dx, dy) + 20;
+      S.sh.push({ tri: tri.map(([x, y]) => [x - cx, y - cy]), cx, cy, vx: dx / d * 9000 / d, vy: dy / d * 9000 / d - 60, va: (Math.random() - .5) * 8, hue: 190 + Math.random() * 40, delay: d / 900 });
+    }
+  }
+  g.fillStyle = "#0b0a12"; g.fillRect(0, 0, W, H);
+  const e = t - S.t0 - .5;
+  for (const s of S.sh) {
+    const k = Math.max(0, e - s.delay);
+    g.save(); g.translate(s.cx + s.vx * k, s.cy + s.vy * k + 300 * k * k); g.rotate(s.va * k);
+    g.globalAlpha = Math.max(0, 1 - k * .8); g.fillStyle = `hsl(${s.hue},60%,${45 + 20 * Math.sin(s.cx * .05)}%)`;
+    g.beginPath(); s.tri.forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill(); g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke(); g.restore();
+  }
+  g.globalAlpha = 1;
+  if (e > -.5 && e < .3) { g.fillStyle = `rgba(255,255,255,${Math.max(0, .3 - Math.abs(e)) * 2})`; g.fillRect(0, 0, W, H); }
+});
+
+D("glyphrain", "Glyph Rain", "VFX", "Falling glyph columns with bright heads and fading tails.",
+function (g, W, H, t, dt, S, P) {
+  const fs = Math.max(12, W / 32), cols = Math.ceil(W / fs), set = "アイウエオカキクケコサシスセソ01ΣΔΨΩ∴⊕◇";
+  if (!S.y || S.y.length !== cols) { S.y = Array.from({ length: cols }, () => Math.random() * -H); S.v = S.y.map(() => 60 + Math.random() * 160); g.fillStyle = "#06080a"; g.fillRect(0, 0, W, H); }
+  g.fillStyle = "rgba(6,8,10,.14)"; g.fillRect(0, 0, W, H); g.font = `${fs}px JetBrains Mono, monospace`; g.textAlign = "center";
+  for (let i = 0; i < cols; i++) {
+    S.y[i] += S.v[i] * dt; if (S.y[i] > H + fs * 4) { S.y[i] = -Math.random() * H * .5; S.v[i] = 60 + Math.random() * 160; }
+    const ch = set[(Math.random() * set.length) | 0];
+    g.fillStyle = "#eaffff"; g.fillText(ch, i * fs + fs / 2, S.y[i]);
+    g.fillStyle = "rgba(90,230,200,.7)"; g.fillText(set[(i * 7 + (t * 10 | 0)) % set.length], i * fs + fs / 2, S.y[i] - fs);
+  }
+});
+
+D("fireflies", "Firefly Swarm", "VFX", "Wandering glows that blink on their own clocks, drawn additively.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.f) S.f = Array.from({ length: 70 }, () => ({ x: Math.random() * W, y: Math.random() * H, a: Math.random() * 7, ph: Math.random() * 7, sp: .6 + Math.random() }));
+  g.fillStyle = "rgba(6,10,8,.25)"; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = "lighter";
+  for (const f of S.f) {
+    f.a += (Math.random() - .5) * 2 * dt * 3;
+    if (P.active) f.a += Math.sin(Math.atan2(P.y - f.y, P.x - f.x) - f.a) * dt * 2;
+    f.x = (f.x + Math.cos(f.a) * 30 * dt + W) % W; f.y = (f.y + Math.sin(f.a) * 30 * dt + H) % H;
+    const b = Math.pow(Math.max(0, Math.sin(t * f.sp * 2 + f.ph)), 4), r = 4 + b * 16;
+    const gr = g.createRadialGradient(f.x, f.y, 0, f.x, f.y, r); gr.addColorStop(0, `rgba(230,255,140,${.2 + b * .8})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = gr; g.fillRect(f.x - r, f.y - r, r * 2, r * 2);
+  }
+  g.globalCompositeOperation = "source-over";
+});
+
+D("shockwave", "Shockwave Clear", "VFX", "An expanding ring flashes the screen and shoves every particle outward. Tap to fire.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.d) { S.d = Array.from({ length: 220 }, () => { const x = Math.random() * W, y = Math.random() * H; return { x, y, hx: x, hy: y, vx: 0, vy: 0 }; }); S.r = 0; S.next = 1; }
+  if (t > S.next || P.tap) { S.cx = P.tap ? P.x : W / 2; S.cy = P.tap ? P.y : H / 2; S.r = 1; S.next = t + 3; }
+  if (S.r) S.r += dt * Math.max(W, H) * 1.1;
+  const R = Math.hypot(W, H);
+  g.fillStyle = "#0c0a14"; g.fillRect(0, 0, W, H);
+  if (S.r && S.r < R) { g.fillStyle = `rgba(255,240,210,${Math.max(0, .5 - S.r / R)})`; g.fillRect(0, 0, W, H); }
+  for (const d of S.d) {
+    if (S.r) { const dx = d.x - S.cx, dy = d.y - S.cy, dd = Math.hypot(dx, dy) + .1; if (Math.abs(dd - S.r) < 20) { d.vx += dx / dd * 500; d.vy += dy / dd * 500; } }
+    d.vx += (d.hx - d.x) * dt * 4; d.vy += (d.hy - d.y) * dt * 4; d.vx *= .9; d.vy *= .9; d.x += d.vx * dt; d.y += d.vy * dt;
+    g.fillStyle = "#e05a6a"; g.fillRect(d.x - 2, d.y - 2, 4, 4);
+  }
+  if (S.r && S.r < R) { g.strokeStyle = `rgba(255,220,160,${1 - S.r / R})`; g.lineWidth = 14 * (1 - S.r / R) + 2; g.beginPath(); g.arc(S.cx, S.cy, S.r, 0, 7); g.stroke(); }
+});
+
+D("freeze", "Time Freeze", "VFX", "Everything halts, the frame tints cold and a clock hand sweeps the stop.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.b) S.b = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * 160, vy: (Math.random() - .5) * 160 }));
+  const ph = t % 4.5, frozen = ph > 2.5, fk = frozen ? Math.min(1, (ph - 2.5) * 4) * Math.min(1, (4.5 - ph) * 4) : 0;
+  g.fillStyle = "#101018"; g.fillRect(0, 0, W, H);
+  for (const b of S.b) {
+    if (!frozen) { b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < 0 || b.x > W) b.vx *= -1; if (b.y < 0 || b.y > H) b.vy *= -1; }
+    g.fillStyle = frozen ? "#9ec9ff" : "#ff8a5c"; g.beginPath(); g.arc(b.x, b.y, 7, 0, 7); g.fill();
+  }
+  if (fk) {
+    g.fillStyle = `rgba(90,150,255,${.25 * fk})`; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2, r = Math.min(W, H) * .3, a = (ph - 2.5) / 2 * Math.PI * 2 - Math.PI / 2;
+    g.strokeStyle = `rgba(220,235,255,${.8 * fk})`; g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+    for (let i = 0; i < 12; i++) { const ta = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(ta) * r * .88, cy + Math.sin(ta) * r * .88); g.lineTo(cx + Math.cos(ta) * r, cy + Math.sin(ta) * r); g.stroke(); }
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * r * .8, cy + Math.sin(a) * r * .8); g.stroke();
+    g.strokeStyle = `rgba(220,235,255,${.3 * fk})`; g.beginPath(); g.arc(cx, cy, r * (1 + ((ph * 1.5) % 1) * .6), 0, 7); g.stroke();
+  }
+});
+
+D("ink", "Curl Ink", "VFX", "Thousands of particles advected through a swirling field, leaving ink trails.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.p) { S.p = Array.from({ length: 900 }, () => [Math.random() * W, Math.random() * H]); g.fillStyle = "#f1ece2"; g.fillRect(0, 0, W, H); }
+  g.fillStyle = "rgba(241,236,226,.04)"; g.fillRect(0, 0, W, H);
+  g.strokeStyle = `hsla(${(t * 12) % 360},55%,30%,.35)`; g.lineWidth = 1; g.beginPath();
+  for (const p of S.p) {
+    const a = (Math.sin(p[0] * .011 + t * .3) + Math.cos(p[1] * .013 - t * .2) + Math.sin((p[0] + p[1]) * .004)) * 2.2;
+    const nx = p[0] + Math.cos(a) * 60 * dt, ny = p[1] + Math.sin(a) * 60 * dt;
+    g.moveTo(p[0], p[1]); g.lineTo(nx, ny); p[0] = nx; p[1] = ny;
+    if (nx < 0 || nx > W || ny < 0 || ny > H || Math.random() < .004) { p[0] = Math.random() * W; p[1] = Math.random() * H; }
+  }
+  g.stroke();
+});
+
+/* ========================= UI / HUD ========================= */
+
+D("xpbar", "XP Bar Level-Up", "UI / HUD", "Eased fill, a glowing leading edge, a shine sweep and a burst at full.",
+function (g, W, H, t, dt, S, P) {
+  const cyc = 3, ph = (t % cyc) / cyc, fill = ph < .8 ? 1 - Math.pow(1 - ph / .8, 3) : 1, pop = ph > .8 ? (ph - .8) / .2 : 0;
+  g.fillStyle = "#0e0c16"; g.fillRect(0, 0, W, H);
+  const bx = W * .08, by = H * .62, bw = W * .84, bh = Math.max(14, H * .07);
+  g.fillStyle = "#1e1a2c"; g.beginPath(); g.roundRect(bx, by, bw, bh, bh / 2); g.fill();
+  g.save(); g.beginPath(); g.roundRect(bx, by, bw, bh, bh / 2); g.clip();
+  const lg = g.createLinearGradient(bx, 0, bx + bw, 0); lg.addColorStop(0, "#2f7bff"); lg.addColorStop(1, "#7fe6ff");
+  g.fillStyle = lg; g.fillRect(bx, by, bw * fill, bh);
+  const sx = bx + ((t * .8) % 1.4 - .2) * bw * fill; const sh = g.createLinearGradient(sx - 30, 0, sx + 30, 0);
+  sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, "rgba(255,255,255,.6)"); sh.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = sh; g.fillRect(bx, by, bw * fill, bh);
+  g.fillStyle = "rgba(0,0,0,.35)"; for (let i = 1; i < 10; i++) g.fillRect(bx + bw * i / 10 - 1, by, 2, bh);
+  g.restore();
+  g.globalCompositeOperation = "lighter";
+  const ex = bx + bw * fill, eg = g.createRadialGradient(ex, by + bh / 2, 0, ex, by + bh / 2, bh * 2); eg.addColorStop(0, "rgba(180,240,255,.9)"); eg.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = eg; g.fillRect(ex - bh * 2, by - bh * 2, bh * 4, bh * 5);
+  if (pop) {
+    for (let i = 0; i < 40; i++) { const a = i * 2.4, r = pop * W * .35 * (.5 + (i % 5) / 8); g.fillStyle = `rgba(255,210,110,${1 - pop})`; g.fillRect(W / 2 + Math.cos(a) * r, by + Math.sin(a) * r * .6, 4, 4); }
+  }
+  g.globalCompositeOperation = "source-over";
+  const s = pop ? 1 + Math.sin(Math.min(1, pop * 2) * Math.PI) * .35 : 1;
+  g.save(); g.translate(W / 2, H * .38); g.scale(s, s); g.textAlign = "center"; g.font = `700 ${W * .08}px Space Grotesk, sans-serif`;
+  g.fillStyle = pop ? "#ffd27a" : "#cfc8e6"; g.shadowColor = pop ? "#ff9d2e" : "transparent"; g.shadowBlur = 20 * (1 - pop);
+  g.fillText(pop ? "LEVEL UP" : `LV 12 · ${Math.round(fill * 100)}%`, 0, 0); g.restore();
+});
+
+D("dmgnums", "Damage Numbers", "UI / HUD", "Pop-scale, drift and fade, with heavier crits that shake and outline.",
+function (g, W, H, t, dt, S, P) {
+  S.n ??= []; S.acc = (S.acc || 0) + dt; S.hit = Math.max(0, (S.hit || 0) - dt * 6);
+  while (S.acc > .16) { S.acc -= .16; const crit = Math.random() < .2; S.n.push({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .5 + (Math.random() - .5) * H * .15, v: crit ? (300 + Math.random() * 700) | 0 : (10 + Math.random() * 90) | 0, crit, t: 0, dx: (Math.random() - .5) * 40 }); S.hit = 1; }
+  g.fillStyle = "#12101a"; g.fillRect(0, 0, W, H);
+  const r = Math.min(W, H) * .14; g.fillStyle = S.hit > .5 ? "#fff" : "#6b5f8f"; g.beginPath(); g.arc(W / 2 + (S.hit > .5 ? 3 : 0), H * .55, r, 0, 7); g.fill();
+  g.textAlign = "center"; g.lineJoin = "round";
+  S.n = S.n.filter(n => (n.t += dt) < 1);
+  for (const n of S.n) {
+    const k = n.t, s = k < .12 ? 1 + (1 - k / .12) * (n.crit ? 1 : .6) : 1, sz = (n.crit ? 30 : 18) * s * Math.min(1.2, W / 360);
+    const x = n.x + n.dx * k + (n.crit && k < .25 ? (Math.random() - .5) * 6 : 0), y = n.y - 60 * k;
+    g.globalAlpha = k > .7 ? (1 - k) / .3 : 1; g.font = `700 ${sz}px Space Grotesk, sans-serif`;
+    g.lineWidth = n.crit ? 5 : 3; g.strokeStyle = n.crit ? "#5a1a00" : "#000"; g.strokeText(n.v, x, y);
+    g.fillStyle = n.crit ? "#ffcf3a" : "#ffffff"; g.fillText(n.v, x, y);
+  }
+  g.globalAlpha = 1;
+});
+
+D("countup", "Rarity Count-Up", "UI / HUD", "An exponential roll that climbs through tier colours, bursting at each threshold.",
+function (g, W, H, t, dt, S, P) {
+  const tiers = [[0, "COMMON", "#b9c2cf"], [100, "RARE", "#4ea8ff"], [1000, "EPIC", "#b46bff"], [10000, "LEGENDARY", "#ffb02e"], [100000, "MYTHIC", "#ff4f7b"]];
+  const cyc = 4.2, ph = Math.min(1, (t % cyc) / 3), v = Math.floor(Math.pow(10, ph * 5.6)) - 1;
+  let ti = 0; for (let i = 0; i < tiers.length; i++) if (v >= tiers[i][0]) ti = i;
+  if (S.ti !== ti) { S.ti = ti; S.burst = 1; }
+  S.burst = Math.max(0, (S.burst || 0) - dt * 1.6);
+  const [, name, col] = tiers[ti];
+  g.fillStyle = "#0d0b13"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H * .48;
+  g.globalCompositeOperation = "lighter";
+  const gl = g.createRadialGradient(cx, cy, 0, cx, cy, W * .45); gl.addColorStop(0, col + "55"); gl.addColorStop(1, "#00000000");
+  g.fillStyle = gl; g.fillRect(0, 0, W, H);
+  if (S.burst) { g.strokeStyle = col; g.globalAlpha = S.burst; g.lineWidth = 4; g.beginPath(); g.arc(cx, cy, (1 - S.burst) * W * .5, 0, 7); g.stroke(); g.globalAlpha = 1; }
+  g.globalCompositeOperation = "source-over";
+  const sc = 1 + S.burst * .25; g.save(); g.translate(cx, cy); g.scale(sc, sc); g.textAlign = "center";
+  g.font = `700 ${Math.min(W * .14, H * .2)}px JetBrains Mono, monospace`; g.shadowColor = col; g.shadowBlur = 10 + ti * 6;
+  g.fillStyle = "#fff"; g.fillText(v.toLocaleString("en-US"), 0, 0); g.restore();
+  g.textAlign = "center"; g.font = `700 ${W * .05}px Space Grotesk, sans-serif`; g.fillStyle = col; g.fillText(name, cx, cy + H * .2);
+});
+
+D("cardflip", "Card Reveal", "UI / HUD", "A card flips from its back, with rarity rays spinning behind the face.",
+function (g, W, H, t, dt, S, P) {
+  const cyc = 3.4, ph = (t % cyc) / cyc, flip = Math.min(1, Math.max(0, (ph - .2) / .35)), ang = flip * Math.PI, sx = Math.cos(ang), face = sx < 0;
+  const hues = [210, 280, 40]; const hue = hues[Math.floor(t / cyc) % 3];
+  g.fillStyle = "#0c0a12"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, ch = H * .74, cw = ch * .68;
+  if (face) {
+    g.save(); g.translate(cx, cy); g.rotate(t * .6); g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 12; i++) { g.rotate(Math.PI / 6); g.fillStyle = `hsla(${hue},90%,60%,${.18 * flip})`; g.beginPath(); g.moveTo(0, 0); g.lineTo(-W * .08, -W); g.lineTo(W * .08, -W); g.fill(); }
+    g.restore(); g.globalCompositeOperation = "source-over";
+  }
+  g.save(); g.translate(cx, cy - Math.sin(flip * Math.PI) * 20); g.scale(Math.abs(sx) || .01, 1);
+  g.beginPath(); g.roundRect(-cw / 2, -ch / 2, cw, ch, 12);
+  if (!face) { g.fillStyle = "#2a2340"; g.fill(); g.strokeStyle = "#5a4c86"; g.lineWidth = 3; g.stroke();
+    g.strokeStyle = "#433768"; for (let i = -6; i < 6; i++) { g.beginPath(); g.moveTo(-cw / 2, i * 20); g.lineTo(cw / 2, i * 20 + 40); g.stroke(); } }
+  else { const lg = g.createLinearGradient(0, -ch / 2, 0, ch / 2); lg.addColorStop(0, `hsl(${hue},70%,55%)`); lg.addColorStop(1, `hsl(${hue},60%,22%)`);
+    g.fillStyle = lg; g.fill(); g.strokeStyle = `hsl(${hue},90%,80%)`; g.lineWidth = 3; g.stroke();
+    g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.arc(0, -ch * .1, cw * .3, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.font = `700 ${cw * .12}px Space Grotesk, sans-serif`; g.textAlign = "center"; g.fillText(["RARE", "EPIC", "LEGENDARY"][Math.floor(t / cyc) % 3], 0, ch * .34); }
+  g.restore();
+});
+
+D("lowhp", "Low-HP Heartbeat", "UI / HUD", "A double-beat vignette and draining health bar for danger states.",
+function (g, W, H, t, dt, S, P) {
+  const hp = .5 + .5 * Math.cos(t * .5), low = hp < .3, ph = (t * 1.3) % 1, beat = Math.exp(-ph * 14) + .6 * Math.exp(-Math.max(0, ph - .18) * 14) * (ph > .18);
+  g.fillStyle = "#14161c"; g.fillRect(0, 0, W, H);
+  g.strokeStyle = "#1f2430"; for (let x = 0; x < W; x += 24) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); } for (let y = 0; y < H; y += 24) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  const k = low ? (.55 + beat * .45) : .15;
+  const v = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * (.25 + (low ? beat * .05 : .15)), W / 2, H / 2, Math.hypot(W, H) * .6);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, `rgba(${low ? 200 : 0},10,20,${k})`); g.fillStyle = v; g.fillRect(0, 0, W, H);
+  const bx = 16, by = 16, bw = W * .45, bh = 12;
+  g.fillStyle = "#000a"; g.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+  g.fillStyle = low ? `rgb(${220 + beat * 35},40,50)` : "#46d07a"; g.fillRect(bx, by, bw * hp, bh);
+  g.fillStyle = "#fff"; g.font = "600 12px JetBrains Mono, monospace"; g.fillText(`HP ${Math.round(hp * 100)}`, bx, by + bh + 16);
+});
+
+D("chest", "Chest Burst", "UI / HUD", "Lid pops, light rays spin out and coins arc under gravity.",
+function (g, W, H, t, dt, S, P) {
+  const cyc = 3.5, ph = (t % cyc), open = Math.min(1, Math.max(0, (ph - .6) * 3));
+  if (S.cy !== Math.floor(t / cyc)) { S.cy = Math.floor(t / cyc); S.c = Array.from({ length: 50 }, () => ({ vx: (Math.random() - .5) * 320, vy: -300 - Math.random() * 260, s: Math.random() * 6 })); }
+  g.fillStyle = "#110e18"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, by = H * .78, bw = Math.min(W, H) * .42, bh = bw * .5, shake = ph < .6 ? Math.sin(ph * 80) * 3 * ph : 0;
+  if (open) { g.save(); g.translate(cx, by - bh); g.rotate(t); g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 10; i++) { g.rotate(Math.PI / 5); g.fillStyle = `rgba(255,200,90,${.16 * open})`; g.beginPath(); g.moveTo(0, 0); g.lineTo(-30, -W); g.lineTo(30, -W); g.fill(); }
+    g.restore(); g.globalCompositeOperation = "source-over"; }
+  g.fillStyle = "#6b3f1f"; g.fillRect(cx - bw / 2 + shake, by - bh, bw, bh); g.fillStyle = "#c99a3a"; g.fillRect(cx - bw / 2 + shake, by - bh * .6, bw, bh * .12); g.fillRect(cx - 8 + shake, by - bh * .7, 16, bh * .3);
+  g.save(); g.translate(cx - bw / 2 + shake, by - bh); g.rotate(-open * 1.1); g.fillStyle = "#83502a"; g.fillRect(0, -bh * .45, bw, bh * .45); g.fillStyle = "#c99a3a"; g.fillRect(0, -bh * .12, bw, bh * .12); g.restore();
+  if (open) { const k = ph - .6;
+    for (const c of S.c) { const x = cx + c.vx * k, y = by - bh + c.vy * k + 500 * k * k; if (y > H) continue; const sp = Math.abs(Math.cos(k * 10 + c.s));
+      g.fillStyle = "#ffd34d"; g.beginPath(); g.ellipse(x, y, 6 * sp + 1, 6, 0, 0, 7); g.fill(); g.fillStyle = "#fff6"; g.fillRect(x - 1, y - 4, 2, 3); } }
+});
+
+D("cooldown", "Cooldown Icons", "UI / HUD", "Radial sweeps over ability slots, with a ready flash and countdown.",
+function (g, W, H, t, dt, S, P) {
+  g.fillStyle = "#0f0d16"; g.fillRect(0, 0, W, H);
+  const n = 4, sz = Math.min(W / (n + 1.2), H * .4), gap = sz * .2, x0 = (W - (n * sz + (n - 1) * gap)) / 2, y = (H - sz) / 2, cds = [2, 3.5, 5, 1.2], hues = [10, 200, 120, 280];
+  for (let i = 0; i < n; i++) {
+    const x = x0 + i * (sz + gap), p = (t % (cds[i] + .6)) / cds[i], ready = p >= 1, cx = x + sz / 2, cy = y + sz / 2;
+    g.fillStyle = `hsl(${hues[i]},60%,40%)`; g.beginPath(); g.roundRect(x, y, sz, sz, 10); g.fill();
+    g.fillStyle = `hsl(${hues[i]},80%,70%)`; g.beginPath(); for (let k = 0; k < 5; k++) { const a = k * 1.2566 - 1.57; g.lineTo(cx + Math.cos(a) * sz * .28, cy + Math.sin(a) * sz * .28); g.lineTo(cx + Math.cos(a + .628) * sz * .12, cy + Math.sin(a + .628) * sz * .12); } g.fill();
+    if (!ready) { g.save(); g.beginPath(); g.roundRect(x, y, sz, sz, 10); g.clip(); g.fillStyle = "rgba(0,0,0,.65)"; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, sz, -Math.PI / 2 + p * Math.PI * 2, Math.PI * 1.5); g.fill(); g.restore();
+      g.fillStyle = "#fff"; g.font = `700 ${sz * .28}px JetBrains Mono, monospace`; g.textAlign = "center"; g.fillText((cds[i] * (1 - p)).toFixed(1), cx, cy + sz * .1); }
+    else { const f = 1 - ((t % (cds[i] + .6)) - cds[i]) / .6; g.strokeStyle = `rgba(255,255,255,${f})`; g.lineWidth = 3; g.beginPath(); g.roundRect(x - (1 - f) * 8, y - (1 - f) * 8, sz + (1 - f) * 16, sz + (1 - f) * 16, 12); g.stroke(); }
+  }
+});
+
+/* ========================= ALGORITHMIC ========================= */
+
+D("reaction", "Reaction-Diffusion", "Algorithmic", "Gray-Scott chemistry growing coral patterns. Drag to drop reagent.",
+function (g, W, H, t, dt, S, P) {
+  const w = 140, h = Math.round(140 * H / W);
+  if (!S.A || S.h !== h) {
+    S.h = h; S.A = new Float32Array(w * h).fill(1); S.B = new Float32Array(w * h); S.A2 = new Float32Array(w * h); S.B2 = new Float32Array(w * h);
+    for (let k = 0; k < 12; k++) { const cx = (Math.random() * w) | 0, cy = (Math.random() * h) | 0; for (let y = -3; y <= 3; y++) for (let x = -3; x <= 3; x++) { const i = ((cy + y + h) % h) * w + (cx + x + w) % w; S.B[i] = 1; } }
+    S.o = document.createElement("canvas"); S.o.width = w; S.o.height = h; S.c = S.o.getContext("2d"); S.img = S.c.createImageData(w, h);
+  }
+  if (P.active) { const cx = (P.x / W * w) | 0, cy = (P.y / H * h) | 0; for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) { const i = ((cy + y + h) % h) * w + (cx + x + w) % w; S.B[i] = 1; } }
+  const f = .037, k = .06;
+  for (let it = 0; it < 8; it++) {
+    const A = S.A, B = S.B, A2 = S.A2, B2 = S.B2;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x, l = y * w + (x + w - 1) % w, r = y * w + (x + 1) % w, u = ((y + h - 1) % h) * w + x, d = ((y + 1) % h) * w + x;
+      const la = A[l] + A[r] + A[u] + A[d] - 4 * A[i], lb = B[l] + B[r] + B[u] + B[d] - 4 * B[i], abb = A[i] * B[i] * B[i];
+      A2[i] = A[i] + (.2 * la * 4 * .25 - abb + f * (1 - A[i])); B2[i] = B[i] + (.1 * lb * 4 * .25 + abb - (k + f) * B[i]);
+    }
+    S.A = A2; S.B = B2; S.A2 = A; S.B2 = B;
+  }
+  const d = S.img.data;
+  for (let i = 0; i < w * h; i++) { const v = Math.max(0, Math.min(1, (S.A[i] - S.B[i]))); d[i * 4] = 255 * v * v; d[i * 4 + 1] = 120 + 120 * v; d[i * 4 + 2] = 160 * (1 - v) + 90; d[i * 4 + 3] = 255; }
+  S.c.putImageData(S.img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(S.o, 0, 0, W, H);
+});
+
+D("tree", "L-System Tree", "Algorithmic", "A recursive tree that grows in, sways per depth and blossoms at the tips.",
+function (g, W, H, t, dt, S, P) {
+  g.fillStyle = "#0e1014"; g.fillRect(0, 0, W, H);
+  const grow = Math.min(1, (t % 8) / 4), maxD = 9;
+  const br = (x, y, len, a, d) => {
+    if (d > maxD * grow) return;
+    const k = Math.min(1, maxD * grow - d), sway = Math.sin(t * 1.4 + d * .6) * .04 * d;
+    const nx = x + Math.cos(a + sway) * len * k, ny = y + Math.sin(a + sway) * len * k;
+    g.strokeStyle = `hsl(${25 + d * 9},${35 + d * 4}%,${22 + d * 5}%)`; g.lineWidth = Math.max(1, (maxD - d) * 1.3); g.lineCap = "round";
+    g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
+    if (d >= maxD - 1 && k >= 1) { g.fillStyle = `hsla(${330 + Math.sin(d + nx) * 20},80%,75%,.8)`; g.beginPath(); g.arc(nx, ny, 3, 0, 7); g.fill(); }
+    br(nx, ny, len * .76, a - .42 + Math.sin(d * 3.1) * .1, d + 1); br(nx, ny, len * .72, a + .36 + Math.cos(d * 2.3) * .1, d + 1);
+  };
+  br(W / 2, H * .97, H * .22, -Math.PI / 2, 0);
+});
+
+D("voronoi", "Stained Glass Voronoi", "Algorithmic", "Drifting Voronoi cells with lead lines, lit by a moving light.",
+function (g, W, H, t, dt, S, P) {
+  const w = 200, h = Math.round(200 * H / W);
+  if (!S.s || S.h !== h) { S.h = h; S.s = Array.from({ length: 16 }, (_, i) => ({ x: Math.random() * w, y: Math.random() * h, a: Math.random() * 7, hue: [350, 210, 45, 140, 280][i % 5] })); S.o = document.createElement("canvas"); S.o.width = w; S.o.height = h; S.c = S.o.getContext("2d"); S.img = S.c.createImageData(w, h); }
+  for (const s of S.s) { s.a += dt * .3; s.x += Math.cos(s.a) * dt * 3; s.y += Math.sin(s.a * 1.3) * dt * 3; s.x = (s.x + w) % w; s.y = (s.y + h) % h; }
+  const lx = (P.active ? P.x / W : .5 + .4 * Math.cos(t * .5)) * w, ly = (P.active ? P.y / H : .5 + .4 * Math.sin(t * .4)) * h, d = S.img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let d1 = 1e9, d2 = 1e9, c = 0;
+    for (let k = 0; k < S.s.length; k++) { const dx = x - S.s[k].x, dy = y - S.s[k].y, dd = dx * dx + dy * dy; if (dd < d1) { d2 = d1; d1 = dd; c = k; } else if (dd < d2) d2 = dd; }
+    const i = (y * w + x) * 4, edge = Math.sqrt(d2) - Math.sqrt(d1);
+    if (edge < 1.2) { d[i] = d[i + 1] = d[i + 2] = 18; }
+    else { const L = Math.max(.25, 1.4 - Math.hypot(x - lx, y - ly) / (w * .5)), hh = S.s[c].hue / 60, X = 1 - Math.abs(hh % 2 - 1);
+      const rgb = hh < 1 ? [1, X, 0] : hh < 2 ? [X, 1, 0] : hh < 3 ? [0, 1, X] : hh < 4 ? [0, X, 1] : hh < 5 ? [X, 0, 1] : [1, 0, X];
+      for (let j = 0; j < 3; j++) d[i + j] = Math.min(255, (rgb[j] * 170 + 40) * L); }
+    d[i + 3] = 255;
+  }
+  S.c.putImageData(S.img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(S.o, 0, 0, W, H);
+});
+
+D("ascii", "ASCII Renderer", "Algorithmic", "A lit, rippling sphere shaded per character cell through a glyph ramp.",
+function (g, W, H, t, dt, S, P) {
+  const fs = Math.max(9, Math.min(14, W / 46)), cw = fs * .62, cols = Math.floor(W / cw), rows = Math.floor(H / fs), ramp = " .:-=+*#%@";
+  g.fillStyle = "#07090b"; g.fillRect(0, 0, W, H); g.font = `${fs}px JetBrains Mono, monospace`; g.textBaseline = "top";
+  const lx = Math.cos(t), ly = -.5, lz = Math.sin(t), ll = Math.hypot(lx, ly, lz), R = Math.min(cols * cw, rows * fs) * .4;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const px = (c * cw - W / 2) / R, py = (r * fs - H / 2) / R, q = px * px + py * py;
+    let v = 0;
+    if (q < 1) { const pz = Math.sqrt(1 - q); v = Math.max(0, (px * lx + py * ly + pz * lz) / ll) * (.75 + .25 * Math.sin(px * 9 + py * 7 + t * 3)); }
+    else v = .06 * (.5 + .5 * Math.sin(c * .3 + r * .5 - t * 2));
+    const ch = ramp[Math.min(ramp.length - 1, (v * ramp.length) | 0)];
+    if (ch !== " ") { g.fillStyle = `hsl(${160 + v * 40},70%,${25 + v * 55}%)`; g.fillText(ch, c * cw, r * fs); }
+  }
+});
+
+D("boids", "Boids Flock", "Algorithmic", "Separation, alignment and cohesion. Hold to scatter the flock.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.b) S.b = Array.from({ length: 110 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: Math.random() * 2 - 1, vy: Math.random() * 2 - 1 }));
+  g.fillStyle = "rgba(12,14,22,.4)"; g.fillRect(0, 0, W, H);
+  for (const b of S.b) {
+    let ax = 0, ay = 0, cx = 0, cy = 0, sx = 0, sy = 0, n = 0;
+    for (const o of S.b) { if (o === b) continue; const dx = o.x - b.x, dy = o.y - b.y, d = dx * dx + dy * dy; if (d < 2500) { n++; ax += o.vx; ay += o.vy; cx += dx; cy += dy; if (d < 300) { sx -= dx; sy -= dy; } } }
+    if (n) { b.vx += (ax / n - b.vx) * .05 + cx / n * .002 + sx * .02; b.vy += (ay / n - b.vy) * .05 + cy / n * .002 + sy * .02; }
+    if (P.active) { const dx = b.x - P.x, dy = b.y - P.y, d = Math.hypot(dx, dy); if (d < 120) { b.vx += dx / d * .4; b.vy += dy / d * .4; } }
+    const sp = Math.hypot(b.vx, b.vy) || 1, ms = 2.4; b.vx = b.vx / sp * ms; b.vy = b.vy / sp * ms;
+    b.x = (b.x + b.vx * dt * 60 + W) % W; b.y = (b.y + b.vy * dt * 60 + H) % H;
+    const a = Math.atan2(b.vy, b.vx); g.fillStyle = `hsl(${200 + Math.sin(a) * 40},80%,70%)`;
+    g.beginPath(); g.moveTo(b.x + Math.cos(a) * 8, b.y + Math.sin(a) * 8); g.lineTo(b.x + Math.cos(a + 2.5) * 5, b.y + Math.sin(a + 2.5) * 5); g.lineTo(b.x + Math.cos(a - 2.5) * 5, b.y + Math.sin(a - 2.5) * 5); g.fill();
+  }
+});
+
+D("flow", "Flow Field Silk", "Algorithmic", "Particles trace a layered angle field into glowing silk. Tap to reseed.",
+function (g, W, H, t, dt, S, P) {
+  if (!S.p || P.tap) { S.p = Array.from({ length: 600 }, () => ({ x: Math.random() * W, y: Math.random() * H, h: Math.random() * 60 })); S.seed = Math.random() * 10; g.fillStyle = "#08070d"; g.fillRect(0, 0, W, H); }
+  g.fillStyle = "rgba(8,7,13,.03)"; g.fillRect(0, 0, W, H); g.globalCompositeOperation = "lighter"; g.lineWidth = 1;
+  for (const p of S.p) {
+    const a = Math.sin(p.x * .006 + S.seed) * 2 + Math.cos(p.y * .008 - S.seed) * 2 + Math.sin((p.x - p.y) * .003 + t * .1);
+    const nx = p.x + Math.cos(a) * 70 * dt, ny = p.y + Math.sin(a) * 70 * dt;
+    g.strokeStyle = `hsla(${(280 + p.h + t * 5) % 360},80%,60%,.12)`; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(nx, ny); g.stroke();
+    p.x = nx; p.y = ny; if (nx < 0 || nx > W || ny < 0 || ny > H) { p.x = Math.random() * W; p.y = Math.random() * H; }
+  }
+  g.globalCompositeOperation = "source-over";
+});
+
+/* ========================= GPU SHADERS ========================= */
+
+SH("portal", "Mythic Portal", "A swirling rarity vortex with a pulsing event ring and white-hot core.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  if (M.z > 0.) uv -= (M.xy - .5 * R) / R.y * .25;
+  float r = length(uv), a = atan(uv.y, uv.x);
+  float sw = a + T * 1.4 + 2.6 / (r + .08);
+  float arms = sin(sw * 5. + r * 18. - T * 3.);
+  vec3 pink = vec3(1., .25, .65), blue = vec3(.25, .55, 1.), gold = vec3(1., .82, .3);
+  vec3 col = mix(pink, blue, .5 + .5 * sin(sw * 2. + T));
+  col = mix(col, gold, smoothstep(.55, 1., arms) * .7);
+  col *= smoothstep(.8, .12, r) * (1.1 + .5 * arms);
+  col += vec3(1., .92, 1.) * (.018 / (r + .015));
+  float ring = .006 / abs(r - .42 - .025 * sin(a * 7. + T * 3.));
+  col += ring * vec3(1., .6, .95);
+  float sp = fract(sin(dot(floor(vec2(a * 12., r * 40. - T * 6.)), vec2(12.9, 78.2))) * 43758.5);
+  col += step(.985, sp) * smoothstep(.9, .3, r) * 1.5;
+  col = 1. - exp(-col * 1.25);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("blackhole", "Black Hole Lens", "Gravitational lensing bends a starfield around a spinning accretion disk. Drag the hole.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec3 sky(vec2 p) {
+  vec3 c = vec3(.02, .015, .05) + .06 * vec3(.4, .2, .7) * (.5 + .5 * sin(p.x * 3. + sin(p.y * 4.)));
+  for (int i = 0; i < 2; i++) {
+    vec2 q = p * (24. + float(i) * 31.); vec2 id = floor(q), f = fract(q) - .5;
+    float s = h(id + float(i) * 7.);
+    c += smoothstep(.965, 1., s) * smoothstep(.35, 0., length(f)) * mix(vec3(.7, .8, 1.), vec3(1., .85, .7), h(id));
+  }
+  return c;
+}
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  vec2 c = M.z > 0. ? (M.xy - .5 * R) / R.y : vec2(.12 * sin(T * .3), .06 * cos(T * .4));
+  vec2 d = uv - c; float r = length(d);
+  vec2 bent = uv - d / r * (.028 / max(r, .05));
+  vec3 col = sky(bent + vec2(T * .01, 0.)) * smoothstep(.1, .125, r);
+  vec2 q = d; q.y *= 3.2; float dr = length(q);
+  float disk = smoothstep(.36, .2, dr) * smoothstep(.115, .16, dr);
+  float swirl = .5 + .5 * sin(atan(q.y, q.x) * 4. - T * 5. + dr * 34.);
+  float dopp = 1. + .7 * (d.x / max(dr, .001)) * -1.;
+  vec3 hot = mix(vec3(1., .42, .12), vec3(1., .95, .85), swirl);
+  float front = step(0., -d.y) + step(.115, r) * step(0., d.y);
+  col += disk * hot * dopp * 1.4 * front;
+  col += vec3(1., .75, .45) * min(.0035 / abs(r - .12), 2.);
+  col = 1. - exp(-col * 1.4);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("aurora", "Aurora Night", "Layered aurora curtains with ray streaks over a mountain line and stars.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+float n(float x) { return sin(x) + .5 * sin(x * 2.3 + 1.) + .25 * sin(x * 4.7 + 2.); }
+float h(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5); }
+void main() {
+  vec2 uv = gl_FragCoord.xy / R; float ax = uv.x * R.x / R.y;
+  vec3 col = mix(vec3(.01, .02, .05), vec3(.02, .07, .12), uv.y);
+  vec2 sq = floor(gl_FragCoord.xy / 2.); col += step(.996, h(sq)) * (.6 + .4 * sin(T * 3. + h(sq) * 40.)) * smoothstep(.3, .8, uv.y);
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    float edge = .5 + .07 * fi + .07 * n(ax * 2.2 + T * (.18 + fi * .03) + fi * 1.7);
+    float d = uv.y - edge;
+    float curtain = exp(-max(d, 0.) * (7. - fi)) * smoothstep(-.012, .0, d);
+    float rays = .55 + .45 * sin(ax * 90. + n(ax * 6. + T * .8 + fi) * 5.);
+    vec3 tint = mix(vec3(.15, 1., .55), vec3(.65, .3, 1.), clamp(d * 3. + fi * .12, 0., 1.));
+    col += curtain * rays * tint * (.38 - fi * .05);
+  }
+  float m = .2 + .06 * n(ax * 4. + 3.) + .025 * n(ax * 15.);
+  float m2 = .12 + .05 * n(ax * 3. + 9.);
+  if (uv.y < m) col = mix(col * .15, vec3(.02, .03, .05), .85);
+  if (uv.y < m2) col = vec3(.008, .012, .02);
+  col = 1. - exp(-col * 1.6);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("godrays", "God Rays", "Light marched back toward its source through moving foliage: volumetric shafts in one pass.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+float occ(vec2 p) {
+  float leaves = sin(p.x * 13. + T * .7) * sin(p.y * 11. - T * .5) + .45 * sin(p.x * 31. - T) * sin(p.y * 27.);
+  float region = smoothstep(.55, .25, length((p - vec2(.5, .62)) * vec2(1., 1.6)));
+  return step(.15, leaves) * region;
+}
+void main() {
+  vec2 uv = gl_FragCoord.xy / R;
+  vec2 L = M.z > 0. ? M.xy / R : vec2(.5 + .15 * sin(T * .3), .78);
+  vec2 dir = (L - uv) / 48.; vec2 p = uv; float acc = 0., w = 1.;
+  for (int i = 0; i < 48; i++) { p += dir; acc += (1. - occ(p)) * w; w *= .965; }
+  acc /= 20.;
+  vec3 col = mix(vec3(.04, .06, .05), vec3(.08, .14, .1), uv.y);
+  col += acc * vec3(1., .86, .55) * .55;
+  col += vec3(1., .95, .8) * .03 / (length((uv - L) * vec2(R.x / R.y, 1.)) + .02);
+  col = mix(col, vec3(.02, .05, .03), occ(uv) * .9);
+  col = 1. - exp(-col * 1.5);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("plasma", "Plasma Orb", "A glass orb full of crawling electric filaments. Drag to pull an arc to your finger.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  float r = length(uv), a = atan(uv.y, uv.x), S = .4;
+  vec3 col = vec3(.02, .01, .04);
+  if (r < S) {
+    float glow = 0.;
+    for (int k = 0; k < 7; k++) {
+      float fk = float(k);
+      float ak = fk * .9 + T * (.3 + fk * .07) + sin(T * .7 + fk) * 1.5;
+      if (k == 0 && M.z > 0.) { vec2 m = (M.xy - .5 * R) / R.y; ak = atan(m.y, m.x); }
+      float wob = sin(r * 22. - T * 9. + fk * 3.) * .12 * r + sin(r * 47. + T * 13. + fk) * .04 * r;
+      float da = abs(mod(a - ak - wob + 3.14159, 6.28318) - 3.14159) * r;
+      glow += .0022 / (da + .002) * smoothstep(S, S * .2, r * .9);
+    }
+    col += glow * vec3(.75, .45, 1.);
+    col += vec3(.6, .35, 1.) * .03 / (r + .03);
+    float fres = pow(r / S, 6.);
+    col += fres * vec3(.35, .25, .6);
+    col += smoothstep(.06, 0., length(uv - vec2(-.15, .17))) * .5;
+  }
+  col += .004 / abs(r - S) * vec3(.6, .5, .9);
+  col = 1. - exp(-col * 1.2);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("crystal", "Raymarched Crystal", "A signed-distance crystal with reflection, dispersion and a Fresnel rim.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float sdf(vec3 p) {
+  float ry = M.z > 0. ? (M.x / R.x - .5) * 6. : T * .6;
+  p.xz *= rot(ry); p.xy *= rot(T * .27);
+  vec3 q = abs(p);
+  float oct = (q.x + q.y * .72 + q.z - 1.) * .577;
+  float box = max(q.x, max(q.y * .6, q.z)) - .82;
+  return max(oct, box);
+}
+vec3 env(vec3 d) {
+  vec3 c = mix(vec3(.05, .02, .12), vec3(.45, .7, 1.), .5 + .5 * d.y);
+  c += pow(max(dot(d, normalize(vec3(.6, .7, .4))), 0.), 40.) * 3.;
+  c += pow(max(dot(d, normalize(vec3(-.7, .2, .5))), 0.), 20.) * vec3(1., .5, .8);
+  return c;
+}
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  vec3 ro = vec3(0., 0., 3.3), rd = normalize(vec3(uv, -1.55));
+  float t = 0., d = 1.;
+  for (int i = 0; i < 72; i++) { d = sdf(ro + rd * t); if (d < .001 || t > 6.) break; t += d; }
+  vec3 col = vec3(.03, .02, .07) * (1. - length(uv) * .6);
+  if (d < .002) {
+    vec3 p = ro + rd * t; vec2 e = vec2(.001, 0.);
+    vec3 n = normalize(vec3(sdf(p + e.xyy) - sdf(p - e.xyy), sdf(p + e.yxy) - sdf(p - e.yxy), sdf(p + e.yyx) - sdf(p - e.yyx)));
+    float fres = pow(1. - max(dot(-rd, n), 0.), 3.);
+    vec3 refl = env(reflect(rd, n));
+    vec3 refr = vec3(env(refract(rd, n, .66)).r, env(refract(rd, n, .7)).g, env(refract(rd, n, .74)).b);
+    col = mix(refr * vec3(.55, .85, 1.), refl, .25 + .75 * fres);
+    float facet = abs(dot(n, normalize(vec3(.5, .8, .4))));
+    col += vec3(.35, .6, 1.) * pow(facet, 8.) * 1.4 + vec3(1., .5, .9) * pow(abs(dot(n, normalize(vec3(-.8, -.2, .5)))), 10.) * .8;
+    col *= .7 + .6 * facet;
+  }
+  col = 1. - exp(-col * 1.3);
+  gl_FragColor = vec4(col, 1.);
+}`);
+
+SH("chrome", "Liquid Chrome", "Merging metaballs shaded as mirror chrome reflecting a studio horizon.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+float field(vec2 p) {
+  float f = 0.;
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i);
+    vec2 c = vec2(sin(T * (.5 + fi * .11) + fi * 2.), cos(T * (.4 + fi * .13) + fi * 1.3)) * vec2(.5, .3);
+    f += (.018 + .006 * fi) / dot(p - c, p - c);
+  }
+  if (M.z > 0.) { vec2 m = (M.xy - .5 * R) / R.y; f += .03 / dot(p - m, p - m); }
+  return f;
+}
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  float f = field(uv);
+  vec3 col = mix(vec3(.05, .05, .07), vec3(.1, .1, .14), uv.y + .5);
+  if (f > 1.) {
+    vec2 e = vec2(.002, 0.);
+    vec2 g = vec2(field(uv + e.xy) - field(uv - e.xy), field(uv + e.yx) - field(uv - e.yx));
+    vec3 n = normalize(vec3(-g * .02, 1.));
+    vec3 r = reflect(vec3(0., 0., -1.), n);
+    float hor = r.y;
+    vec3 c = mix(vec3(.15, .12, .1), vec3(.9, .93, 1.), smoothstep(-.05, .05, hor));
+    c += smoothstep(.02, 0., abs(hor - .05)) * 1.2;
+    c *= .5 + .5 * smoothstep(-1., 1., r.x);
+    c += pow(max(dot(r, normalize(vec3(.4, .6, .7))), 0.), 30.) * 1.5;
+    col = mix(col, c, smoothstep(1., 1.15, f));
+  }
+  gl_FragColor = vec4(1. - exp(-col * 1.3), 1.);
+}`);
+
+SH("soap", "Soap Film", "Thin-film interference: flowing thickness turned into iridescent colour inside a bubble.", `
+precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+void main() {
+  vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y;
+  float r = length(uv), S = .42;
+  vec3 col = mix(vec3(.04, .05, .08), vec3(.09, .1, .15), uv.y + .5);
+  if (r < S) {
+    vec2 p = uv * 3.;
+    for (int i = 0; i < 4; i++) p += .3 * vec2(sin(p.y * 1.7 + T * .6), cos(p.x * 1.5 - T * .5));
+    float th = .45 + .35 * sin(p.x + p.y) + .2 * (uv.y + .4) + .15 * sin(length(p) * 2. - T);
+    vec3 film = .5 + .5 * cos(6.2832 * (th * vec3(1., 1.18, 1.36) + vec3(0., .1, .2)));
+    float fres = pow(r / S, 3.);
+    col = mix(col, film, .35 + .55 * fres);
+    col += smoothstep(.07, 0., length(uv - vec2(-.16, .18))) * .8;
+  }
+  col += .0025 / abs(r - S) * vec3(.8, .9, 1.);
+  gl_FragColor = vec4(1. - exp(-col * 1.4), 1.);
+}`);
+
+/* ========================= REWARD MOMENTS ========================= */
+
+const RARITY = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#3f9bff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
+
+D("roulette", "RNG Roulette Reel", "Moments", "A weighted item reel eases onto the winner, then flashes its rarity. Tap to spin again.",
+function (g, W, H, t, dt, S, P) {
+  const R = [["Common", "#9aa4b2", 50], ["Uncommon", "#4fd17a", 25], ["Rare", "#3f9bff", 14], ["Epic", "#b25cff", 7], ["Legendary", "#ffb02e", 3], ["Mythic", "#ff3d7f", 1]];
+  const pick = () => { let r = Math.random() * 100; for (const x of R) if ((r -= x[2]) < 0) return x; return R[0]; };
+  const iw = Math.min(W * .2, H * .38), step = iw * 1.14, cy = H * .5;
+  if (!S.items || P.tap || (S.done && t - S.done > 2.4)) {
+    S.items = Array.from({ length: 64 }, pick); S.items[52] = Math.random() < .55 ? R[3 + ((Math.random() * 3) | 0)] : pick();
+    S.t0 = t; S.dur = 4.4; S.done = 0; S.off = (Math.random() - .5) * .7;
+  }
+  const k = Math.min(1, (t - S.t0) / S.dur), e = 1 - Math.pow(1 - k, 4), x = e * (52 * step + S.off * iw);
+  if (k >= 1 && !S.done) S.done = t;
+  const win = S.items[52], f = S.done ? t - S.done : 0;
+  g.fillStyle = "#0d0b14"; g.fillRect(0, 0, W, H);
+  if (S.done) {
+    g.save(); g.translate(W / 2 - S.off * iw * 0, cy); g.rotate(t * .5); g.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 14; i++) { g.rotate(Math.PI / 7); g.fillStyle = win[1] + "22"; g.beginPath(); g.moveTo(0, 0); g.lineTo(-iw * .35, -W); g.lineTo(iw * .35, -W); g.fill(); }
+    g.restore(); g.globalCompositeOperation = "source-over";
+  }
+  const star = (cx, cy2, r, n, inner) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = i * Math.PI / n - Math.PI / 2, rr = i % 2 ? r * inner : r; g.lineTo(cx + Math.cos(a) * rr, cy2 + Math.sin(a) * rr); } g.closePath(); };
+  for (let i = 0; i < S.items.length; i++) {
+    const cx = W / 2 + i * step - x; if (cx < -iw || cx > W + iw) continue;
+    const it = S.items[i], ri = R.indexOf(it), isWin = S.done && i === 52, pop = isWin ? 1 + Math.sin(Math.min(1, f * 3) * Math.PI) * .12 : 1;
+    g.save(); g.translate(cx, cy); g.scale(pop, pop);
+    const gr = g.createLinearGradient(0, -iw / 2, 0, iw / 2); gr.addColorStop(0, "#1c1828"); gr.addColorStop(1, it[1] + "55");
+    g.fillStyle = gr; g.beginPath(); g.roundRect(-iw / 2, -iw / 2, iw, iw, 10); g.fill();
+    g.strokeStyle = it[1]; g.lineWidth = isWin ? 4 : 2; g.stroke();
+    g.fillStyle = it[1]; star(0, -iw * .05, iw * .26, 3 + ri, .45 + ri * .03); g.fill();
+    g.fillStyle = "rgba(255,255,255,.35)"; star(-iw * .04, -iw * .09, iw * .1, 3 + ri, .5); g.fill();
+    g.restore();
+  }
+  const fade = g.createLinearGradient(0, 0, W, 0); fade.addColorStop(0, "#0d0b14"); fade.addColorStop(.18, "#0d0b1400"); fade.addColorStop(.82, "#0d0b1400"); fade.addColorStop(1, "#0d0b14");
+  g.fillStyle = fade; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#ffffff"; g.beginPath(); g.moveTo(W / 2 - 9, cy - iw * .62 - 12); g.lineTo(W / 2 + 9, cy - iw * .62 - 12); g.lineTo(W / 2, cy - iw * .62); g.fill();
+  g.beginPath(); g.moveTo(W / 2 - 9, cy + iw * .62 + 12); g.lineTo(W / 2 + 9, cy + iw * .62 + 12); g.lineTo(W / 2, cy + iw * .62); g.fill();
+  if (S.done) {
+    g.textAlign = "center"; g.font = `700 ${Math.min(W * .07, 34)}px Space Grotesk, sans-serif`;
+    g.globalAlpha = Math.min(1, f * 3); g.fillStyle = win[1]; g.shadowColor = win[1]; g.shadowBlur = 18;
+    g.fillText(win[0].toUpperCase() + "!", W / 2, cy + iw * .62 + Math.min(W * .07, 34) + 18); g.shadowBlur = 0; g.globalAlpha = 1;
+    if (f < .25) { g.fillStyle = `rgba(255,255,255,${.35 - f * 1.4})`; g.fillRect(0, 0, W, H); }
+  }
+});
+
+D("gacha", "Gacha Pull Beam", "Moments", "A charge-up, then a beam that climbs rarity tiers before it settles. Built for suspense.",
+function (g, W, H, t, dt, S, P) {
+  const tiers = [["#9aa4b2", "COMMON"], ["#3f9bff", "RARE"], ["#b25cff", "EPIC"], ["#ffb02e", "LEGENDARY"], ["#ff3d7f", "MYTHIC"]];
+  const cyc = 5.4, ci = Math.floor(t / cyc), ph = t % cyc;
+  if (S.ci !== ci || P.tap) { S.ci = ci; S.final = 1 + ((Math.random() * 4) | 0); S.p = []; if (P.tap) S.shift = t - ci * cyc; }
+  const p2 = ph - (S.shift || 0) < 0 ? ph : ph - (S.shift || 0);
+  let ti = 0; if (p2 > 1.3) ti = Math.min(S.final, Math.floor((p2 - 1.3) / .42));
+  const col = ti === 4 ? `hsl(${(t * 220) % 360},95%,62%)` : tiers[ti][0];
+  const bx = W / 2, by = H * .82;
+  g.fillStyle = "#08070d"; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = "lighter";
+  if (p2 < 1.3) {
+    const k = p2 / 1.3;
+    for (let i = 0; i < 60; i++) { const a = i * 2.4 + t * 2, r = (1 - ((k * 2 + i / 60) % 1)) * W * .5; g.fillStyle = "rgba(255,255,255,.7)"; g.fillRect(bx + Math.cos(a) * r, by - H * .1 + Math.sin(a) * r * .5, 2, 2); }
+    const og = g.createRadialGradient(bx, by - H * .1, 0, bx, by - H * .1, 20 + k * 40); og.addColorStop(0, "rgba(255,255,255,.95)"); og.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = og; g.fillRect(0, 0, W, H);
+  } else {
+    const bw = W * (.07 + ti * .015) * (1 + .15 * Math.sin(t * 30));
+    const bg = g.createLinearGradient(bx - bw * 2, 0, bx + bw * 2, 0);
+    bg.addColorStop(0, "rgba(0,0,0,0)"); bg.addColorStop(.3, col); bg.addColorStop(.5, "#ffffff"); bg.addColorStop(.7, col); bg.addColorStop(1, "rgba(0,0,0,0)");
+    g.globalAlpha = .85; g.fillStyle = bg; g.fillRect(bx - bw * 2, 0, bw * 4, by); g.globalAlpha = 1;
+    g.strokeStyle = col; g.lineWidth = 3; for (let i = 0; i < 3; i++) { const rr = ((t * .8 + i / 3) % 1); g.globalAlpha = 1 - rr; g.beginPath(); g.ellipse(bx, by, rr * W * .4, rr * W * .08, 0, 0, 7); g.stroke(); } g.globalAlpha = 1;
+    if (Math.random() < .9) S.p.push({ x: bx + (Math.random() - .5) * bw * 3, y: by, v: 80 + Math.random() * 260, s: 1 + Math.random() * 3 });
+    S.p = S.p.filter(q => (q.y -= q.v * dt) > 0);
+    for (const q of S.p) { g.fillStyle = col; g.fillRect(q.x + Math.sin(q.y * .05) * 6, q.y, q.s, q.s * 3); }
+  }
+  g.globalCompositeOperation = "source-over";
+  if (p2 > 1.3 + S.final * .42 + .3) {
+    g.textAlign = "center"; g.font = `700 ${Math.min(W * .08, 40)}px Space Grotesk, sans-serif`; g.fillStyle = col; g.shadowColor = col; g.shadowBlur = 24;
+    g.fillText(tiers[ti][1], bx, H * .2); g.shadowBlur = 0;
+  }
+});
+
+D("textmorph", "Particle Text Morph", "Moments", "Nine hundred particles spring between words for banners and announcements.",
+function (g, W, H, t, dt, S, P) {
+  const words = ["LEVEL UP", "MYTHIC!", "x1,000", "WINNER"];
+  if (!S.p) S.p = Array.from({ length: 900 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, tx: W / 2, ty: H / 2 }));
+  const wi = Math.floor(t / 2.6) % words.length;
+  if (wi !== S.wi || S.W !== W || S.H !== H) {
+    S.wi = wi; S.W = W; S.H = H;
+    const ow = 220, oh = Math.round(220 * H / W), o = document.createElement("canvas"); o.width = ow; o.height = oh;
+    const c = o.getContext("2d"); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = `900 ${Math.min(ow / words[wi].length * 1.55, oh * .5)}px Space Grotesk, sans-serif`; c.fillText(words[wi], ow / 2, oh / 2);
+    const d = c.getImageData(0, 0, ow, oh).data, pts = [];
+    for (let y = 0; y < oh; y += 2) for (let x = 0; x < ow; x += 2) if (d[(y * ow + x) * 4 + 3] > 128) pts.push([x / ow * W, y / oh * H]);
+    S.p.forEach((q, i) => { const tp = pts[(i * 7) % pts.length] || [W / 2, H / 2]; q.tx = tp[0]; q.ty = tp[1]; q.vx += (Math.random() - .5) * 600; q.vy += (Math.random() - .5) * 600; });
+  }
+  g.fillStyle = "rgba(9,8,14,.35)"; g.fillRect(0, 0, W, H); g.globalCompositeOperation = "lighter";
+  for (const q of S.p) {
+    q.vx += (q.tx - q.x) * 40 * dt; q.vy += (q.ty - q.y) * 40 * dt; q.vx *= .9; q.vy *= .9;
+    if (P.active) { const dx = q.x - P.x, dy = q.y - P.y, d2 = dx * dx + dy * dy; if (d2 < 3600) { q.vx += dx * 8; q.vy += dy * 8; } }
+    q.x += q.vx * dt; q.y += q.vy * dt;
+    g.fillStyle = `hsl(${(q.tx / W) * 120 + 280 + t * 30},90%,65%)`; g.fillRect(q.x, q.y, 2, 2);
+  }
+  g.globalCompositeOperation = "source-over";
+});
+
+D("rebirth", "Rebirth Implosion", "Moments", "A runaway number implodes, a shockwave resets the screen and the multiplier climbs.",
+function (g, W, H, t, dt, S, P) {
+  const cyc = 5.2, ci = Math.floor(t / cyc), ph = t % cyc, cx = W / 2, cy = H / 2, mult = 2 + (ci % 8);
+  g.fillStyle = "#0a0910"; g.fillRect(0, 0, W, H);
+  const fs = Math.min(W * .13, H * .22);
+  g.textAlign = "center"; g.textBaseline = "middle";
+  if (ph < 2) {
+    const v = Math.pow(10, 3 + ph * 3.2), sh = ph * ph * 3;
+    g.save(); g.translate(cx + (Math.random() - .5) * sh, cy + (Math.random() - .5) * sh);
+    g.font = `800 ${fs}px JetBrains Mono, monospace`; g.fillStyle = `hsl(${40 - ph * 20},100%,${60 + ph * 10}%)`; g.shadowColor = "#ff7a2e"; g.shadowBlur = ph * 20;
+    g.fillText(Math.floor(v).toLocaleString("en-US"), 0, 0); g.restore();
+  } else if (ph < 2.5) {
+    const k = (ph - 2) / .5; g.save(); g.translate(cx, cy); g.scale(1 - k, 1 - k); g.rotate(k * 3);
+    g.font = `800 ${fs}px JetBrains Mono, monospace`; g.fillStyle = "#fff"; g.fillText("1,000,000,000", 0, 0); g.restore();
+    g.globalCompositeOperation = "lighter"; for (let i = 0; i < 80; i++) { const a = i * 2.4, r = (1 - k) * W * .6 * ((i % 7) / 7 + .3); g.fillStyle = "#ffcf6e"; g.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 3, 3); } g.globalCompositeOperation = "source-over";
+  } else {
+    const k = ph - 2.5, R = k * Math.max(W, H) * 1.2;
+    if (k < .3) { g.fillStyle = `rgba(255,255,255,${.8 - k * 2.6})`; g.fillRect(0, 0, W, H); }
+    g.strokeStyle = `rgba(190,140,255,${Math.max(0, 1 - k)})`; g.lineWidth = 10 * Math.max(0, 1 - k) + 1; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+    const pop = 1 + Math.max(0, .4 - k) * 1.5;
+    g.save(); g.translate(cx, cy - fs * .35); g.scale(pop, pop); g.font = `800 ${fs * .55}px Space Grotesk, sans-serif`; g.fillStyle = "#c9a0ff"; g.shadowColor = "#9a5cff"; g.shadowBlur = 20; g.fillText("REBIRTH", 0, 0); g.restore();
+    g.font = `800 ${fs * .8}px JetBrains Mono, monospace`; g.fillStyle = "#fff"; g.fillText("x" + mult, cx, cy + fs * .55);
+  }
+});
+
+/* ========================= WORLD & COMBAT ========================= */
+
+D("cloth", "Verlet Cloth Banner", "World", "A pinned cloth grid flapping in gusting wind, shaded by its own folds. Tap for a gust.",
+function (g, W, H, t, dt, S, P) {
+  const C = 20, Rr = 12, sx = W * .62 / C, sy = H * .5 / Rr, x0 = W * .18, y0 = H * .18;
+  if (!S.p) { S.p = []; for (let r = 0; r <= Rr; r++) for (let c = 0; c <= C; c++) { const x = x0 + c * sx, y = y0 + r * sy; S.p.push({ x, y, ox: x, oy: y, pin: c === 0 }); } S.g = 0; }
+  if (P.tap) S.g = 1; S.g = Math.max(0, S.g - dt);
+  const at = (r, c) => S.p[r * (C + 1) + c], wind = 380 + 260 * Math.sin(t * 1.3) + 200 * Math.sin(t * 3.1) + S.g * 1400;
+  for (const q of S.p) { if (q.pin) continue; const vx = (q.x - q.ox) * .985, vy = (q.y - q.oy) * .985; q.ox = q.x; q.oy = q.y; q.x += vx + wind * dt * dt * (.6 + .4 * Math.sin(q.y * .05 + t * 4)); q.y += vy + 500 * dt * dt; }
+  for (let it = 0; it < 6; it++) for (let r = 0; r <= Rr; r++) for (let c = 0; c <= C; c++) {
+    const a = at(r, c);
+    for (const [b, L] of [[c < C ? at(r, c + 1) : null, sx], [r < Rr ? at(r + 1, c) : null, sy]]) {
+      if (!b) continue; const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, f = (d - L) / d * .5;
+      if (!a.pin) { a.x += dx * f; a.y += dy * f; } if (!b.pin) { b.x -= dx * f; b.y -= dy * f; }
+    }
+  }
+  g.fillStyle = "#101320"; g.fillRect(0, 0, W, H);
+  for (let r = 0; r < Rr; r++) for (let c = 0; c < C; c++) {
+    const a = at(r, c), b = at(r, c + 1), d = at(r + 1, c + 1), e = at(r + 1, c);
+    const shade = Math.max(-1, Math.min(1, ((b.y - a.y) - (e.y - a.y - sy)) / sx * 1.4));
+    const band = r < 3 || r > Rr - 4 ? 45 : 350;
+    g.fillStyle = `hsl(${band},${band === 45 ? 85 : 70}%,${46 + shade * 22}%)`;
+    g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.lineTo(d.x, d.y); g.lineTo(e.x, e.y); g.closePath(); g.fill(); g.strokeStyle = g.fillStyle; g.stroke();
+  }
+  g.fillStyle = "#c9b48a"; g.fillRect(x0 - 5, y0 - 12, 6, H * .78);
+  g.beginPath(); g.arc(x0 - 2, y0 - 14, 7, 0, 7); g.fill();
+});
+
+D("snow", "Parallax Snowfall", "World", "Three depth layers of drifting snow that pile up into drifts. Tap for a snowball puff.",
+function (g, W, H, t, dt, S, P) {
+  const B = 80;
+  if (!S.f) { S.f = Array.from({ length: 260 }, (_, i) => ({ x: Math.random() * W, y: Math.random() * H, z: i % 3, ph: Math.random() * 7 })); S.h = new Float32Array(B); S.puff = []; }
+  if (P.tap) for (let i = 0; i < 40; i++) { const a = Math.random() * 7, v = 40 + Math.random() * 220; S.puff.push({ x: P.x, y: P.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, l: 1 }); }
+  const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, "#0e1a33"); sky.addColorStop(1, "#33486e"); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#1d2b47"; g.beginPath(); g.moveTo(0, H * .78); for (let x = 0; x <= W; x += 20) g.lineTo(x, H * .7 + Math.sin(x * .02) * 14 + Math.sin(x * .053) * 8); g.lineTo(W, H); g.lineTo(0, H); g.fill();
+  const wind = Math.sin(t * .4) * 30;
+  for (const f of S.f) {
+    const sp = [30, 55, 90][f.z], sz = [1.2, 2, 3.4][f.z];
+    f.y += sp * dt; f.x += (wind * (f.z + 1) / 3 + Math.sin(t * 1.5 + f.ph) * 12) * dt;
+    const bi = Math.max(0, Math.min(B - 1, (f.x / W * B) | 0)), ground = H - S.h[bi];
+    if (f.y > ground) { if (f.z === 2) { S.h[bi] = Math.min(H * .22, S.h[bi] + .6); if (bi > 0) S.h[bi - 1] += .2; if (bi < B - 1) S.h[bi + 1] += .2; } f.y = -5; f.x = Math.random() * W; }
+    if (f.x < 0) f.x += W; if (f.x > W) f.x -= W;
+    g.fillStyle = `rgba(255,255,255,${[.45, .7, .95][f.z]})`; g.beginPath(); g.arc(f.x, f.y, sz, 0, 7); g.fill();
+  }
+  if (S.h[0] > H * .2) S.h.fill(0);
+  g.fillStyle = "#eef4ff"; g.beginPath(); g.moveTo(0, H);
+  for (let i = 0; i < B; i++) g.lineTo(i / (B - 1) * W, H - S.h[i] - 3);
+  g.lineTo(W, H); g.fill();
+  S.puff = S.puff.filter(q => (q.l -= dt * 1.2) > 0);
+  for (const q of S.puff) { q.vy += 300 * dt; q.x += q.vx * dt; q.y += q.vy * dt; g.fillStyle = `rgba(255,255,255,${q.l})`; g.beginPath(); g.arc(q.x, q.y, 2 + q.l * 3, 0, 7); g.fill(); }
+});
+
+/* ========================= HUD & INTERFACE ========================= */
+
+D("odometer", "Rolling Odometer", "HUD", "Big-number formatting with K/M/B/T suffixes where every digit rolls into place.",
+function (g, W, H, t, dt, S, P) {
+  const suf = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx"];
+  const v = Math.pow(10, 1 + ((t * .35) % 20));
+  const fmt = n => { let i = 0; while (n >= 1000 && i < suf.length - 1) { n /= 1000; i++; } return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + suf[i]; };
+  const s = fmt(v).padStart(7, " ");
+  S.slots ??= Array.from({ length: 7 }, () => ({ cur: " ", prev: " ", p: 1 }));
+  s.split("").forEach((ch, i) => { const sl = S.slots[i]; if (sl.cur !== ch) { sl.prev = sl.cur; sl.cur = ch; sl.p = 0; } sl.p = Math.min(1, sl.p + dt * 7); });
+  g.fillStyle = "#0e0c14"; g.fillRect(0, 0, W, H);
+  const fs = Math.min(W / 6.2, H * .3), cw = fs * .66, x0 = W / 2 - cw * 3.5, cy = H * .48;
+  g.font = `800 ${fs}px JetBrains Mono, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+  S.slots.forEach((sl, i) => {
+    const x = x0 + cw * (i + .5);
+    g.fillStyle = "#18151f"; g.beginPath(); g.roundRect(x - cw * .46, cy - fs * .62, cw * .92, fs * 1.24, 6); g.fill();
+    g.save(); g.beginPath(); g.rect(x - cw * .5, cy - fs * .62, cw, fs * 1.24); g.clip();
+    const e = 1 - Math.pow(1 - sl.p, 3), isSuf = /[A-Za-z]/.test(sl.cur);
+    g.fillStyle = isSuf ? "#ffb547" : "#f4f0ff";
+    g.globalAlpha = 1 - e; g.fillText(sl.prev, x, cy - e * fs); g.globalAlpha = 1; g.fillText(sl.cur, x, cy + (1 - e) * fs);
+    g.restore();
+  });
+  const sh = g.createLinearGradient(0, cy - fs * .62, 0, cy + fs * .62); sh.addColorStop(0, "rgba(14,12,20,.8)"); sh.addColorStop(.3, "rgba(14,12,20,0)"); sh.addColorStop(.7, "rgba(14,12,20,0)"); sh.addColorStop(1, "rgba(14,12,20,.8)");
+  g.fillStyle = sh; g.fillRect(x0, cy - fs * .62, cw * 7, fs * 1.24);
+  g.font = `600 ${Math.max(11, fs * .16)}px JetBrains Mono, monospace`; g.fillStyle = "#8f87a8"; g.fillText(Math.floor(v).toLocaleString("en-US").slice(0, 40), W / 2, cy + fs * .95);
+});
+
+D("combo", "Combo Meter", "HUD", "Streaks escalate through named tiers with pop, shake and a decay bar; stop and it breaks.",
+function (g, W, H, t, dt, S, P) {
+  const tiers = [[0, "NICE", 190], [10, "GREAT", 140], [25, "INSANE", 35], [50, "GODLIKE", 320]];
+  S.c ??= 0; S.last ??= 0; S.next ??= 0; S.pop = Math.max(0, (S.pop || 0) - dt * 5); S.broke = Math.max(0, (S.broke || 0) - dt);
+  const burst = (t % 7) < 5.2;
+  if ((burst && t > S.next) || P.tap) { S.c++; S.last = t; S.pop = 1; S.next = t + .07 + Math.random() * .12; }
+  if (S.c && t - S.last > 1.2) { S.broke = 1; S.lost = S.c; S.c = 0; }
+  let ti = 0; for (let i = 0; i < tiers.length; i++) if (S.c >= tiers[i][0]) ti = i;
+  const [, name, hue] = tiers[ti];
+  g.fillStyle = "#0e0c14"; g.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H * .45, fs = Math.min(W * .22, H * .36), sh = S.c ? Math.min(8, S.c / 8) * S.pop : 0;
+  g.textAlign = "center"; g.textBaseline = "middle";
+  if (S.c) {
+    g.save(); g.translate(cx + (Math.random() - .5) * sh, cy + (Math.random() - .5) * sh); g.scale(1 + S.pop * .25, 1 + S.pop * .25); g.rotate(-.06);
+    g.font = `900 ${fs}px Space Grotesk, sans-serif`; g.lineWidth = 8; g.strokeStyle = `hsl(${hue},80%,18%)`; g.strokeText(S.c, 0, 0);
+    g.fillStyle = `hsl(${ti === 3 ? (t * 300) % 360 : hue},95%,62%)`; g.shadowColor = g.fillStyle; g.shadowBlur = 10 + ti * 8; g.fillText(S.c, 0, 0); g.restore();
+    g.font = `800 ${fs * .26}px Space Grotesk, sans-serif`; g.fillStyle = `hsl(${hue},95%,75%)`; g.fillText(name + " COMBO", cx, cy + fs * .62);
+    const k = Math.max(0, 1 - (t - S.last) / 1.2); g.fillStyle = "#24202e"; g.fillRect(cx - W * .3, cy + fs * .85, W * .6, 6); g.fillStyle = `hsl(${hue},90%,60%)`; g.fillRect(cx - W * .3, cy + fs * .85, W * .6 * k, 6);
+  } else if (S.broke) {
+    g.globalAlpha = S.broke; g.font = `800 ${fs * .3}px Space Grotesk, sans-serif`; g.fillStyle = "#ff5a6a"; g.fillText(`COMBO BROKEN · ${S.lost}`, cx, cy + (1 - S.broke) * 30); g.globalAlpha = 1;
+  }
+});
+
+D("frames", "Rarity Frames", "HUD", "Inventory slot borders that get louder with rarity: static, shimmer, spin, sparks, rainbow, glitch.",
+function (g, W, H, t, dt, S, P) {
+  const rs = [["Common", "#9aa4b2"], ["Rare", "#3f9bff"], ["Epic", "#b25cff"], ["Legendary", "#ffb02e"], ["Mythic", "#ff3d7f"], ["Secret", "#ffffff"]];
+  g.fillStyle = "#0d0b13"; g.fillRect(0, 0, W, H);
+  const cols = 3, sz = Math.min(W / 3.6, H / 2.6), gx = (W - cols * sz) / (cols + 1), gy = (H - 2 * sz) / 3;
+  rs.forEach(([name, col], i) => {
+    const x = gx + (i % cols) * (sz + gx), y = gy + Math.floor(i / cols) * (sz + gy), cx = x + sz / 2, cy = y + sz / 2;
+    const path = () => { g.beginPath(); g.roundRect(x, y, sz, sz, sz * .12); };
+    if (i >= 3) { const gl = g.createRadialGradient(cx, cy, sz * .3, cx, cy, sz * .8); gl.addColorStop(0, (i === 5 ? "#ffffff" : col) + (i === 4 ? "55" : "33")); gl.addColorStop(1, "#00000000"); g.fillStyle = gl; g.fillRect(x - sz * .3, y - sz * .3, sz * 1.6, sz * 1.6); }
+    path(); g.fillStyle = i === 5 ? "#030305" : "#1a1724"; g.fill();
+    if (i === 5) { g.save(); path(); g.clip(); for (let k = 0; k < 30; k++) { const sx = x + ((k * 37.7 + t * 9 * (k % 3 + 1)) % sz), sy = y + ((k * 61.3) % sz); g.fillStyle = `rgba(255,255,255,${.3 + .7 * Math.abs(Math.sin(t * 3 + k))})`; g.fillRect(sx, sy, 1.5, 1.5); } g.restore(); }
+    g.save(); g.translate(cx, cy); g.rotate(i * .3 + (i >= 2 ? Math.sin(t * 1.5 + i) * .08 : 0));
+    g.fillStyle = i === 4 ? `hsl(${(t * 120) % 360},90%,65%)` : col; g.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; g.lineTo(Math.cos(a) * sz * (k % 2 ? .16 : .26), Math.sin(a) * sz * (k % 2 ? .16 : .26)); } g.fill(); g.restore();
+    let stroke = col, lw = 2;
+    if (i === 1) { lw = 3; const p = (t * .6) % 1.6 - .3, sh = g.createLinearGradient(x + p * sz * 2 - sz, y, x + p * sz * 2, y + sz); sh.addColorStop(0, col); sh.addColorStop(.5, "#ffffff"); sh.addColorStop(1, col); stroke = sh; }
+    if (i === 2 || i === 4) { lw = i === 4 ? 4 : 3; if (g.createConicGradient) { const cg = g.createConicGradient(t * (i === 4 ? 3 : 1.6), cx, cy); const stops = i === 4 ? ["#ff3d7f", "#ffb02e", "#4fd17a", "#3f9bff", "#b25cff", "#ff3d7f"] : [col, "#ffffff", col, "#5a2a8a", col]; stops.forEach((s2, k) => cg.addColorStop(k / (stops.length - 1), s2)); stroke = cg; } }
+    if (i === 3) lw = 3;
+    if (i === 5) { lw = 2; stroke = Math.random() < .08 ? "#ff3d7f" : "#ffffff"; }
+    path(); g.strokeStyle = stroke; g.lineWidth = lw; g.stroke();
+    if (i === 5 && Math.random() < .1) { const gy2 = y + Math.random() * sz; g.drawImage(g.canvas, x * (g.canvas.width / W), gy2 * (g.canvas.height / H), sz * (g.canvas.width / W), 6 * (g.canvas.height / H), x + (Math.random() - .5) * 10, gy2, sz, 6); }
+    if (i === 3) { g.globalCompositeOperation = "lighter"; for (let k = 0; k < 3; k++) { const per = ((t * .35 + k / 3) % 1) * 4, sd = Math.floor(per), f = per - sd; const px = sd === 0 ? x + f * sz : sd === 1 ? x + sz : sd === 2 ? x + sz - f * sz : x, py = sd === 0 ? y : sd === 1 ? y + f * sz : sd === 2 ? y + sz : y + sz - f * sz; const sg = g.createRadialGradient(px, py, 0, px, py, 10); sg.addColorStop(0, "#fff6d0"); sg.addColorStop(1, "#ffb02e00"); g.fillStyle = sg; g.fillRect(px - 10, py - 10, 20, 20); } g.globalCompositeOperation = "source-over"; }
+    g.font = `700 ${Math.max(10, sz * .12)}px Space Grotesk, sans-serif`; g.textAlign = "center"; g.fillStyle = i === 4 ? `hsl(${(t * 120) % 360},90%,70%)` : col; g.fillText(name.toUpperCase(), cx, y + sz + Math.max(12, sz * .14));
+  });
+});
+
+D("feed", "Reward Feed", "HUD", "Toasts slide in, stack, and fade, each tinted by what you got.",
+function (g, W, H, t, dt, S, P) {
+  const pool = [["+250 Coins", "#ffd34d"], ["Rare Snowflake!", "#3f9bff"], ["+1 Gem", "#4fd17a"], ["Epic Mitten!", "#b25cff"], ["+12% Luck", "#ff8f3a"], ["LEGENDARY Sled!", "#ffb02e"], ["+5,000 XP", "#7fe6ff"]];
+  S.list ??= []; S.next ??= 0;
+  if (t > S.next || P.tap) { S.list.unshift({ it: pool[(Math.random() * pool.length) | 0], t0: t }); S.next = t + .7 + Math.random() * .6; if (S.list.length > 6) S.list.pop(); }
+  g.fillStyle = "#11141c"; g.fillRect(0, 0, W, H);
+  g.strokeStyle = "#1a1f2b"; for (let x = 0; x < W; x += 30) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+  const bw = Math.min(W * .78, 300), bh = Math.min(42, H * .13), gap = 8, x1 = W - 14;
+  S.list = S.list.filter(e => t - e.t0 < 4.2);
+  S.list.forEach((e, i) => {
+    const age = t - e.t0, inK = Math.min(1, age / .35), ease = 1 - Math.pow(1 - inK, 3), out = age > 3.7 ? (age - 3.7) / .5 : 0;
+    e.y = e.y === undefined ? H - 14 - bh : e.y + ((H - 14 - bh - i * (bh + gap)) - e.y) * Math.min(1, dt * 12);
+    const x = x1 - bw + (1 - ease) * (bw + 30) + out * 40;
+    g.globalAlpha = Math.max(0, 1 - out);
+    g.fillStyle = "rgba(20,18,30,.92)"; g.beginPath(); g.roundRect(x, e.y, bw, bh, 8); g.fill();
+    g.fillStyle = e.it[1]; g.fillRect(x, e.y + 6, 3, bh - 12);
+    if (age < .5) { g.fillStyle = e.it[1] + "40"; g.beginPath(); g.roundRect(x, e.y, bw, bh, 8); g.fill(); }
+    g.beginPath(); g.arc(x + bh * .6, e.y + bh / 2, bh * .26, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.font = `700 ${bh * .36}px Inter, sans-serif`; g.textBaseline = "middle"; g.textAlign = "left"; g.fillText(e.it[0], x + bh * 1.05, e.y + bh / 2);
+    g.globalAlpha = 1;
+  });
+});
+
+D("luck", "Luck Gauge", "HUD", "A segmented boost gauge with a spring needle that ignites when you max it.",
+function (g, W, H, t, dt, S, P) {
+  const target = 1 + 9 * Math.pow(.5 + .5 * Math.sin(t * .55), 1.6) + (P.active ? 3 : 0);
+  S.v ??= 1; S.vv ??= 0; S.vv += (Math.min(10, target) - S.v) * 40 * dt; S.vv *= Math.pow(.02, dt); S.v += S.vv * dt;
+  const v = Math.max(1, Math.min(10.3, S.v)), cx = W / 2, cy = H * .62, R = Math.min(W * .4, H * .5), a0 = Math.PI * .8, a1 = Math.PI * 2.2, maxed = v > 9;
+  g.fillStyle = "#0d0b13"; g.fillRect(0, 0, W, H);
+  if (maxed) { const gl = g.createRadialGradient(cx, cy, 0, cx, cy, R * 1.3); gl.addColorStop(0, "rgba(255,90,170,.35)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, W, H); }
+  const N = 24;
+  for (let i = 0; i < N; i++) {
+    const k = i / N, a = a0 + (a1 - a0) * k, a2 = a + (a1 - a0) / N * .8, on = 1 + k * 9 < v;
+    g.strokeStyle = on ? `hsl(${130 - k * 160},90%,${55 + (maxed ? 10 * Math.sin(t * 12 + i) : 0)}%)` : "#25212f"; g.lineWidth = R * .14;
+    g.beginPath(); g.arc(cx, cy, R, a, a2); g.stroke();
+  }
+  const na = a0 + (a1 - a0) * (v - 1) / 9;
+  g.strokeStyle = "#fff"; g.lineWidth = 3; g.lineCap = "round"; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(na) * R * .82, cy + Math.sin(na) * R * .82); g.stroke();
+  g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, cy, 6, 0, 7); g.fill();
+  g.textAlign = "center"; g.textBaseline = "middle"; g.font = `800 ${R * .34}px JetBrains Mono, monospace`;
+  g.fillStyle = maxed ? `hsl(${(t * 200) % 360},95%,70%)` : "#fff"; g.fillText("x" + v.toFixed(1), cx, cy + R * .38);
+  g.font = `700 ${R * .11}px Space Grotesk, sans-serif`; g.fillStyle = "#9d95b3"; g.fillText(maxed ? "MAX LUCK" : "LUCK BOOST", cx, cy + R * .62);
+  if (maxed) { g.globalCompositeOperation = "lighter"; for (let i = 0; i < 18; i++) { const a = i * 2.3 + t * 2, r = R * (1.05 + ((t + i * .13) % 1) * .3); g.fillStyle = "rgba(255,200,240,.8)"; g.fillRect(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 2.5, 2.5); } g.globalCompositeOperation = "source-over"; }
+});
+
+/* ========================= RUNNER ========================= */
+
+const GL = (() => {
+  const c = document.createElement("canvas"); let gl = null;
+  try { gl = c.getContext("webgl", { preserveDrawingBuffer: true, antialias: false }); } catch (e) {}
+  if (!gl) return null;
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const progs = new Map(), vs = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+  const prog = fs => {
+    if (progs.has(fs)) return progs.get(fs);
+    const mk = (type, src) => { const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)); return sh; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    const o = { p, R: gl.getUniformLocation(p, "R"), T: gl.getUniformLocation(p, "T"), M: gl.getUniformLocation(p, "M"), a: gl.getAttribLocation(p, "p") };
+    progs.set(fs, o); return o;
+  };
+  return {
+    draw(g, W, H, t, P, fs) {
+      const sc = QUALITY.scale(), pw = Math.max(1, Math.round(W * sc)), ph = Math.max(1, Math.round(H * sc));
+      if (c.width < pw) c.width = pw; if (c.height < ph) c.height = ph;
+      const o = prog(fs);
+      gl.viewport(0, 0, pw, ph); gl.useProgram(o.p); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.enableVertexAttribArray(o.a); gl.vertexAttribPointer(o.a, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform2f(o.R, pw, ph); gl.uniform1f(o.T, t); gl.uniform3f(o.M, P.x * sc, (H - P.y) * sc, P.active ? 1 : 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      g.drawImage(c, 0, c.height - ph, pw, ph, 0, 0, W, H);
+    }
+  };
+})();
+
+
+/* ---- SDF raymarch tile (tier 6): smooth-union blobs, soft shadows, AO ---- */
+SH("sdf", "SDF Raymarch", "Smooth-union blobs on a rounded slab with soft shadows and ambient occlusion. Drag to orbit.", `precision highp float;
+uniform vec2 R; uniform float T; uniform vec3 M;
+float sdSphere(vec3 p, float r){ return length(p) - r; }
+float sdRoundBox(vec3 p, vec3 b, float r){ vec3 q = abs(p) - b + r; return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.) - r; }
+float smin(float a, float b, float k){ float h = clamp(.5 + .5 * (b - a) / k, 0., 1.); return mix(b, a, h) - k * h * (1. - h); }
+float map(vec3 p){ float ground = p.y + 1.;
+  float a = sdSphere(p - vec3(sin(T) * .9, 0., 0.), .55), b = sdSphere(p - vec3(-sin(T * .8) * .9, .2 * sin(T * 1.3), 0.), .45);
+  float c = sdRoundBox(p - vec3(0., -.3, .2), vec3(.5, .18, .5), .08); return min(ground, smin(smin(a, b, .45), c, .3)); }
+vec3 nrm(vec3 p){ vec2 e = vec2(.001, 0.); return normalize(vec3(map(p + e.xyy) - map(p - e.xyy), map(p + e.yxy) - map(p - e.yxy), map(p + e.yyx) - map(p - e.yyx))); }
+float shadow(vec3 ro, vec3 rd){ float res = 1., t = .02; for (int i = 0; i < 48; i++) { float h = map(ro + rd * t); res = min(res, 10. * h / t); t += clamp(h, .02, .2); if (res < .001 || t > 6.) break; } return clamp(res, 0., 1.); }
+float ao(vec3 p, vec3 n){ float o = 0., s = 1.; for (int i = 1; i <= 5; i++) { float h = .03 * float(i); o += (h - map(p + n * h)) * s; s *= .7; } return clamp(1. - 3. * o, 0., 1.); }
+void main(){ vec2 uv = (gl_FragCoord.xy - .5 * R) / R.y; float yaw = M.z > .5 ? (M.x / R.x - .5) * 4. : T * .2;
+  vec3 ro = vec3(3. * sin(yaw), .9, 3. * cos(yaw)), ta = vec3(0., -.2, 0.), f = normalize(ta - ro), r = normalize(cross(vec3(0., 1., 0.), f)), u = cross(f, r);
+  vec3 rd = normalize(uv.x * r + uv.y * u + 1.6 * f); float t = 0.; bool hit = false;
+  for (int i = 0; i < 128; i++) { float d = map(ro + rd * t); if (d < .0005) { hit = true; break; } t += d; if (t > 12.) break; }
+  vec3 col = mix(vec3(.05, .04, .09), vec3(.12, .1, .2), uv.y + .5);
+  if (hit) { vec3 p = ro + rd * t, n = nrm(p), L = normalize(vec3(.6, .8, .4)); float dif = max(dot(n, L), 0.) * shadow(p + n * .002, L);
+    float rim = pow(1. - max(dot(n, -rd), 0.), 3.), spec = pow(max(dot(reflect(-L, n), -rd), 0.), 48.);
+    vec3 alb = p.y < -.99 ? vec3(.18, .16, .24) : vec3(1., .71, .28);
+    col = alb * (.15 + .85 * dif) * ao(p, n) + rim * vec3(.43, .84, 1.) * .6 + spec * dif;
+    col = mix(col, vec3(.05, .04, .09), 1. - exp(-.02 * t * t)); }
+  gl_FragColor = vec4(pow(col, vec3(.4545)), 1.); }`);
+
+/* ---- the hierarchy ---- */
+const TIERS = [
+  { n: 1, name: "Moments & Rewards", loud: 5, c: "--t1", owner: "ceremony (7)", rungs: "ceremony (3), boss (4), finale (5)",
+    budget: "Owns the screen for a beat. One at a time, skippable, world dims to the lowest band.",
+    ids: ["gacha", "portal", "roulette", "chest", "cardflip", "countup", "rebirth", "xpbar", "textmorph", "blackhole"] },
+  { n: 2, name: "Combat & Impact", loud: 4, c: "--t2", owner: "hero (5) / threat (4)", rungs: "all; impact frames from surge (2)",
+    budget: "Reads instantly, gets out of the way: brightest on the onset frame, baseline within 12 frames, ≤ 6 decorations at once.",
+    ids: ["lightning", "shockwave", "whip", "shatter", "dissolve", "vortex", "plasma", "aura", "freeze", "glyphrain"] },
+  { n: 3, name: "HUD & Interface", loud: 3, c: "--t3", owner: "UI (6)", rungs: "all; ornament waits at surge, boss, finale",
+    budget: "Always on screen, so still until a number changes. One loud element per panel. Gold = currency, blue = XP, red = danger.",
+    ids: ["odometer", "frames", "dmgnums", "combo", "cooldown", "feed", "luck", "lowhp"] },
+  { n: 4, name: "World & Atmosphere", loud: 2, c: "--t4", owner: "ambient (1) / world (2)", rungs: "calm (0), build (1), ceremony (3); off in surge, boss, finale",
+    budget: "Slow, soft, never brighter than the HUD. Steps back first when the screen gets busy.",
+    ids: ["aurora", "godrays", "fireflies", "snow", "cloth", "ink"] },
+  { n: 5, name: "Materials", loud: 2, c: "--t5", owner: "inherits the surface it's on", rungs: "all; motion only from Rare up",
+    budget: "One material per rarity, used consistently: flat → satin → brushed → glass/gem → chrome/molten → holo → void.",
+    ids: ["holo", "crystal", "chrome", "gem", "glass", "soap", "molten", "brushed"] },
+  { n: 6, name: "Generative Engines", loud: 1, c: "--t6", owner: "background (0) until it feeds a louder tier", rungs: "all; slows or freezes at calm",
+    budget: "Systems that make content: patterns, growth, crowds and text rendering. They never compete for attention themselves.",
+    ids: ["sdf", "reaction", "voronoi", "flow", "boids", "tree", "ascii"] }
+];
+const USE = {
+  roulette: "Crate / egg opening", gacha: "Summon, hatch, pull", portal: "Mythic reveal backdrop", countup: "Rarity roll, sell value", cardflip: "Card or pet reveal", chest: "Chest open", rebirth: "Rebirth / prestige", xpbar: "Level-up", textmorph: "Banners, announcements", blackhole: "Boss intro, void zone",
+  lightning: "Chain lightning", whip: "Melee swing trail", shockwave: "Nuke / screen clear", shatter: "Break, shield pop", dissolve: "Death, despawn", vortex: "Magnet, collect", plasma: "Charge-up, energy item", aura: "Passive aura", freeze: "Time stop", glyphrain: "Digital zone",
+  frames: "Inventory slots", odometer: "Coins, big numbers", combo: "Hit streaks", feed: "Loot log", luck: "Luck / boost meter", dmgnums: "Damage numbers", lowhp: "Danger state", cooldown: "Ability bar",
+  aurora: "Night sky, winter map", godrays: "Forest, temple", snow: "Winter maps", cloth: "Flags, banners, capes", fireflies: "Night ambience", ink: "Loading screen",
+  crystal: "Gem items", chrome: "Premium items", soap: "Bubble pets, shields", holo: "Foil cards, shiny variants", gem: "Currency icon", glass: "Potion, lens UI", molten: "Lava zone, forge", brushed: "Metal UI panels",
+  sdf: "Soft shapes, panels, blobs", reaction: "Coral, corruption spread", tree: "Growth upgrades", voronoi: "Stained glass, cracks", ascii: "Retro mode, crowd LOD", boids: "Fish, bird swarms", flow: "Backgrounds"
+};
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ALL = new URLSearchParams(location.search).has("all"); // test mode: run every tile, visible or not
+const host = document.getElementById("tiers"), ladder = document.getElementById("ladder");
+const tiles = [];
+function pointer(cv) {
+  const P = { x: 0, y: 0, active: false, tap: false };
+  const at = e => { const r = cv.getBoundingClientRect(); P.x = e.clientX - r.left; P.y = e.clientY - r.top; };
+  cv.addEventListener("pointerdown", e => { at(e); P.active = true; P.tap = true; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", at);
+  cv.addEventListener("pointerup", () => { P.active = false; });
+  cv.addEventListener("pointercancel", () => { P.active = false; });
+  return P;
+}
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+for (const T of TIERS) {
+  const a = el("a"); a.href = "#tier-" + T.n; a.style.setProperty("--c", `var(${T.c})`); a.style.setProperty("--w", (T.loud * 20) + "%");
+  a.append(el("b", null, String(T.n)), el("span", null, T.name), el("div", "meter")); ladder.append(a);
+  const sec = el("section", "tier"); sec.id = "tier-" + T.n; sec.style.setProperty("--c", `var(${T.c})`);
+  const head = el("div", "thead"); head.append(el("div", "tnum", String(T.n)));
+  const info = el("div"); info.append(el("h2", null, T.name));
+  const rules = el("div", "rules");
+  for (const [k, v] of [["Loudness", "■".repeat(T.loud) + "□".repeat(5 - T.loud)], ["Budget", T.budget], ["Pixel owner", T.owner], ["Intensity rungs", T.rungs]]) {
+    const d = el("div"); d.append(el("b", null, k), document.createTextNode(v)); rules.append(d);
+  }
+  info.append(rules); head.append(info); sec.append(head);
+  const grid = el("div", "grid"); sec.append(grid); host.append(sec);
+  T.ids.forEach((id, i) => {
+    const d = DEMOS.find(x => x.id === id); if (!d) { console.warn("missing demo", id); return; }
+    const card = el("article", "card" + (i === 0 ? " lead" : ""));
+    const stage = el("div", "stage"), cv = el("canvas"); cv.setAttribute("role", "img"); cv.setAttribute("aria-label", d.name);
+    stage.append(cv);
+    const meta = el("div", "meta"), row = el("div", "mrow");
+    row.append(el("span", "tag", d.frag ? "GPU shader" : "Canvas 2D"), el("span", "use", USE[id] || ""));
+    meta.append(row, el("h3", null, d.name), el("p", null, d.note));
+    card.append(stage, meta); grid.append(card);
+    tiles.push({ d, cv, g: cv.getContext("2d"), S: {}, P: pointer(cv), visible: ALL });
+  });
+}
+const io = new IntersectionObserver(es => { for (const e of es) { const tl = tiles.find(x => x.cv === e.target); if (tl && !ALL) tl.visible = e.isIntersecting; } }, { rootMargin: "120px" });
+tiles.forEach(tl => io.observe(tl.cv));
+document.querySelectorAll(".bar button").forEach(b => b.addEventListener("click", () => {
+  QUALITY.mode = b.dataset.q; document.querySelectorAll(".bar button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+}));
+
+const stat = document.getElementById("stat");
+let last = performance.now(), acc = 0, frames = 0;
+function fit(tl) {
+  const sc = QUALITY.scale(), r = tl.cv.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width * sc)), h = Math.max(1, Math.round(r.height * sc));
+  if (tl.cv.width !== w || tl.cv.height !== h) { tl.cv.width = w; tl.cv.height = h; }
+  tl.g.setTransform(sc, 0, 0, sc, 0, 0); tl.g.imageSmoothingQuality = "high";
+  return [r.width, r.height];
+}
+function frame(now) {
+  const raw = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
+  const dt = raw * (reduce ? 0.35 : 1), t = now / 1000 * (reduce ? 0.35 : 1);
+  let live = 0;
+  for (const tl of tiles) {
+    if (!tl.visible) continue; live++;
+    const [W, H] = fit(tl);
+    try { tl.d.run(tl.g, W, H, t, dt, tl.S, tl.P); } catch (e) { console.error(tl.d.id, e); tl.visible = false; }
+    tl.P.tap = false;
+  }
+  acc += raw; frames++;
+  if (acc > 0.5) { stat.textContent = `${Math.round(frames / acc)} fps · ${live} live · ${QUALITY.scale().toFixed(2)}× render scale`; acc = 0; frames = 0; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

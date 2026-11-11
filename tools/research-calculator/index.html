@@ -72,6 +72,8 @@
   .src .nm{flex:1;font-size:12.5px}
   .src .vl{font-family:var(--display);font-size:15px;color:var(--moss)}
   .src.off .nm,.src.off .vl{opacity:.3}
+  /* phones: wide tables scroll inside themselves instead of pushing the page sideways */
+  @media (max-width:480px){table{display:block;overflow-x:auto;max-width:100%}}
 </style>
 </head>
 <body>
