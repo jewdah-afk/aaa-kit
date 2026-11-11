@@ -1,0 +1,4 @@
+{
+ "12:345": { "mod": "Shop", "kind": "window" },
+ "12:678": { "mod": "Hud_Wallet", "kind": "hud" }
+}
