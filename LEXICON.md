@@ -1,6 +1,6 @@
 # Lexicon
 
-442 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
+444 design terms from my repos and standard practice. Each has a ready-to-paste prompt phrase. The machine-readable version is [lexicon.json](lexicon.json) (schema: [lexicon.schema.json](lexicon.schema.json)); this page is generated from it by `python3 tools/lexicon/build.py`, so edit `tools/lexicon/src/*.txt`, not this file.
 
 ## Starter pack (40 terms)
 
@@ -51,7 +51,7 @@ The highest-leverage terms. Know these and most briefs write themselves.
 
 ## Domains
 
-[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (39) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
+[Hierarchy](#hierarchy) (61) · [UI & HUD](#ui---hud) (56) · [Rewards & Moments](#rewards---moments) (22) · [VFX](#vfx) (42) · [Materials](#materials) (41) · [Shaders & SDF](#shaders---sdf) (28) · [Algorithms](#algorithms) (38) · [World](#world) (29) · [Economy](#economy) (26) · [Code & Framework](#code---framework) (34) · [Performance](#performance) (17) · [Art Direction](#art-direction) (17) · [Audio & Feel](#audio---feel) (8) · [Game Feel](#game-feel) (12) · [Process](#process) (13)
 
 ## Hierarchy
 
@@ -1826,6 +1826,22 @@ A noise-threshold dissolve with a hot rim where the threshold crosses the surfac
 > dissolve the enemy over 0.8 s with an orange 0.08-wide burning rim
 
 Tier: T2 combat · Pairs with: [baked-field animation](#baked-field-animation) · Source: aaa-kit/lib/surfacebake/Animate.luau
+
+### reactive surface
+
+A texture with per-texel state (heat, frost) that hits, other effects and the object's motion change over time. **Use when:** Impacts that leave marks, elemental fights on a surface, shields that respond.
+
+> make the boss armour a reactive surface: hits heat it, ice spells freeze it, heat melts the ice
+
+Tier: T2 combat · Pairs with: [baked-field animation](#baked-field-animation), [effect coupling](#effect-coupling) · Source: aaa-kit/lib/surfacebake/React.luau
+
+### effect coupling
+
+One effect's state feeding another's (frost suppresses lava flow, flow heat melts frost) so effects interact instead of stacking. **Use when:** Making elemental systems feel physical.
+
+> couple the lava flow to the frost field so ice visibly stops the flow
+
+Tier: all · Pairs with: [reactive surface](#reactive-surface) · Source: aaa-kit/lib/surfacebake/React.luau
 
 
 ## Shaders & SDF

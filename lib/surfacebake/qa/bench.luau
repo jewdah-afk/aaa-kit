@@ -7,6 +7,7 @@ local Bake = require("../Bake")
 local Presets = require("../Presets")
 local Animate = require("../Animate")
 local Parallax = require("../Parallax")
+local React = require("../React")
 
 local quick = table.find(process.args, "--quick") ~= nil
 
@@ -78,6 +79,28 @@ local budgetMs = median(function()
 	Animate.step(st, 0.5, 256 * 32)
 end, runs)
 print(string.format("\nBudgeted update, 256² at 32 rows/frame (8,192 texels): **%.2f ms** per frame; the whole image refreshes every 8 frames.", budgetMs))
+
+print("\n### React: one frame, all texels\n")
+print("| Profile | 128² | 256² |")
+print("|---|---:|---:|")
+local profiles = {
+	{ "molten hits (heat + ripple, 4 live hits)", { heat = { gain = 1, radius = 0.28, decay = 0.55 }, ripple = { speed = 2.2, width = 0.07, life = 1.1 } }, false },
+	{ "ice vs lava (flow + frost, 3 seeds)", { flow = { mask = { { "voronoi", scale = 4, lo = 0.12, hi = 0 } }, phase = { "y", scale = 1 }, heat = 0.35 }, frost = { speed = 0.55, max = 0.75, width = 0.07, melt = 0.5 } }, true },
+	{ "force field (shimmer + ripple)", { shimmer = { mask = { { "voronoi", scale = 3, lo = 0.16, hi = 0.02 } }, phase = { "voronoi", scale = 3, field = "f1" }, gain = 1.4 }, ripple = { speed = 2.8, width = 0.06, life = 0.9 } }, false },
+}
+for _, pr in profiles do
+	local row = { pr[1] }
+	for _, S in { 128, 256 } do
+		local rst = React.prepare(bakes[S], pr[2])
+		for k = 1, (if pr[3] then 3 else 4) do
+			React.hit(rst, 0.9 - k * 0.3, 0.75, 0.2 * k, 1, pr[3])
+		end
+		row[#row + 1] = string.format("%.2f", median(function()
+			React.step(rst, 1 / 60, 1.5)
+		end, runs))
+	end
+	print("| " .. table.concat(row, " | ") .. " |")
+end
 
 print("\n### Depth effects, one frame\n")
 print("| Effect | Size | ms |")

@@ -35,6 +35,7 @@ export type State = {
 	mask: buffer, -- f32 0..1
 	phase: buffer, -- f32
 	noise: buffer, -- f32 0..1 (dissolve)
+	crystal: buffer, -- f32 ~0.75..1.25 frost facet brightness (spread)
 	lut: { number }, -- 256-entry 0..1 noise table (flow)
 	spec: any,
 	cursor: number, -- next row for budgeted updates
@@ -84,6 +85,7 @@ function Animate.prepare(maps: Bake.Maps, spec: any): State
 			buffer.writef32(nz, i * 4, math.clamp(v * 0.5 + 0.5, 0, 1))
 		end
 	end
+	local crystal = Animate.crystalField(maps)
 	local lut = table.create(256, 0)
 	for k = 0, 255 do
 		local a = k / 256 * 2 * math.pi
@@ -99,10 +101,26 @@ function Animate.prepare(maps: Bake.Maps, spec: any): State
 		mask = mask,
 		phase = phase,
 		noise = nz,
+		crystal = crystal,
 		lut = lut,
 		spec = spec,
 		cursor = 0,
 	}
+end
+
+--- Frost crystals: bright facet edges from a fine 3D Voronoi plus a little noise (~0.75..1.25).
+function Animate.crystalField(maps: Bake.Maps): buffer
+	local W, H, G = maps.W, maps.H, maps.G
+	local out = buffer.create(W * H * 4)
+	for i = 0, W * H - 1 do
+		if buffer.readu8(G.cover, i) ~= 0 then
+			local px, py, pz = Raster.readVec(G.pos, i)
+			local f1, f2 = Noise.voronoi(px * 9, py * 9, pz * 9)
+			local e = math.min(1, (f2 - f1) / 0.12)
+			buffer.writef32(out, i * 4, 0.78 + 0.4 * (1 - e) + 0.08 * math.noise(px * 6.3, py * 6.3, pz * 6.3))
+		end
+	end
+	return out
 end
 
 --- Updates rows [y0, y0 + rows) of state.out for time t (seconds).
@@ -156,8 +174,10 @@ function Animate.shadeRows(st: State, t: number, y0: number, rows: number)
 					local d = front - p
 					if d > 0 then
 						-- behind the front: the new material
-						local mm = math.min(1, d / (width * 4)) * (if m > 0 then m else 1)
-						r, g, b = r + (ar - r) * mm, g + (ag - g) * mm, b + (ab - b) * mm
+						-- 85% cover so the material still reads through; crystals modulate the frost
+						local mm = math.min(1, d / (width * 4)) * (if m > 0 then m else 1) * 0.85
+						local cry = buffer.readf32(st.crystal, q)
+						r, g, b = r + (ar * cry - r) * mm, g + (ag * cry - g) * mm, b + (ab * cry - b) * mm
 					end
 					local e = d / width
 					k = math.exp(-e * e)

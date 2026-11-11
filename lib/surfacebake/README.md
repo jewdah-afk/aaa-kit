@@ -14,6 +14,7 @@ Pure Luau except `Apply.luau`. Tested headless in lune. The process is in the [p
 | `Bake` | Mesh + recipe → `albedo`, `normal`, `roughness`, `metalness`, plus `edge` and `ao` maps; normals from 3D height differences (seamless) |
 | `Presets` | 15 recipes: `paintedMetal`, `rustedIron`, `mossyStone`, `lavaRock`, `ice`, `wood`, `gold`, `marble`, `sciFiPanel`, `camo`, `snowRock`, `slime`, `runeStone`, `carbonFiber`, `copperPatina` |
 | `Animate` | Realtime moving surfaces from pre-baked per-texel fields: `pulse`, `flow`, `dissolve`, `scan`, `spread`. A texel budget per frame with round-robin rows, and a reused upload slice (no per-frame allocation) |
+| `React` | Reactive surfaces: `hit()` adds heat (glows red → white, cools) and ripples that travel in 3D; frost grows from seeds and melts under heat; a lava flow freezes under frost; a shield shimmers with spin speed; `spring()` makes fur, cloth and jelly lag behind the body's motion |
 | `Parallax` | Depth without shaders: parallax occlusion mapping, interior mapping (rooms behind windows), layered 2D parallax, infinite zoom (octave blend, optional spiral) and shell texturing (fur/grass meshes and masks) |
 | `Apply` | Roblox only: read a `MeshPart` through `EditableMesh`, bake over several frames, and apply as `TextureContent` or a `SurfaceAppearance` |
 
@@ -47,6 +48,10 @@ RunService.RenderStepped:Connect(function()
 end)
 ```
 
+Reactive: `local st = React.prepare(maps, profile)`; on a raycast hit call `React.hit(st, p.X, p.Y, p.Z, 1)` with the hit in mesh space; each frame `React.step(st, dt, angularSpeed)` and upload `st.out`.
+
+GIFs of all of it, on different surfaces: [media/gifs/surfaces](../../media/gifs/surfaces/index.html) (record with `node tools/capture_surface_gifs.mjs`).
+
 `Parallax.pom`, `Parallax.interior` and `Parallax.zoom` write into an RGBA8 buffer you upload the same way: a portal, a facade or a screen on a `SurfaceGui`. `Parallax.shells` returns offset meshes and alpha masks for fur and grass. The [depth lab](../../examples/web/depth-lab.html) runs all of them live.
 
 ## Tests and timings
@@ -54,6 +59,7 @@ end)
 ```sh
 cd lib/surfacebake/qa && lune run test_surfacebake.luau | grep -a '^@@'   # 28 checks: bake
 cd lib/surfacebake/qa && lune run test_motion.luau | grep -a '^@@'        # 26 checks: Animate + Parallax
+cd lib/surfacebake/qa && lune run test_react.luau | grep -a '^@@'         # 11 checks: React
 cd lib/surfacebake/qa && lune run bench.luau                              # latency tables (BENCH.md)
 python3 lib/surfacebake/qa/sheet.py                                       # qa/out/sheet.png of every map
 ```
@@ -68,6 +74,8 @@ Full numbers are in [BENCH.md](BENCH.md). Headless lune, one thread:
 | Animate, full 128² frame | 1.0–1.6 ms |
 | Animate, full 256² frame | 3.6–6.5 ms |
 | Animate, 256² budgeted to 32 rows/frame | 0.7 ms |
+| React, 128² (heat + ripple / flow + frost / shield) | 2.5–3.4 ms |
+| React, 256² | 10–23 ms (too much per frame: use 128² for reactive surfaces) |
 | POM 128², 16 steps | 4.5 ms |
 | Interior mapping 128² | 2.4 ms |
 | Infinite zoom 128², 5 octaves | 1.6 ms |

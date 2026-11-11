@@ -74,11 +74,22 @@ function Parallax.pom(height: buffer, colour: buffer, hw: number, hh: number, ou
 			local fu = u - dU * stepD * (1 - f)
 			local fv = v - dV * stepD * (1 - f)
 			local hitD = prevD + (d - prevD) * f
-			local x = math.floor(fu * hw) % hw
-			local y = math.floor(fv * hh) % hh
-			local c = buffer.readu32(colour, (y * hw + x) * 4)
+			-- bilinear colour fetch: nearest-texel fetch makes thin bright features (cracks, runes)
+			-- crawl from frame to frame as the view moves, which can fail the WCAG flash check
+			local gx, gy = fu * hw - 0.5, fv * hh - 0.5
+			local x0, y0 = math.floor(gx), math.floor(gy)
+			local ax, ay = gx - x0, gy - y0
+			local r, g, bb = 0, 0, 0
+			for k2 = 0, 3 do
+				local dx, dy = k2 % 2, k2 // 2
+				local w = (if dx == 1 then ax else 1 - ax) * (if dy == 1 then ay else 1 - ay)
+				local c = buffer.readu32(colour, (((y0 + dy) % hh) * hw + ((x0 + dx) % hw)) * 4)
+				r += (c % 256) * w
+				g += ((c // 256) % 256) * w
+				bb += ((c // 65536) % 256) * w
+			end
 			local k = 1 - sh * hitD
-			local r, g, bb = (c % 256) * k, ((c // 256) % 256) * k, ((c // 65536) % 256) * k
+			r, g, bb = r * k, g * k, bb * k
 			buffer.writeu32(out, (oy * ow + ox) * 4, math.floor(r) + math.floor(g) * 256 + math.floor(bb) * 65536 + 255 * 16777216)
 		end
 	end

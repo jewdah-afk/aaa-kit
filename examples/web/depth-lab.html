@@ -74,9 +74,9 @@ code { font-family: var(--mono); font-size: 0.88em; color: var(--ink); }
     <div class="plate">
       <h2>Shell fur</h2>
       <canvas id="shells" width="280" height="280" aria-label="A furry sphere built from stacked transparent shells"></canvas>
-      <div class="meta"><span><span id="shellN">16</span> shells · alpha-tested</span><span><b id="shellMs">–</b> ms JS (software render)</span></div>
+      <div class="meta"><span><span id="shellN">16</span> shells · fur lags on a spring</span><span><b id="shellMs">–</b> ms JS (software render)</span></div>
       <div class="chips" id="shellChips"></div>
-      <p>Copies of the mesh pushed out along the normals, each with a sparser mask of strand dots that taper to a point. Strands get a real silhouette and real depth from the engine. In Roblox it's one MeshPart per shell, so the cost is draw calls, not Luau.</p>
+      <p>Copies of the mesh pushed out along the normals, each with a sparser mask of strand dots that taper to a point. Strands get a real silhouette and real depth from the engine. The fur reacts to motion: a spring driven by the spin's acceleration makes the tips lag, then settle (<code>React.spring</code>). In Roblox it's one MeshPart per shell, offset by its CFrame, so the cost is draw calls, not Luau.</p>
     </div>
     <div class="plate wide">
       <h2>Layered 2D parallax</h2>
@@ -119,16 +119,19 @@ function pointer(canvas) { const p = { x: 0, y: 0, active: false }; canvas.addEv
 const ema = (o, v) => o === null ? v : o * 0.9 + v * 0.1;
 
 // ---------------------------------------------------------------- 1. parallax occlusion mapping (port of Parallax.pom)
-const HW = 256, H = new Float32Array(HW * HW), COL = new Uint8ClampedArray(HW * HW * 4);
+const HW = 256, H = new Float32Array(HW * HW), COL = new Uint8ClampedArray(HW * HW * 4), GLOW = new Float32Array(HW * HW);
 (function () {
   for (let y = 0; y < HW; y++) for (let x = 0; x < HW; x++) {
     const u = x / HW * 6, v = y / HW * 6, [f1, f2, id] = vor2(u, v, 6), edge = f2 - f1;
     const dome = Math.min(1, edge / 0.35), n = fbm(x / 22, y / 22, 0.3, 4);
-    const h = edge < 0.1 ? 0.0 : 0.45 + 0.5 * Math.sqrt(dome) + 0.05 * n;
+    // soft crack edges (smoothstep, not a hard threshold): thin hard-edged bright lines alias
+    // into frame-to-frame flicker under parallax, which fails the WCAG flash check
+    const lava = 1 - Math.min(1, Math.max(0, (edge - 0.04) / 0.1)), lv = lava * lava * (3 - 2 * lava);
+    const h = (0.45 + 0.5 * Math.sqrt(dome) + 0.05 * n) * (1 - lv);
     const i = y * HW + x; H[i] = Math.max(0, Math.min(1, h));
-    const lava = edge < 0.1;
-    const tint = 0.75 + 0.25 * id + 0.1 * n;
-    COL.set(lava ? [255, 120 + 80 * (0.5 + 0.5 * n), 30, 255] : [110 * tint, 104 * tint, 98 * tint, 255], i * 4);
+    const tint = 0.75 + 0.25 * id + 0.1 * n, rock = [110 * tint, 104 * tint, 98 * tint], hot = [255, 120 + 80 * (0.5 + 0.5 * n), 30];
+    COL.set([rock[0] + (hot[0] - rock[0]) * lv, rock[1] + (hot[1] - rock[1]) * lv, rock[2] + (hot[2] - rock[2]) * lv, 255], i * 4);
+    GLOW[i] = lv;
   }
 })();
 const pomC = document.getElementById("pom"), pomX = pomC.getContext("2d"), pomImg = pomX.createImageData(256, 256), pomP = pointer(pomC);
@@ -136,7 +139,7 @@ let pomSteps = 16, pomMs = null;
 chips("pomChips", ["8 steps", "16 steps", "32 steps"], "16 steps", n => { pomSteps = parseInt(n); document.getElementById("pomSteps").textContent = pomSteps; });
 function pom(t) {
   const t0 = performance.now();
-  let vx = pomP.active ? pomP.x * 0.8 : Math.cos(t * 0.6) * 0.55, vy = pomP.active ? -pomP.y * 0.8 : Math.sin(t * 0.6) * 0.45;
+  let vx = pomP.active ? pomP.x * 0.8 : Math.cos(t * 0.35) * 0.5, vy = pomP.active ? -pomP.y * 0.8 : Math.sin(t * 0.35) * 0.4;
   const vz = Math.sqrt(Math.max(0.05, 1 - vx * vx - vy * vy)), depth = 0.18, dU = -vx / vz * depth, dV = vy / vz * depth;
   const n = Math.floor(pomSteps * (1 + (1 - vz) * 1.5)), step = 1 / n, d = pomImg.data, O = 256;
   for (let oy = 0; oy < O; oy++) for (let ox = 0; ox < O; ox++) {
@@ -145,8 +148,14 @@ function pom(t) {
     let surf = 1 - hAt(u, v), pd = 0, ps = surf;
     while (dd < surf && dd < 1) { pd = dd; ps = surf; dd += step; u += dU * step; v += dV * step; surf = 1 - hAt(u, v); }
     const a = ps - pd, b = dd - surf, f = a + b > 1e-6 ? a / (a + b) : 0, fu = u - dU * step * (1 - f), fv = v - dV * step * (1 - f), hit = pd + (dd - pd) * f;
-    const si = (((Math.floor(fv * HW) % HW + HW) % HW) * HW + ((Math.floor(fu * HW) % HW + HW) % HW)) * 4, k = 1 - 0.55 * hit, glow = COL[si] > 200 && COL[si + 2] < 60;
-    const q = (oy * O + ox) * 4; d[q] = COL[si] * (glow ? 1 : k); d[q + 1] = COL[si + 1] * (glow ? 1 : k); d[q + 2] = COL[si + 2] * (glow ? 1 : k); d[q + 3] = 255;
+    // bilinear colour fetch at the hit (nearest-texel fetch makes thin features crawl)
+    const gx = fu * HW - 0.5, gy = fv * HW - 0.5, x0 = Math.floor(gx), y0 = Math.floor(gy), ax = gx - x0, ay = gy - y0, q = (oy * O + ox) * 4;
+    let cr = 0, cg = 0, cb = 0, gl = 0;
+    for (const [dx, dy, w] of [[0, 0, (1 - ax) * (1 - ay)], [1, 0, ax * (1 - ay)], [0, 1, (1 - ax) * ay], [1, 1, ax * ay]]) {
+      const ti = ((((y0 + dy) % HW) + HW) % HW) * HW + ((((x0 + dx) % HW) + HW) % HW); cr += COL[ti * 4] * w; cg += COL[ti * 4 + 1] * w; cb += COL[ti * 4 + 2] * w; gl += GLOW[ti] * w;
+    }
+    const k = (1 - 0.55 * hit) * (1 - gl) + gl; // lava glows regardless of depth
+    d[q] = cr * k; d[q + 1] = cg * k; d[q + 2] = cb * k; d[q + 3] = 255;
   }
   pomX.putImageData(pomImg, 0, 0);
   pomMs = ema(pomMs, performance.now() - t0); document.getElementById("pomMs").textContent = pomMs.toFixed(1);
@@ -224,16 +233,24 @@ function strand(u, v, h) {
   const jx = 0.5 + (hashU(cx, cy, 3) - 0.5) * 0.4, jy = 0.5 + (hashU(cx, cy, 4) - 0.5) * 0.4;
   return Math.hypot(gx - cx - jx, gy - cy - jy) < 0.48 * (1 - h / hgt);
 }
-function shells(t) {
-  const t0 = performance.now(); shYaw = shP.active ? shP.x * 2.2 : shYaw + 0.01;
+// fur reacts to the body's motion: a spring driven by angular acceleration (port of React.spring)
+const furSpring = { x: 0, v: 0 }; let prevYaw = 0, prevVel = 0;
+function shells(t, dtFixed) {
+  const t0 = performance.now(), dt = dtFixed ?? 1 / 30;
+  // auto: a turntable that lurches every couple of seconds so the fur visibly lags and springs back
+  shYaw = shP.active ? shP.x * 2.2 : t * 0.5 + 0.9 * Math.sin(t * 1.6) ** 3;
+  const vel = (shYaw - prevYaw) / dt, acc = (vel - prevVel) / dt; prevYaw = shYaw; prevVel = vel;
+  furSpring.v += (-acc * 0.02 - 70 * furSpring.x - 6 * furSpring.v) * dt; furSpring.x += furSpring.v * dt;
+  const lag = Math.max(-0.6, Math.min(0.6, furSpring.x));
   const pitch = shP.active ? shP.y * 0.9 : -0.35, cy = Math.cos(shYaw), sy = Math.sin(shYaw), cp = Math.cos(pitch), sp = Math.sin(pitch), d = shImg.data;
   for (let i = 0; i < d.length; i += 4) { d[i] = 10; d[i + 1] = 11; d[i + 2] = 15; d[i + 3] = 255; }
   shZ.fill(Infinity);
-  const L = [-0.5, 0.7, -0.5], camZ = 3.4, f = SR * 0.9, len = 0.22, sway = Math.sin(t * 1.3) * 0.05;
+  const L = [-0.5, 0.7, -0.5], camZ = 3.4, f = SR * 0.9, len = 0.22;
   for (let s = 0; s < NSH; s++) {
     const h = s / (NSH - 1), off = len * h, bend = h * h;
     const V = SPH.P.map(([x, y, z, u, v]) => {
-      let px = x * (1 + off) + sway * bend, py = y * (1 + off) - 0.08 * bend, pz = z * (1 + off);
+      // tangential lag: a point at (x, z) on a body spinning about Y lags along (-z, 0, x)
+      let px = x * (1 + off) - z * lag * bend, py = y * (1 + off) - 0.08 * bend, pz = z * (1 + off) + x * lag * bend;
       const x1 = px * cy - pz * sy, z1 = px * sy + pz * cy, y2 = py * cp - z1 * sp, z2 = py * sp + z1 * cp, Z = camZ + z2;
       return [SR / 2 + x1 * f / Z, SR / 2 - y2 * f / Z, Z, u, v, x1, y2, z2];
     });
@@ -289,9 +306,12 @@ const io = new IntersectionObserver(es => { for (const e of es) e.isIntersecting
 for (const [c] of plates) io.observe(c);
 let lastT = 0;
 function loop(ts) {
+  if (window.__capturing) return;
   if (ts - lastT > 33) { lastT = ts; for (const [c, f] of plates) if (visible.has(c)) f(ts / 1000); }
   requestAnimationFrame(loop);
 }
+// Deterministic capture hook for tools/capture_surface_gifs.mjs
+window.__dl = { render(id, t, dt) { window.__capturing = true; const [c, f] = plates.find(([cv]) => cv.id === id); f(t, dt); return c.toDataURL("image/png"); } };
 for (const [, f] of plates) f(0);
 requestAnimationFrame(loop);
 </script>
