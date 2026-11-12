@@ -1,0 +1,21 @@
+{
+  "_note": "One entry per sound. tier = the HIERARCHY.md loudness tier (sets the OGG loudness). variants > 1 renders seed, seed+1, ... so the game can pick between takes.",
+  "sounds": [
+    { "id": "ui_click", "tier": 3, "duration": 1, "seed": 11, "variants": 3,
+      "prompt": "a short soft plastic UI button click, dry, close, no reverb, no music" },
+    { "id": "coin_pickup", "tier": 3, "duration": 1.5, "seed": 21, "variants": 3,
+      "prompt": "a bright metallic coin pickup chime, one short sparkle, dry, no music" },
+    { "id": "sword_whoosh", "tier": 2, "duration": 1.5, "seed": 31, "variants": 3,
+      "prompt": "a fast sword swing whoosh through the air, close, no impact, no voice" },
+    { "id": "hit_impact", "tier": 2, "duration": 1, "seed": 41, "variants": 3,
+      "prompt": "a punchy cartoon melee hit, low thump with a short crack on top, dry" },
+    { "id": "chest_open", "tier": 1, "duration": 4, "seed": 51,
+      "prompt": "a wooden treasure chest creaking open then a magical shimmering reveal swell, no voice" },
+    { "id": "level_up", "tier": 1, "duration": 3, "seed": 61,
+      "prompt": "a triumphant short fantasy level up fanfare sting with sparkles, no voice" },
+    { "id": "forest_ambience", "tier": 4, "duration": 30, "seed": 71,
+      "prompt": "calm daytime forest ambience, gentle wind in leaves, distant birds, no music, no people" },
+    { "id": "waterfall_loop", "tier": 4, "duration": 20, "seed": 81,
+      "prompt": "a steady medium waterfall splashing into a stone pool, constant, no birds, no music" }
+  ]
+}
