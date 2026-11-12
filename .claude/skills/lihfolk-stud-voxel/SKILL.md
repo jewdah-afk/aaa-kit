@@ -98,6 +98,15 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 - Colours = vertex colours (COLOR_0) x base texture `stud_mul.png` (2 x stud overlay, world UVs); glow pieces = emissive, untextured (set them to Neon in Studio).
 - Roblox: Avatar/3D Importer -> the `.glb`, Rig type: keep bones (custom rig), scale unit = Stud; it lands as one Model with a MeshPart per piece and Bones. Add `AnimationController` + `Animator`, animate in the Animation Editor. Front ends up as LookVector (the importer turns GLBs 180 about Y).
 
+## Studio route without Blender (BrickBoxes)
+For mobs, pets, props and fast iteration, build the grid in Luau and skip Blender and the 3D Importer. Research and measurements: [Stud Voxel in Studio](../../../docs/research/90-stud-voxel-in-studio.md).
+- `references/roblox/BrickBoxes.luau` (pure, lune-tested): `BrickBoxes.new(nx, ny, nz)`, `grid:set`, `grid:fill` (box or any test function), `grid:ellipsoid`; each brick stores a palette index and a bone index. Later writes win.
+- `grid:boxes()` merges the bricks into as few boxes as possible: every exposed brick is covered once by a box of its own colour and bone, hidden bricks are free filler. A 118,656-brick snowman became 160 boxes.
+- `grid:lint(groundOk)` returns `bricks`, `exposed`, `colours`, `floating`. Fail the model when `floating > 0` or `colours > 16`, before opening Studio.
+- `references/roblox/BrickBuild.luau`: `BrickBuild(grid, { Palette, Glow, Bones, StudsPerBrick, MaterialVariant }, CFrame, name)` builds studded Parts on the same Motor6D rig as `ModelBuild`, so `ModelAnimator` plays clips on it. Compile-checked only: not yet run in Studio.
+- Test: `lune run references/roblox/BrickBoxes.test.luau`.
+- Keep the GLB route for finished hero bosses with fine detail.
+
 ## Rejected (don't repeat)
 Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 

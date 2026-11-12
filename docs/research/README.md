@@ -62,6 +62,12 @@ Why HIERARCHY.md works, with the perception, timing and audio research behind ea
 | 84 | [Grouping, density and choice](84-grouping-density-and-choice.md) | Common region, about four chunks, Hick and Fitts, touch targets, clutter |
 | 85 | [Measuring hierarchy](85-measuring-hierarchy.md) | The auditor's checks and thresholds, how the model fails, validating with people |
 
+## Part VI — Asset packs
+
+| # | Chapter | Answers |
+|---|---------|---------|
+| 90 | [Stud Voxel in Studio](90-stud-voxel-in-studio.md) | Three routes from a brick grid into Studio, the lune-tested Parts route, measured box counts, the ranked upgrade plan and the 76-reference build queue |
+
 ## Method
 
 `create.roblox.com`, `devforum.roblox.com` and `luau.org` are unreachable from
