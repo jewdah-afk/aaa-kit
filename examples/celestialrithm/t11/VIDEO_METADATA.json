@@ -1,0 +1,20 @@
+{
+  "hydro": {
+    "width": 960,
+    "height": 540,
+    "avg_frame_rate": "60/1",
+    "nb_frames": "240"
+  },
+  "prism": {
+    "width": 960,
+    "height": 540,
+    "avg_frame_rate": "60/1",
+    "nb_frames": "240"
+  },
+  "solar": {
+    "width": 960,
+    "height": 540,
+    "avg_frame_rate": "60/1",
+    "nb_frames": "240"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "60fps_encoded": true,
+    "240_frames": true,
+    "dimensions": true,
+    "source_artwork_present": true,
+    "calm_start": true,
+    "calm_end": true,
+    "four_reactions": true,
+    "calm_identity_SHOP": true,
+    "calm_identity_UPGRADES": true,
+    "calm_identity_INDEX": true,
+    "calm_identity_ANIMALS": true,
+    "computed_motion": true,
+    "mesh_grid_169_288": true,
+    "no_mesh_collision_rebuild_hotpath": true,
+    "one_dynamic_image": true,
+    "physics_shared_with_optics": true
+  },
+  "passed": 16,
+  "total": 16,
+  "failures": [],
+  "limitations": [
+    "Not the repository full hierarchy auditor",
+    "Not Lune or Selene",
+    "Roblox Studio API and phone FPS unverified",
+    "Human perceptual scanpath not measured",
+    "Audio not installed in Roblox"
+  ]
+}

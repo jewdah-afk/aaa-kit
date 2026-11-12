@@ -32,6 +32,14 @@ elif echo "$out" | grep -q "Could not collect standard library"; then
 else
   echo "$out" | tail -20; exit 1
 fi
+echo "== celestialrithm"
+python3 tools/algorithm_vault/build_vault.py > /dev/null && python3 tools/celestialrithm/build_ui_catalog.py > /dev/null
+python3 tools/algorithm_vault/test_vault.py | tail -1
+python3 tools/celestialrithm/test_ui_catalog.py 2>&1 | tail -1
+python3 tools/celestialrithm/test_world.py | tail -1
+python3 examples/celestialrithm/test_system.py 2>&1 | tail -1
+python3 tools/celestialrithm/foundry/test_foundry.py | tail -1
+python3 docs/algorithm-vault/external/test_external.py | tail -1
 echo "== links";         python3 tools/check_links.py | tail -1
 echo "== skills";        python3 tools/check_skills.py | tail -1
 echo "== lexicon";       python3 tools/check_lexicon.py | tail -1

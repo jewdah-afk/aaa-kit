@@ -1,0 +1,71 @@
+{
+  "size": [
+    1280,
+    720
+  ],
+  "fixations": [
+    {
+      "x": 348,
+      "y": 489,
+      "salience": 1.0,
+      "in_focus": true
+    },
+    {
+      "x": 339,
+      "y": 315,
+      "salience": 0.772,
+      "in_focus": true
+    },
+    {
+      "x": 732,
+      "y": 649,
+      "salience": 0.744,
+      "in_focus": false
+    },
+    {
+      "x": 892,
+      "y": 315,
+      "salience": 0.676,
+      "in_focus": false
+    },
+    {
+      "x": 108,
+      "y": 484,
+      "salience": 0.543,
+      "in_focus": false
+    }
+  ],
+  "clutter": {
+    "edge_density": 0.1564,
+    "chroma_std": 0.0252
+  },
+  "focus": [
+    [
+      304,
+      151,
+      232,
+      373
+    ]
+  ],
+  "focus_area": 0.0939,
+  "focus_share": 0.2139,
+  "lift": 2.28,
+  "competitor": {
+    "x": 732,
+    "y": 649,
+    "ratio": 0.74
+  },
+  "squint_gap": 0.109,
+  "cvd": {
+    "deutan": {
+      "first_fixation_in_focus": true,
+      "lift": 2.07
+    },
+    "protan": {
+      "first_fixation_in_focus": true,
+      "lift": 1.82
+    }
+  },
+  "verdict": "PASS",
+  "reasons": []
+}

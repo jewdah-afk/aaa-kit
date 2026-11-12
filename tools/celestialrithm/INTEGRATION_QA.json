@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "test": "tools/algorithm_vault/test_vault.py",
+      "passed": true,
+      "output_tail": "PASS primitive_count\nPASS recipe_count\nPASS unique_method_ids\nPASS source_links\nPASS unique_recipes\nPASS all_restricted\nPASS has_hierarchy\nPASS style_contract\nPASS sqlite_recipes\nPASS sqlite_primitive\nPASS cli_query\nPASS ingest_fixture\nPASS evolution_rejects_failures\nPASS mutation_approval_gated\n14/14 passed\n"
+    },
+    {
+      "test": "tools/celestialrithm/test_ui_catalog.py",
+      "passed": true,
+      "output_tail": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.116s\n\nOK\n"
+    },
+    {
+      "test": "tools/celestialrithm/test_world.py",
+      "passed": true,
+      "output_tail": "PASS deterministic seed, terrace invariants, road corridor, watertight-facing exports, preview\n"
+    },
+    {
+      "test": "examples/celestialrithm/test_system.py",
+      "passed": true,
+      "output_tail": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.434s\n\nOK\n"
+    },
+    {
+      "test": "media/approved-material-visual-target.gif",
+      "passed": true,
+      "bytes": 521009
+    },
+    {
+      "test": "media/engineering-v1-preview.gif",
+      "passed": true,
+      "bytes": 630384
+    }
+  ],
+  "scope": "local integration smoke check; not Lune, Selene, Studio, or device FPS"
+}

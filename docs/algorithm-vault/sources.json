@@ -1,0 +1,68 @@
+[
+  {
+    "id": "REPO",
+    "name": "aaa-kit repository existing implementations or documented methods",
+    "url": "https://github.com/jewdah-afk/aaa-kit",
+    "classification": "repo-indexed"
+  },
+  {
+    "id": "XPBD",
+    "name": "PositionBasedDynamics \u2014 XPBD / constraints / fluids",
+    "url": "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics",
+    "classification": "external-method"
+  },
+  {
+    "id": "FLUID",
+    "name": "GPU Gems 38 \u2014 stable fluids",
+    "url": "https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu",
+    "classification": "external-method"
+  },
+  {
+    "id": "GPU",
+    "name": "GPU Gems \u2014 water caustics and rendering",
+    "url": "https://www.nvidia.com/en-us/drivers/gpu-gems-home/",
+    "classification": "external-method"
+  },
+  {
+    "id": "MSDF",
+    "name": "msdfgen sharp-corner distance fields",
+    "url": "https://github.com/Chlumsky/msdfgen",
+    "classification": "external-method"
+  },
+  {
+    "id": "FILAMENT",
+    "name": "Google Filament material / light transport models",
+    "url": "https://github.com/google/filament",
+    "classification": "external-method"
+  },
+  {
+    "id": "POST",
+    "name": "pmndrs/postprocessing image compositing effects",
+    "url": "https://github.com/pmndrs/postprocessing",
+    "classification": "external-method"
+  },
+  {
+    "id": "GEMS",
+    "name": "Graphics Gems compilation of graphics algorithms",
+    "url": "https://github.com/erich666/GraphicsGems",
+    "classification": "external-method"
+  },
+  {
+    "id": "IQ",
+    "name": "Inigo Quilez 2D SDF shapes / combinations",
+    "url": "https://iquilezles.org/articles/distfunctions2d/",
+    "classification": "external-method"
+  },
+  {
+    "id": "RD",
+    "name": "Reaction-diffusion Gray-Scott general model",
+    "url": "https://www.karlsims.com/rd.html",
+    "classification": "external-method"
+  },
+  {
+    "id": "PACK",
+    "name": "LihFolk uploaded voxel-pack techniques; license unconfirmed",
+    "url": "local-upload:LihFolk-Stud-Voxel-Pack-Full.zip",
+    "classification": "local-reference-license-review"
+  }
+]

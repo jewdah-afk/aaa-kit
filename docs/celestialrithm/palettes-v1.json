@@ -1,0 +1,10 @@
+{
+ "hydro":{"name":"Hydroglass","base":"#02bfea","light":"#e2ffff","shadow":"#063b87","role":"secondary"},
+ "prism":{"name":"Prism Gel","base":"#9d4af7","light":"#ffd5ff","shadow":"#35076f","role":"upgrade"},
+ "solar":{"name":"Solar Gold","base":"#efac17","light":"#fff4a6","shadow":"#793707","role":"primary"},
+ "bio":{"name":"Bio Slime","base":"#63d626","light":"#e8ff8f","shadow":"#0d683d","role":"success"},
+ "frost":{"name":"Crystal Frost","base":"#76b8f7","light":"#f3fbff","shadow":"#30519a","role":"frost"},
+ "void":{"name":"Void Pulse","base":"#8c2bd7","light":"#efb6ff","shadow":"#160b46","role":"rarity"},
+ "holo":{"name":"Holofoil","base":"#b87cf8","light":"#f3ffff","shadow":"#375aa4","role":"secret"},
+ "azure":{"name":"Electric Azure","base":"#126ef0","light":"#bdefff","shadow":"#091e81","role":"information"}
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "aaa-kit-algorithm-vault-v1",
+  "primitives": 156,
+  "generated_recipes": 12000,
+  "externally_sourced_method_families": 83,
+  "repo_method_families": 70,
+  "uploaded-pack_method_families": 3,
+  "source_catalog": 11,
+  "fts_enabled": true,
+  "claims": "Primitives are curated method families; recipes are synthetic combinations, not 12,000 unique discoveries or validated Roblox features.",
+  "status": "Generated locally. No GitHub commit."
+}

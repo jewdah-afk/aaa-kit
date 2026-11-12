@@ -1,0 +1,2136 @@
+[
+  {
+    "id": "xpbd",
+    "name": "XPBD (extended position-based dynamics)",
+    "family": "A",
+    "principle": "Each constraint C(x)=0 gets a compliance alpha (inverse stiffness) and a Lagrange multiplier lambda. Per iteration: dlambda = (-C - alpha~ * lambda) / (sum w_i |grad C_i|^2 + alpha~) with alpha~ = alpha/dt^2, then x_i += w_i grad C_i dlambda. Stiffness no longer depends on iteration count or time step, unlike plain PBD.",
+    "source": {
+      "title": "XPBD: Position-Based Simulation of Compliant Constrained Dynamics",
+      "authors": "Miles Macklin, Matthias Müller, Nuttapong Chentanez",
+      "year": 2016,
+      "url": "https://matthias-research.github.io/pages/publications/XPBD.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "InteractiveComputerGraphics/PositionBasedDynamics",
+        "url": "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Jelly UI cards, cloth banners, soft rope/chain trims that keep a set stiffness at any frame rate.",
+    "difficulty": 3,
+    "cost": "O(constraints x iterations) per step; low-med for a few hundred particles",
+    "roblox_fit": "Good: Luau loop over a small particle set, write positions to EditableMesh vertices or to Frame positions. Keep under ~1k constraints per frame on phones (estimate; measure).",
+    "offline_fit": "Bake soft-body wobble clips into keyframes or vertex animation sheets.",
+    "combos": [
+      "pbd",
+      "shape-matching",
+      "ribbon-trails",
+      "dual-quaternion-skinning"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "pbd",
+    "name": "Position Based Dynamics",
+    "family": "A",
+    "principle": "Predict positions p = x + dt*v (+ external forces), then iteratively project each constraint by moving particles along grad C weighted by inverse mass, finally set v = (p - x)/dt. Directly editing positions avoids the overshoot of explicit force integration.",
+    "source": {
+      "title": "Position Based Dynamics",
+      "authors": "Matthias Müller, Bruno Heidelberger, Marcus Hennix, John Ratcliff",
+      "year": 2007,
+      "url": "https://alecjacobson.com/seminar/mueller-et-al-2007.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "InteractiveComputerGraphics/PositionBasedDynamics",
+        "url": "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Stable cloth, ropes, hanging charms, squishy buttons.",
+    "difficulty": 2,
+    "cost": "O(constraints x iterations); low",
+    "roblox_fit": "Good for small sets on CPU; drive EditableMesh or Bone/Attachment CFrames. Stiffness drifts with iteration count; prefer xpbd for tuned UI feel.",
+    "offline_fit": "Bake to animation if the motion is fixed.",
+    "combos": [
+      "xpbd",
+      "shape-matching",
+      "ribbon-trails"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "shape-matching",
+    "name": "Meshless shape matching",
+    "family": "A",
+    "principle": "Find the best rigid transform between rest positions q_i and current offsets p_i: A_pq = sum m_i p_i q_i^T, take R = polar decomposition of A_pq. Goal positions g_i = R q_i + c are pulled toward with x_i += alpha (g_i - x_i); unconditionally stable.",
+    "source": {
+      "title": "Meshless Deformations Based on Shape Matching",
+      "authors": "Matthias Müller, Bruno Heidelberger, Matthias Teschner, Markus Gross",
+      "year": 2005,
+      "url": "https://cg.informatik.uni-freiburg.de/publications/2005_SIGGRAPH_deformationShapeMatching.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Jiggly gummy icons, wobbling gems, squash-and-recover on press.",
+    "difficulty": 3,
+    "cost": "O(N) per step plus one 3x3 polar decomposition; low",
+    "roblox_fit": "Very good: a 3x3 polar decomposition per cluster is cheap in Luau; apply to EditableMesh vertices or a lattice of UI points.",
+    "offline_fit": "Bake wobble clips.",
+    "combos": [
+      "pbd",
+      "xpbd",
+      "mean-value-cage",
+      "critically-damped-spring"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "mean-value-cage",
+    "name": "Mean value coordinates (cage deformation)",
+    "family": "A",
+    "principle": "Each interior point is a weighted blend of cage vertices, w_i proportional to an integral over the cage of 1/|v_i - x|, giving coordinates that are smooth inside, linear on cage triangles and reproduce linear functions. Move the coarse cage and every mesh vertex follows via x' = sum w_i v_i'.",
+    "source": {
+      "title": "Mean Value Coordinates for Closed Triangular Meshes",
+      "authors": "Tao Ju, Scott Schaefer, Joe Warren",
+      "year": 2005,
+      "url": "https://people.engr.tamu.edu/schaefer/research/meanvalue.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Smooth bulge/pinch/stretch of a detailed mesh by dragging a few cage points.",
+    "difficulty": 3,
+    "cost": "Precompute O(V x C) weights once; deform O(V x C) per frame (or sparse); med",
+    "roblox_fit": "OK: precompute weights offline, store per-vertex weights, deform EditableMesh with a small cage (8-20 points). Weight table size limits vertex count.",
+    "offline_fit": "Best fit: compute weights offline in Python, ship as a buffer.",
+    "combos": [
+      "shape-matching",
+      "dual-quaternion-skinning"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "dual-quaternion-skinning",
+    "name": "Dual quaternion skinning",
+    "family": "A",
+    "principle": "Represent each bone transform as a unit dual quaternion q = q_r + eps q_d; blend linearly q = sum w_i q_i and renormalise, then transform the vertex. Avoids the volume-collapse (candy-wrapper) artefact of linear blend skinning at ~8 floats per bone.",
+    "source": {
+      "title": "Geometric Skinning with Approximate Dual Quaternion Blending",
+      "authors": "Ladislav Kavan, Steven Collins, Jiří Žára, Carol O'Sullivan",
+      "year": 2008,
+      "url": "https://users.cs.utah.edu/~ladislav/kavan08geometric/kavan08geometric.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Twisting limbs and ribbons that keep volume.",
+    "difficulty": 3,
+    "cost": "O(V x bones per vertex); low-med",
+    "roblox_fit": "Roblox skinned meshes use the engine's own skinning; DQS only applies to custom deformation of EditableMesh vertices in Luau (costly beyond a few thousand verts).",
+    "offline_fit": "Bake deformed poses offline.",
+    "combos": [
+      "mean-value-cage",
+      "xpbd"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "meshlets",
+    "name": "Meshlets (clustered geometry for mesh shaders)",
+    "family": "A",
+    "principle": "Split a mesh into small clusters (NVIDIA suggests up to 64 vertices / 126 triangles) with high vertex reuse; each cluster carries a bounding sphere and normal cone so whole clusters can be culled before rasterisation.",
+    "source": {
+      "title": "Introduction to Turing Mesh Shaders",
+      "authors": "Christoph Kubisch",
+      "year": 2018,
+      "url": "https://developer.nvidia.com/blog/introduction-turing-mesh-shaders",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "No visual change; fewer triangles submitted for big meshes.",
+    "difficulty": 3,
+    "cost": "Offline clustering O(T); runtime culling O(clusters); low",
+    "roblox_fit": "No mesh shaders in Roblox. The idea transfers as chunking: split EditableMesh content into small chunks so edits rebuild one chunk and off-screen chunks can be hidden.",
+    "offline_fit": "Cluster offline, export as separate MeshParts or EditableMesh chunks.",
+    "combos": [
+      "greedy-meshing",
+      "dirty-rectangles"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "level-set-method",
+    "name": "Level set method",
+    "family": "A",
+    "principle": "Represent a moving front as the zero set of phi(x,t) and evolve phi_t + F |grad phi| = 0, where speed F may depend on curvature kappa = div(grad phi/|grad phi|). Topology changes (splitting, merging) happen for free.",
+    "source": {
+      "title": "Fronts Propagating with Curvature-Dependent Speed: Algorithms Based on Hamilton-Jacobi Formulations",
+      "authors": "Stanley Osher, James A. Sethian",
+      "year": 1988,
+      "url": "https://math.berkeley.edu/~sethian/Papers/sethian.osher.88.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Burning/eroding edges, growing ink blots, dissolves that split and merge.",
+    "difficulty": 4,
+    "cost": "O(N) per step on a grid, plus periodic redistancing; med",
+    "roblox_fit": "Possible at 128-256 px in an EditableImage with native Luau; redistance with felzenszwalb-edt or jump-flooding every few frames.",
+    "offline_fit": "Bake front-arrival times to a single texture, then threshold at runtime (cheap animated dissolve).",
+    "combos": [
+      "felzenszwalb-edt",
+      "jump-flooding",
+      "smooth-min",
+      "curl-noise"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "stable-fluids",
+    "name": "Stable Fluids",
+    "family": "B",
+    "principle": "Split each step into add-force, semi-Lagrangian advection (trace each cell back along -u dt and sample), implicit diffusion, and pressure projection (solve laplacian p = div u, then u -= grad p). Unconditionally stable at any time step.",
+    "source": {
+      "title": "Stable Fluids",
+      "authors": "Jos Stam",
+      "year": 1999,
+      "url": "https://pages.cs.wisc.edu/~chaol/data/cs777/stam-stable_fluids.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Swirling smoke, ink and plasma behind UI panels.",
+    "difficulty": 3,
+    "cost": "O(N x Jacobi iterations) per frame; med-high",
+    "roblox_fit": "Feasible at 64-128 px in Luau with native codegen and ~10-20 Jacobi iterations, upscaled in an EditableImage. 256+ px per frame is likely too heavy on phones (estimate; measure).",
+    "offline_fit": "Bake looping flow textures or flipbooks offline at high res.",
+    "combos": [
+      "maccormack-advection",
+      "vorticity-confinement",
+      "curl-noise",
+      "flow-maps"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "lib/frontier/combo/SandTable.luau deliberately uses a pipe/outflow model instead of semi-Lagrangian advection."
+  },
+  {
+    "id": "maccormack-advection",
+    "name": "Unconditionally stable MacCormack advection",
+    "family": "B",
+    "principle": "Advect forward phi^ = A(phi), advect back phi_ = A_reverse(phi^), then correct phi_new = phi^ + (phi - phi_)/2, clamping to the min/max of the source neighbourhood to stay stable. Second-order accuracy for the cost of two semi-Lagrangian steps.",
+    "source": {
+      "title": "An Unconditionally Stable MacCormack Method",
+      "authors": "Andrew Selle, Ronald Fedkiw, ByungMoon Kim, Yingjie Liu, Jarek Rossignac",
+      "year": 2008,
+      "url": "https://yingjie.math.gatech.edu/publications/SFKLR.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Sharper, less blurry smoke and dye than plain semi-Lagrangian.",
+    "difficulty": 3,
+    "cost": "~2x the advection cost of stable-fluids; med",
+    "roblox_fit": "Same budget as stable-fluids; worth it at low grid sizes where blur hurts most.",
+    "offline_fit": "Use in offline bakes for crisper flipbooks.",
+    "combos": [
+      "stable-fluids",
+      "vorticity-confinement"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "vorticity-confinement",
+    "name": "Vorticity confinement",
+    "family": "B",
+    "principle": "Compute vorticity w = curl u, the normalised gradient N = grad|w| / |grad|w||, and add force f = eps h (N x w). It re-injects small swirls that numerical dissipation removed on coarse grids.",
+    "source": {
+      "title": "Visual Simulation of Smoke",
+      "authors": "Ronald Fedkiw, Jos Stam, Henrik Wann Jensen",
+      "year": 2001,
+      "url": "https://www.graphics.stanford.edu/papers/smoke/",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Curly, lively smoke on coarse grids.",
+    "difficulty": 2,
+    "cost": "O(N) per step; low",
+    "roblox_fit": "Cheap add-on to any grid fluid in an EditableImage.",
+    "offline_fit": "Same in bakes.",
+    "combos": [
+      "stable-fluids",
+      "maccormack-advection"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "heightfield-shallow-water",
+    "name": "Height-field shallow water waves",
+    "family": "B",
+    "principle": "Approximate the shallow water equations as a wave equation on a height field, h_tt = g d * laplacian(h), so wave speed is proportional to sqrt(depth). Solved with a simple stable implicit/explicit step; one iteration per frame is often enough.",
+    "source": {
+      "title": "Rapid, Stable Fluid Dynamics for Computer Graphics",
+      "authors": "Michael Kass, Gavin Miller",
+      "year": 1990,
+      "url": "https://ohiostate.pressbooks.pub/app/uploads/sites/45/2017/09/kass-miller.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Ripples on liquid UI, puddles, aura pulses, touch ripples.",
+    "difficulty": 2,
+    "cost": "O(N) per step; low",
+    "roblox_fit": "Very good: 5-point Laplacian on a 128-256 px buffer in an EditableImage, or on EditableMesh vertex heights.",
+    "offline_fit": "Bake ripple normal-map flipbooks.",
+    "combos": [
+      "realtime-caustics",
+      "screen-space-refraction",
+      "flow-maps"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/WaveRing.luau",
+    "kit_note": "Damped 2D wave equation (leapfrog, 5-point Laplacian); the same family, not a literal port of Kass & Miller."
+  },
+  {
+    "id": "sph-fluids",
+    "name": "SPH particle fluids",
+    "family": "B",
+    "principle": "Each particle's density is rho_i = sum m_j W(r_ij, h); pressure p = k (rho - rho0); forces come from kernel gradients of pressure and viscosity plus a surface-tension term. Particles carry the fluid, so no advection grid is needed.",
+    "source": {
+      "title": "Particle-Based Fluid Simulation for Interactive Applications",
+      "authors": "Matthias Müller, David Charypar, Markus Gross",
+      "year": 2003,
+      "url": "https://matthias-research.github.io/pages/publications/sca03.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Splashing blobs, liquid in a bottle, pourable currency.",
+    "difficulty": 4,
+    "cost": "O(N x neighbours) with a spatial hash; med-high",
+    "roblox_fit": "A few hundred particles in Luau with spatial-hashing; render as metaballs into an EditableImage. Compressible wobble unless time step is small.",
+    "offline_fit": "Bake splash flipbooks.",
+    "combos": [
+      "spatial-hashing",
+      "metaballs",
+      "position-based-fluids"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "position-based-fluids",
+    "name": "Position Based Fluids",
+    "family": "B",
+    "principle": "Enforce a density constraint C_i = rho_i/rho0 - 1 = 0 per particle inside the PBD loop, solving for lambda_i with SPH kernel gradients; add artificial pressure for surface tension and vorticity confinement. Allows larger time steps than SPH.",
+    "source": {
+      "title": "Position Based Fluids",
+      "authors": "Miles Macklin, Matthias Müller",
+      "year": 2013,
+      "url": "https://cgweb.informatik.uni-freiburg.de/intern/seminar/positionBasedFluids_2014_SIGGRAPH.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "InteractiveComputerGraphics/PositionBasedDynamics",
+        "url": "https://github.com/InteractiveComputerGraphics/PositionBasedDynamics",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Incompressible-looking liquid with fewer iterations.",
+    "difficulty": 4,
+    "cost": "O(N x neighbours x iterations); med-high",
+    "roblox_fit": "Same particle limits as sph-fluids; more stable at 30-60 Hz.",
+    "offline_fit": "Bake.",
+    "combos": [
+      "sph-fluids",
+      "pbd",
+      "spatial-hashing",
+      "metaballs"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "flip-pic",
+    "name": "FLIP/PIC hybrid",
+    "family": "B",
+    "principle": "Particles carry velocity; transfer to a grid, do pressure projection on the grid, then update particles with a blend of the grid velocity (PIC, smooth) and the grid velocity change (FLIP, lively). Zhu & Bridson popularised the linear blend.",
+    "source": {
+      "title": "Animating Sand as a Fluid",
+      "authors": "Yongning Zhu, Robert Bridson",
+      "year": 2005,
+      "url": "https://www.cs.ubc.ca/~rbridson/docs/zhu-siggraph05-sandfluid.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Splashy water or sand with low dissipation.",
+    "difficulty": 5,
+    "cost": "O(particles + grid x iterations); high",
+    "roblox_fit": "Too heavy per frame in Luau beyond toy sizes; use offline.",
+    "offline_fit": "Good offline in Python/Blender for baked splashes.",
+    "combos": [
+      "stable-fluids",
+      "sph-fluids"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "metaballs",
+    "name": "Metaballs (blobby surfaces)",
+    "family": "B",
+    "principle": "Sum radial falloff fields f(x) = sum b_i exp(-a_i r_i^2) (or a compact polynomial falloff) and draw the iso-contour f(x) = T. Nearby blobs merge smoothly.",
+    "source": {
+      "title": "A Generalization of Algebraic Surface Drawing",
+      "authors": "James F. Blinn",
+      "year": 1982,
+      "url": "https://resolver.caltech.edu/CaltechAUTHORS:20160615-113148009",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Gooey merging blobs, lava-lamp UI, liquid progress bars.",
+    "difficulty": 1,
+    "cost": "O(pixels x balls) or O(pixels) with a bounded falloff; low-med",
+    "roblox_fit": "Good at 128-256 px in an EditableImage with few balls; 2D threshold + gradient for shading.",
+    "offline_fit": "Bake for static shapes.",
+    "combos": [
+      "smooth-min",
+      "sph-fluids",
+      "marching-cubes"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "realtime-caustics",
+    "name": "Real-time caustics by area change",
+    "family": "C",
+    "principle": "Refract a grid of light rays through the water surface onto a receiver; the caustic intensity is the ratio of the original triangle area to the projected triangle area (computed from old and new vertex positions with screen-space derivatives).",
+    "source": {
+      "title": "Rendering Realtime Caustics in WebGL",
+      "authors": "Evan Wallace",
+      "year": 2016,
+      "url": "https://medium.com/@evanwallace/rendering-realtime-caustics-in-webgl-2a99a29a0b2c",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Dancing light networks under water or glass gems.",
+    "difficulty": 3,
+    "cost": "O(grid cells) per frame; med",
+    "roblox_fit": "Possible on CPU at a 64-128 grid splatted into an EditableImage; otherwise bake a looping caustic flipbook and scroll it.",
+    "offline_fit": "Best as a baked tileable flipbook.",
+    "combos": [
+      "heightfield-shallow-water",
+      "screen-space-refraction",
+      "flow-maps"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "screen-space-refraction",
+    "name": "Image-space refraction (two interfaces)",
+    "family": "C",
+    "principle": "Refract the view ray at the front surface using its normal, estimate the distance to the back surface from front/back depth maps, refract again at the back surface, then look up the environment. Approximates refraction through two interfaces in two passes.",
+    "source": {
+      "title": "An Approximate Image-Space Approach for Interactive Refraction",
+      "authors": "Chris Wyman",
+      "year": 2005,
+      "url": "https://history.siggraph.org/?p=113948",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Glassy gems and liquid lenses that bend what is behind them.",
+    "difficulty": 3,
+    "cost": "O(pixels); low-med",
+    "roblox_fit": "No shader access: emulate with an EditableImage that offsets UV lookups into a captured or procedural background by a normal map. Fine for small icons.",
+    "offline_fit": "Bake refracted gem sprites.",
+    "combos": [
+      "schlick-fresnel",
+      "thin-film-iridescence",
+      "gravitational-lensing"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "parallax-occlusion-mapping",
+    "name": "Parallax occlusion mapping",
+    "family": "C",
+    "principle": "March the view ray through a height field in tangent space in N steps until it dips below the surface, interpolate the hit, and sample colour there; a second march toward the light gives soft self-shadowing.",
+    "source": {
+      "title": "Dynamic Parallax Occlusion Mapping with Approximate Soft Shadows",
+      "authors": "Natalya Tatarchuk",
+      "year": 2006,
+      "url": "https://faculty.digipen.edu/~gherron/references/References/SurfaceDetail/Tatarchuk-POM-SI3D06.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Deep grates, gem interiors, cracked surfaces on flat quads.",
+    "difficulty": 3,
+    "cost": "O(pixels x steps); med",
+    "roblox_fit": "Works per texel on CPU into small EditableImages, recomputed when the camera moves.",
+    "offline_fit": "Bake view-dependent sheets for fixed cameras.",
+    "combos": [
+      "interior-mapping",
+      "worley-noise",
+      "domain-warping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/surfacebake/Parallax.luau"
+  },
+  {
+    "id": "interior-mapping",
+    "name": "Interior mapping",
+    "family": "C",
+    "principle": "In the pixel shader, cast the view ray into a virtual grid of rooms behind the facade; intersect with the nearest axis-aligned ceiling/floor and wall planes and texture whichever is hit first. No interior geometry is stored.",
+    "source": {
+      "title": "Interior Mapping: A new technique for rendering realistic buildings",
+      "authors": "Joost van Dongen",
+      "year": 2008,
+      "url": "https://www.proun-game.com/Oogst3D/CODING/InteriorMapping/InteriorMapping.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Rooms behind windows, deep card frames, boxed dioramas inside UI slots.",
+    "difficulty": 2,
+    "cost": "O(pixels) with 3 plane tests each; low",
+    "roblox_fit": "Good per texel on CPU into an EditableImage; cheap enough for several small panels.",
+    "offline_fit": "Bake for fixed views.",
+    "combos": [
+      "parallax-occlusion-mapping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/surfacebake/Parallax.luau"
+  },
+  {
+    "id": "thin-film-iridescence",
+    "name": "Thin-film iridescence (Airy, pre-integrated)",
+    "family": "C",
+    "principle": "A film of thickness d and index n2 gives phase difference 4 pi n2 d cos(theta_t)/lambda between the two reflections; the Airy summation yields wavelength-dependent reflectance. Belcour & Barla integrate it analytically against the RGB response to avoid spectral aliasing and plug it into the microfacet Fresnel term.",
+    "source": {
+      "title": "A Practical Extension to Microfacet Theory for the Modeling of Varying Iridescence",
+      "authors": "Laurent Belcour, Pascal Barla",
+      "year": 2017,
+      "url": "https://belcour.github.io/blog/research/publication/2017/05/01/brdf-thin-film.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Soap bubbles, oil slicks, beetle shells, holographic rarity frames.",
+    "difficulty": 3,
+    "cost": "O(pixels) closed form; low-med",
+    "roblox_fit": "Good: bake a 1D/2D ramp (angle x thickness to RGB) once, then sample per texel or drive UIGradient keypoints from it.",
+    "offline_fit": "Precompute the ramp texture offline.",
+    "combos": [
+      "schlick-fresnel",
+      "ggx-microfacet",
+      "diffraction-shader",
+      "domain-warping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "schlick-fresnel",
+    "name": "Schlick Fresnel approximation",
+    "family": "C",
+    "principle": "F(theta) = F0 + (1 - F0)(1 - cos theta)^5, with F0 = ((n1 - n2)/(n1 + n2))^2. Cheap stand-in for the full Fresnel equations for unpolarised light; misses the grazing dip of some metals.",
+    "source": {
+      "title": "An Inexpensive BRDF Model for Physically-based Rendering",
+      "authors": "Christophe Schlick",
+      "year": 1994,
+      "url": "https://diglib.eg.org/handle/10.2312/6905",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Edges brighten at grazing angles: rim light on glass, gems, water.",
+    "difficulty": 1,
+    "cost": "O(1) per sample; low",
+    "roblox_fit": "Trivial: per texel in EditableImage, or as a UIGradient transparency ramp toward the edge of a circular frame.",
+    "offline_fit": "Use in any bake.",
+    "combos": [
+      "ggx-microfacet",
+      "thin-film-iridescence",
+      "screen-space-refraction"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "disney-principled-brdf",
+    "name": "Disney principled BRDF (clearcoat, anisotropy, sheen)",
+    "family": "C",
+    "principle": "An artist-facing BRDF with parameters (baseColor, metallic, roughness, anisotropic, sheen, clearcoat...), using a GTR/GGX specular lobe with anisotropic roughness alpha_x, alpha_y, a retro-reflective diffuse term, and a separate GTR1 clearcoat lobe.",
+    "source": {
+      "title": "Physically-Based Shading at Disney",
+      "authors": "Brent Burley",
+      "year": 2012,
+      "url": "https://blog.selfshadow.com/publications/s2012-shading-course/",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Car-paint clearcoat, brushed metal streaks, velvet sheen on items.",
+    "difficulty": 4,
+    "cost": "O(pixels x lights); med",
+    "roblox_fit": "Roblox SurfaceAppearance is the real-time path; use the model offline or per texel on small EditableImage icons with one light.",
+    "offline_fit": "Best for baking item icons and material swatches.",
+    "combos": [
+      "ggx-microfacet",
+      "schlick-fresnel",
+      "sh-irradiance"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "ggx-microfacet",
+    "name": "GGX microfacet distribution",
+    "family": "C",
+    "principle": "D(m) = alpha^2 / (pi ((n.m)^2 (alpha^2 - 1) + 1)^2), a long-tailed normal distribution used in the Cook-Torrance BRDF f = D F G / (4 (n.l)(n.v)), with a matching Smith shadowing term G.",
+    "source": {
+      "title": "Microfacet Models for Refraction through Rough Surfaces",
+      "authors": "Bruce Walter, Stephen R. Marschner, Hongsong Li, Kenneth E. Torrance",
+      "year": 2007,
+      "url": "https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Natural specular highlights with soft glowing tails.",
+    "difficulty": 2,
+    "cost": "O(pixels x lights); low-med",
+    "roblox_fit": "Per texel in small EditableImages, or bake highlight ramps.",
+    "offline_fit": "Standard in offline bakes.",
+    "combos": [
+      "schlick-fresnel",
+      "disney-principled-brdf",
+      "thin-film-iridescence"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "sh-irradiance",
+    "name": "Spherical harmonic irradiance (9 coefficients)",
+    "family": "C",
+    "principle": "Project the environment lighting onto the first 9 real spherical harmonics (orders 0-2); because the Lambertian kernel is nearly low-pass, irradiance E(n) is a quadratic polynomial in the normal n evaluated from those 9 coefficients.",
+    "source": {
+      "title": "An Efficient Representation for Irradiance Environment Maps",
+      "authors": "Ravi Ramamoorthi, Pat Hanrahan",
+      "year": 2001,
+      "url": "https://graphics.stanford.edu/papers/envmap/",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Soft, believable ambient light on custom-shaded sprites and mesh vertices.",
+    "difficulty": 2,
+    "cost": "O(1) per normal (9 MACs); low",
+    "roblox_fit": "Very good: 27 numbers per environment, evaluate per vertex on EditableMesh colours or per texel on EditableImage normal-mapped icons.",
+    "offline_fit": "Project environments offline.",
+    "combos": [
+      "disney-principled-brdf",
+      "radiance-cascades"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "gray-scott",
+    "name": "Gray-Scott reaction-diffusion",
+    "family": "D",
+    "principle": "Two chemicals: du/dt = Du lap(u) - u v^2 + F (1 - u), dv/dt = Dv lap(v) + u v^2 - (F + k) v. Small changes in feed F and kill k give spots, stripes, mazes, mitosis and spirals.",
+    "source": {
+      "title": "Complex Patterns in a Simple System",
+      "authors": "John E. Pearson",
+      "year": 1993,
+      "url": "https://arxiv.org/abs/patt-sol/9304003",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Coral, fingerprints, alien skin, growing maze patterns.",
+    "difficulty": 2,
+    "cost": "O(N) per step, needs many steps (hundreds to thousands); med",
+    "roblox_fit": "Slow to converge per frame; run a few steps per frame at 128 px for a growing effect, or bake. Tileable output triplanar-samples well.",
+    "offline_fit": "Bake tileable textures offline (best).",
+    "combos": [
+      "domain-warping",
+      "worley-noise",
+      "flow-maps",
+      "physarum"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "Mentioned in skills docs and Noise.luau (as an input image for triplanar sampling) but not implemented."
+  },
+  {
+    "id": "physarum",
+    "name": "Physarum transport networks (agent-based)",
+    "family": "D",
+    "principle": "Many agents each sense a trail map at three forward sensors (left, centre, right), rotate toward the strongest, move, and deposit trail; the trail map diffuses and decays each step. Networks self-organise like slime mould.",
+    "source": {
+      "title": "Characteristics of Pattern Formation and Evolution in Approximations of Physarum Transport Networks",
+      "authors": "Jeff Jones",
+      "year": 2010,
+      "url": "https://uwe-repository.worktribe.com/output/980579",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Glowing vein networks, mycelium, neural-looking filaments.",
+    "difficulty": 2,
+    "cost": "O(agents + pixels) per step; med",
+    "roblox_fit": "OK at 128-256 px with a few thousand agents in native Luau; render trail map to EditableImage.",
+    "offline_fit": "Bake loops.",
+    "combos": [
+      "gray-scott",
+      "dielectric-breakdown",
+      "curl-noise"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/Physarum.luau"
+  },
+  {
+    "id": "worley-noise",
+    "name": "Worley / cellular (Voronoi) noise",
+    "family": "D",
+    "principle": "Scatter jittered feature points one per grid cell; at each sample find distances to the nearest (F1) and second nearest (F2) points among neighbouring cells. Combinations like F2 - F1 give cell borders.",
+    "source": {
+      "title": "A Cellular Texture Basis Function",
+      "authors": "Steven Worley",
+      "year": 1996,
+      "url": "https://cedric.cnam.fr/~cubaud/PROCEDURAL/worley.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Cracked earth, scales, crystal facets, stained glass, foam cells.",
+    "difficulty": 1,
+    "cost": "O(9 or 27 cells) per sample; low",
+    "roblox_fit": "Good per texel in EditableImage; also bake.",
+    "offline_fit": "Bake tiles.",
+    "combos": [
+      "domain-warping",
+      "parallax-occlusion-mapping",
+      "jump-flooding",
+      "gray-scott"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/surfacebake/Noise.luau"
+  },
+  {
+    "id": "domain-warping",
+    "name": "Domain warping",
+    "family": "D",
+    "principle": "Evaluate noise at coordinates that were themselves displaced by noise: f(p + k * fbm(p + k * fbm(p))). Each nesting adds swirling, marbled structure.",
+    "source": {
+      "title": "Domain Warping",
+      "authors": "Inigo Quilez",
+      "year": 2002,
+      "url": "https://iquilezles.org/articles/warp",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Marble, nebulae, flowing smoke, organic swirls.",
+    "difficulty": 1,
+    "cost": "2-3x the cost of the base noise; low-med",
+    "roblox_fit": "Good per texel with Roblox math.noise; animate the inner offset with time.",
+    "offline_fit": "Bake for large textures.",
+    "combos": [
+      "worley-noise",
+      "curl-noise",
+      "improved-perlin-noise",
+      "thin-film-iridescence"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/surfacebake/Noise.luau"
+  },
+  {
+    "id": "curl-noise",
+    "name": "Curl noise",
+    "family": "D",
+    "principle": "Take a smooth potential psi (noise) and use its curl as velocity: in 2D v = (d psi/dy, -d psi/dx). The field is divergence-free, so particles swirl without clumping or sinking; modulate psi near obstacles to respect boundaries.",
+    "source": {
+      "title": "Curl-Noise for Procedural Fluid Flow",
+      "authors": "Robert Bridson, Jim Hourihan, Marcus Nordenstam",
+      "year": 2007,
+      "url": "https://history.siggraph.org/?p=115355",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Fluid-looking particle swirls with no simulation.",
+    "difficulty": 1,
+    "cost": "2 extra noise samples per particle (finite differences); low",
+    "roblox_fit": "Excellent: drive particle positions (UI sparkles, ParticleEmitter-free dust) with a few math.noise calls each.",
+    "offline_fit": "Bake flow textures.",
+    "combos": [
+      "domain-warping",
+      "ribbon-trails",
+      "flow-maps",
+      "physarum"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "gabor-noise",
+    "name": "Sparse Gabor convolution noise",
+    "family": "D",
+    "principle": "Noise is a sum of randomly placed Gabor kernels K(x) = exp(-pi a^2 |x|^2) cos(2 pi F0 . x) with Poisson-distributed impulses; kernel bandwidth a and frequency F0 give direct control of the power spectrum, including anisotropy.",
+    "source": {
+      "title": "Procedural Noise using Sparse Gabor Convolution",
+      "authors": "Ares Lagae, Sylvain Lefebvre, George Drettakis, Philip Dutré",
+      "year": 2009,
+      "url": "https://dblp.org/rec/journals/tog/LagaeLDD09",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Brushed metal, wood grain, fabric weave, directional scratches.",
+    "difficulty": 3,
+    "cost": "O(impulses per cell x neighbour cells) per sample; med",
+    "roblox_fit": "Heavy per texel in Luau; bake tileable anisotropic textures.",
+    "offline_fit": "Bake (best).",
+    "combos": [
+      "disney-principled-brdf",
+      "flow-maps"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "flow-maps",
+    "name": "Flow maps",
+    "family": "D",
+    "principle": "Store a 2D flow vector per texel; scroll a texture along it with two phase-offset layers, uv - flow * frac(t + phase), and crossfade them with a triangle weight so the stretch resets without a visible pop.",
+    "source": {
+      "title": "Water Flow in Portal 2",
+      "authors": "Alex Vlachos",
+      "year": 2010,
+      "url": "https://www.advances.realtimerendering.com/s2010/Vlachos-Waterflow(SIGGRAPH%202010%20Advanced%20RealTime%20Rendering%20Course).pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Rivers and lava that flow around obstacles, swirling energy in frames.",
+    "difficulty": 2,
+    "cost": "2 texture samples + a lerp per texel; low",
+    "roblox_fit": "Good: per texel in EditableImage from a small flow buffer; also as offsets of stacked ImageLabels for UI.",
+    "offline_fit": "Paint or simulate flow offline.",
+    "combos": [
+      "curl-noise",
+      "stable-fluids",
+      "gray-scott",
+      "heightfield-shallow-water"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "wavelet-noise",
+    "name": "Wavelet noise",
+    "family": "D",
+    "principle": "Create random coefficients, downsample and upsample with wavelet filters, and subtract to keep only one octave's band; sum octaves. Almost perfectly band-limited, so it aliases less and keeps detail when 3D noise is sliced onto 2D surfaces.",
+    "source": {
+      "title": "Wavelet Noise",
+      "authors": "Robert L. Cook, Tony DeRose",
+      "year": 2005,
+      "url": "https://graphics.pixar.com/library/WaveletNoise/paper.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Cleaner fBm without mushy or aliased octaves.",
+    "difficulty": 3,
+    "cost": "Precompute a tile; lookups O(octaves); low at runtime",
+    "roblox_fit": "Precompute the noise tile offline, ship as a buffer or image, sample in Luau.",
+    "offline_fit": "Bake.",
+    "combos": [
+      "improved-perlin-noise",
+      "domain-warping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "improved-perlin-noise",
+    "name": "Improved Perlin noise",
+    "family": "D",
+    "principle": "Gradient noise on an integer lattice with hashed gradients from a fixed set of 12 directions, interpolated with the quintic fade 6t^5 - 15t^4 + 10t^3, which removes the second-order discontinuity of the original.",
+    "source": {
+      "title": "Improving Noise",
+      "authors": "Ken Perlin",
+      "year": 2002,
+      "url": "https://cs.nyu.edu/~perlin/noise/",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "Improved Noise reference implementation (Java)",
+        "url": "https://cs.nyu.edu/~perlin/noise/",
+        "license": "unknown"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "The base of fBm, clouds, terrain and warps.",
+    "difficulty": 1,
+    "cost": "O(1) per sample (8 gradients in 3D); low",
+    "roblox_fit": "Roblox ships math.noise (3D Perlin) natively; use it rather than reimplementing.",
+    "offline_fit": "Any bake.",
+    "combos": [
+      "domain-warping",
+      "curl-noise",
+      "wavelet-noise"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "Kit uses Roblox's built-in math.noise (lib/surfacebake/Noise.luau) instead of its own Perlin."
+  },
+  {
+    "id": "msdf",
+    "name": "Multi-channel signed distance fields (MSDF)",
+    "family": "E",
+    "principle": "Colour the shape's edges into three channels so each corner is the meeting of two differently coloured edges; store a per-channel signed distance in R, G, B and reconstruct with median(r, g, b). Sharp corners survive magnification that blurs a single-channel SDF.",
+    "source": {
+      "title": "msdfgen (implements the 2015 thesis 'Shape Decomposition for Multi-channel Distance Fields')",
+      "authors": "V. Chlumský",
+      "year": 2015,
+      "url": "https://github.com/Chlumsky/msdfgen",
+      "kind": "repo"
+    },
+    "implementation_refs": [
+      {
+        "title": "Chlumsky/msdfgen",
+        "url": "https://github.com/Chlumsky/msdfgen",
+        "license": "MIT"
+      }
+    ],
+    "license": "MIT (msdfgen)",
+    "visual_result": "Crisp icons and glyphs at any scale with sharp corners.",
+    "difficulty": 3,
+    "cost": "Generation offline; runtime O(pixels) with a median; low",
+    "roblox_fit": "Generate offline with msdfgen; at runtime decode in Luau into an EditableImage at the needed size (no shader median in Roblox).",
+    "offline_fit": "Ideal offline step.",
+    "combos": [
+      "valve-sdf-text",
+      "jump-flooding",
+      "smooth-min"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "jump-flooding",
+    "name": "Jump flooding algorithm (JFA)",
+    "family": "E",
+    "principle": "Seed pixels store their own coordinates; for step k = N/2, N/4, ..., 1, every pixel looks at 9 neighbours at offset k and keeps the seed nearest to itself. log2(N) passes give an approximate Voronoi diagram and distance transform independent of seed count.",
+    "source": {
+      "title": "Jump Flooding in GPU with Applications to Voronoi Diagram and Distance Transform",
+      "authors": "Guodong Rong, Tiow-Seng Tan",
+      "year": 2006,
+      "url": "https://www.comp.nus.edu.sg/~tants/jfa.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Outlines and glows of any width, Voronoi shatter, distance-based bands.",
+    "difficulty": 2,
+    "cost": "O(N log N) for N pixels; low-med",
+    "roblox_fit": "Good at 128-256 px in native Luau; outlines for sprites/icons in EditableImage.",
+    "offline_fit": "Bake distance fields for static art.",
+    "combos": [
+      "felzenszwalb-edt",
+      "worley-noise",
+      "msdf",
+      "radiance-cascades"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/JumpFloodOutline.luau"
+  },
+  {
+    "id": "valve-sdf-text",
+    "name": "Alpha-tested distance-field magnification (Valve)",
+    "family": "E",
+    "principle": "Store a distance field in the alpha channel of a low-res texture instead of coverage; bilinear filtering interpolates distance linearly, so thresholding at 0.5 gives smooth edges, and shifting the threshold gives outlines, glows and drop shadows.",
+    "source": {
+      "title": "Improved Alpha-Tested Magnification for Vector Textures and Special Effects",
+      "authors": "Chris Green",
+      "year": 2007,
+      "url": "https://cdn.akamai.steamstatic.com/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Smooth scalable text and icons with free outline/glow.",
+    "difficulty": 1,
+    "cost": "O(pixels); low",
+    "roblox_fit": "Decode a baked SDF into an EditableImage at any size, or bake outlines per size. Roblox text already uses SDF fonts internally, so this is for custom glyphs and icons.",
+    "offline_fit": "Bake the SDF offline.",
+    "combos": [
+      "msdf",
+      "jump-flooding",
+      "felzenszwalb-edt"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "smooth-min",
+    "name": "Smooth minimum (smooth union)",
+    "family": "E",
+    "principle": "Polynomial smin: h = max(k - |a - b|, 0)/k; smin(a, b) = min(a, b) - h^2 k/4. Unlike min, the union of two SDFs blends over a band of width k; exponential and root variants trade order-independence and cost.",
+    "source": {
+      "title": "Smooth Minimum",
+      "authors": "Inigo Quilez",
+      "year": null,
+      "url": "https://iquilezles.org/articles/smin",
+      "kind": "blog"
+    },
+    "implementation_refs": [
+      {
+        "title": "glslify/glsl-smooth-min",
+        "url": "https://github.com/glslify/glsl-smooth-min",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Liquid merging shapes, gooey UI blobs, fused gem clusters.",
+    "difficulty": 1,
+    "cost": "O(1) per pair; low",
+    "roblox_fit": "Trivial per texel in EditableImage SDF renders.",
+    "offline_fit": "Any bake.",
+    "combos": [
+      "metaballs",
+      "msdf",
+      "level-set-method"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": ".claude/skills/shaders-and-sdf/examples/Sdf.luau"
+  },
+  {
+    "id": "felzenszwalb-edt",
+    "name": "Exact Euclidean distance transform (Felzenszwalb-Huttenlocher)",
+    "family": "E",
+    "principle": "Compute the squared Euclidean distance transform separably: for each row then each column, take the lower envelope of parabolas f(q) + (p - q)^2 in one linear pass. Exact, O(N) per dimension.",
+    "source": {
+      "title": "Distance Transforms of Sampled Functions",
+      "authors": "Pedro F. Felzenszwalb, Daniel P. Huttenlocher",
+      "year": 2012,
+      "url": "https://theoryofcomputing.org/articles/v008a019/bibliography.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Exact distance fields for glows, bevels, SDF fonts, GI.",
+    "difficulty": 2,
+    "cost": "O(N) for N pixels; low",
+    "roblox_fit": "Excellent in native Luau on EditableImage buffers; exact where JFA is approximate.",
+    "offline_fit": "Use for offline SDF baking too.",
+    "combos": [
+      "jump-flooding",
+      "radiance-cascades",
+      "valve-sdf-text",
+      "level-set-method"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/fx/RadianceCascades.luau",
+    "kit_note": "Used inside the radiance cascades distance field step."
+  },
+  {
+    "id": "critically-damped-spring",
+    "name": "Critically damped spring (damper)",
+    "family": "F",
+    "principle": "x'' = -k (x - g) - c x' with c = 2 sqrt(k) settles to the goal as fast as possible without overshoot; the exact solution x(t) = g + (j0 + j1 t) e^{-y t} gives a frame-rate independent update, and halflife parameterisation makes tuning intuitive.",
+    "source": {
+      "title": "Spring-It-On: The Game Developer's Spring-Roll-Call",
+      "authors": "Daniel Holden",
+      "year": 2021,
+      "url": "https://theorangeduck.com/page/spring-roll-call",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "UI that glides and settles, cameras that follow, numbers that ease to targets.",
+    "difficulty": 1,
+    "cost": "O(1) per value; low",
+    "roblox_fit": "Excellent: per frame in RenderStepped on positions/scales; or use Roblox TweenService for fixed targets.",
+    "offline_fit": "n/a",
+    "combos": [
+      "framerate-independent-damping",
+      "minimum-jerk",
+      "shape-matching"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "lib/surfacebake/React.luau has a generic damped spring (k, damp), not a tuned critically damped one."
+  },
+  {
+    "id": "framerate-independent-damping",
+    "name": "Frame-rate independent damping (exponential lerp)",
+    "family": "F",
+    "principle": "Replace lerp(a, b, t) per frame with lerp(a, b, 1 - exp(-lambda dt)), equivalent to b + (a - b) e^{-lambda dt}. The same lambda gives the same motion at 30, 60 or 240 fps.",
+    "source": {
+      "title": "Frame Rate Independent Damping using Lerp",
+      "authors": "Rory Driscoll",
+      "year": 2016,
+      "url": "https://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Smooth follow that feels identical on every device.",
+    "difficulty": 1,
+    "cost": "O(1); low",
+    "roblox_fit": "Excellent for any per-frame smoothing in Luau (Roblox clients run at variable frame rates).",
+    "offline_fit": "n/a",
+    "combos": [
+      "critically-damped-spring",
+      "taa"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "minimum-jerk",
+    "name": "Minimum-jerk trajectory",
+    "family": "F",
+    "principle": "Minimising the integral of squared jerk over a point-to-point move gives the quintic x(t) = x0 + (x1 - x0)(10 s^3 - 15 s^4 + 6 s^5), s = t/T, with zero velocity and acceleration at both ends. Matches human reaching motion.",
+    "source": {
+      "title": "The Coordination of Arm Movements: An Experimentally Confirmed Mathematical Model",
+      "authors": "Tamar Flash, Neville Hogan",
+      "year": 1985,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6565116",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Natural, hand-placed feeling UI moves and camera pans.",
+    "difficulty": 1,
+    "cost": "O(1); low",
+    "roblox_fit": "Excellent: a custom easing function in Luau, or approximate with EasingStyle.Quint InOut.",
+    "offline_fit": "n/a",
+    "combos": [
+      "ruckig-jerk-limited",
+      "critically-damped-spring"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "ruckig-jerk-limited",
+    "name": "Jerk-limited time-optimal trajectories (Ruckig)",
+    "family": "F",
+    "principle": "Compute the time-optimal motion to an arbitrary target state (position, velocity, acceleration) under velocity, acceleration and jerk limits, built from up to seven constant-jerk phases and synchronised across axes; re-plannable every frame.",
+    "source": {
+      "title": "Jerk-limited Real-time Trajectory Generation with Arbitrary Target States",
+      "authors": "Lars Berscheid, Torsten Kröger",
+      "year": 2021,
+      "url": "https://arxiv.org/pdf/2105.04830",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "pantor/ruckig",
+        "url": "https://github.com/pantor/ruckig",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Moves that retarget mid-flight without snapping (dragged cards, homing UI).",
+    "difficulty": 4,
+    "cost": "O(1) per axis per plan, but complex case analysis; low",
+    "roblox_fit": "Port is substantial; a critically damped spring covers most UI needs. Use when hard limits matter.",
+    "offline_fit": "n/a",
+    "combos": [
+      "minimum-jerk",
+      "critically-damped-spring"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "taa",
+    "name": "Temporal anti-aliasing / supersampling",
+    "family": "F",
+    "principle": "Jitter the sample position each frame by a sub-pixel offset, reproject the previous accumulated frame with motion vectors, clamp the history colour to the current pixel's neighbourhood min/max (in YCoCg), and blend a small fraction of the new frame in.",
+    "source": {
+      "title": "High-Quality Temporal Supersampling",
+      "authors": "Brian Karis",
+      "year": 2014,
+      "url": "https://advances.realtimerendering.com/s2014/",
+      "kind": "docs"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Stable, smooth edges and shimmer-free thin lines over time.",
+    "difficulty": 3,
+    "cost": "O(pixels) per frame + history buffer; med",
+    "roblox_fit": "Roblox has no access to its own render targets. Applies only to your own EditableImage renderer (accumulate jittered frames into a history buffer); for static pixel art, prefer supersample-and-downscale.",
+    "offline_fit": "Supersample offline instead.",
+    "combos": [
+      "dynamic-resolution",
+      "framerate-independent-damping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "fabrik",
+    "name": "FABRIK inverse kinematics",
+    "family": "F",
+    "principle": "Forward pass: put the end effector at the target and walk back along the chain, placing each joint at bone length along the line to the next. Backward pass: re-anchor the root and walk forward. Repeat until the tip is within tolerance; constraints are applied per joint.",
+    "source": {
+      "title": "FABRIK: A fast, iterative solver for the Inverse Kinematics problem",
+      "authors": "Andreas Aristidou, Joan Lasenby",
+      "year": 2011,
+      "url": "https://andreasaristidou.com/FABRIK",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Tentacles, tails, reaching arms, chains that follow the cursor.",
+    "difficulty": 1,
+    "cost": "O(joints x iterations); low",
+    "roblox_fit": "Excellent: cheap in Luau, drive Bones, Motor6Ds or 2D UI segments.",
+    "offline_fit": "n/a",
+    "combos": [
+      "xpbd",
+      "ribbon-trails"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/FabrikChain.luau"
+  },
+  {
+    "id": "dla",
+    "name": "Diffusion-limited aggregation",
+    "family": "G",
+    "principle": "Release random walkers far away; each walks until it touches the cluster and sticks. The result is a fractal (dimension about 1.7 in 2D) whose branches screen their interiors from new walkers.",
+    "source": {
+      "title": "Diffusion-Limited Aggregation, a Kinetic Critical Phenomenon",
+      "authors": "T. A. Witten Jr., L. M. Sander",
+      "year": 1981,
+      "url": "https://ifisc.uib-csic.es/~tomas/MFCS/EdenDLA/PhysRevLett.47.1400.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Frost, coral, mineral dendrites, cracks.",
+    "difficulty": 2,
+    "cost": "Many random-walk steps per particle; med (precompute and reveal by arrival order)",
+    "roblox_fit": "Grow once (or bake), then animate the reveal by storing each cell's arrival order.",
+    "offline_fit": "Bake (best).",
+    "combos": [
+      "dielectric-breakdown",
+      "physarum",
+      "jump-flooding"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/FrostDLA.luau"
+  },
+  {
+    "id": "dielectric-breakdown",
+    "name": "Dielectric breakdown model (Lichtenberg figures)",
+    "family": "G",
+    "principle": "Solve Laplace's equation for an electric potential phi around the growing pattern, then add a boundary cell with probability proportional to phi^eta. eta = 1 reproduces DLA statistics; larger eta gives straighter, lightning-like branches.",
+    "source": {
+      "title": "Fractal Dimension of Dielectric Breakdown",
+      "authors": "L. Niemeyer, L. Pietronero, H. J. Wiesmann",
+      "year": 1984,
+      "url": "https://scilit.com/publications/83b76f3e5ee693ba417547249cb6aa11",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Lightning, Lichtenberg burns, electric cracks.",
+    "difficulty": 3,
+    "cost": "Laplace solve per growth step; med-high (keep grids small or bake)",
+    "roblox_fit": "Feasible at 64-128 px per strike, grown over a few frames; bake reusable bolts.",
+    "offline_fit": "Bake many bolts and pick at random.",
+    "combos": [
+      "dla",
+      "kim-lin-lightning",
+      "jump-flooding"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/Lichtenberg.luau"
+  },
+  {
+    "id": "kim-lin-lightning",
+    "name": "Fast lightning on adaptive grids",
+    "family": "G",
+    "principle": "Extends the dielectric breakdown model to lightning animation on an adaptive (quadtree) mesh so the Poisson solve is far cheaper, and renders the bolt by convolving it with a glow kernel to approximate scattering.",
+    "source": {
+      "title": "Fast Animation of Lightning Using an Adaptive Mesh",
+      "authors": "Theodore Kim, Ming C. Lin",
+      "year": 2007,
+      "url": "https://gamma.cs.unc.edu/FAST_LIGHTNING/index.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Physically shaped lightning with glow.",
+    "difficulty": 4,
+    "cost": "Adaptive Poisson solve; med",
+    "roblox_fit": "Port the glow convolution idea (cheap, separable blur) on top of the kit's Lichtenberg; the adaptive solver is heavy to port.",
+    "offline_fit": "LumosQuad (authors' 2D tool) can generate bolts offline; license not checked.",
+    "combos": [
+      "dielectric-breakdown",
+      "dla"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "ribbon-trails",
+    "name": "Ribbon / trail strips",
+    "family": "G",
+    "principle": "Record the last N positions of an emitter and build a triangle strip along them; orient each segment by crossing the segment direction with the vector from the segment to the camera (not the view direction) so the strip faces the viewer even on tight turns.",
+    "source": {
+      "title": "Ribbons and trails (Stride particle manual)",
+      "authors": "Stride documentation",
+      "year": null,
+      "url": "https://doc.stride3d.net/4.2/en/manual/particles/ribbons-and-trails.html",
+      "kind": "docs"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Sword swooshes, comet tails, cursor trails, orbiting sparks.",
+    "difficulty": 2,
+    "cost": "O(segments); low",
+    "roblox_fit": "Roblox Trail and Beam instances cover 3D; for UI, draw strips into an EditableImage or chain rotated Frames; EditableMesh for custom 3D ribbons.",
+    "offline_fit": "n/a",
+    "combos": [
+      "curl-noise",
+      "fabrik",
+      "xpbd"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "boids",
+    "name": "Boids flocking",
+    "family": "G",
+    "principle": "Each agent steers by three local rules over neighbours within a radius: separation (avoid crowding), alignment (match heading) and cohesion (move toward the local centre). Flocking emerges without a leader.",
+    "source": {
+      "title": "Flocks, Herds, and Schools: A Distributed Behavioral Model",
+      "authors": "Craig W. Reynolds",
+      "year": 1987,
+      "url": "https://www.cs.toronto.edu/~dt/siggraph97-course/cwr87",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Swarms of sparks, fish, birds, coins flying to the HUD.",
+    "difficulty": 1,
+    "cost": "O(N x neighbours) with a spatial hash; low-med",
+    "roblox_fit": "Good for hundreds of agents in Luau with spatial-hashing; render as UI images or pixels.",
+    "offline_fit": "n/a",
+    "combos": [
+      "spatial-hashing",
+      "curl-noise"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "lib/pixelfx/fx/Crowd.luau implements separation with a spatial hash, not full boids."
+  },
+  {
+    "id": "oklab",
+    "name": "OKLab perceptual colour space",
+    "family": "H",
+    "principle": "Linear sRGB -> LMS-like cone responses via a 3x3 matrix M1, cube root each channel, then a second 3x3 matrix M2 gives L (lightness), a, b. Euclidean distance and straight-line interpolation in OKLab are close to perceptually uniform.",
+    "source": {
+      "title": "A perceptual color space for image processing",
+      "authors": "Björn Ottosson",
+      "year": 2020,
+      "url": "https://bottosson.github.io/posts/oklab/",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "public domain or MIT (author's code)",
+    "visual_result": "Gradients with no muddy middles; even palette ramps; hue-stable saturation changes.",
+    "difficulty": 1,
+    "cost": "Two 3x3 matrices + 3 cube roots per colour; low",
+    "roblox_fit": "Excellent: build UIGradient keypoints by sampling OKLab ramps; quantise palettes in OKLab.",
+    "offline_fit": "Use in palette tools.",
+    "combos": [
+      "apca",
+      "ciede2000",
+      "machado-cvd",
+      "bayer-dither"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": ".claude/skills/hierarchy-audit/examples/Perceptual.luau",
+    "kit_note": "Also used in lib/pixelfx/fx/PaletteDither.luau."
+  },
+  {
+    "id": "apca",
+    "name": "APCA contrast (Accessible Perceptual Contrast Algorithm)",
+    "family": "H",
+    "principle": "Convert text and background to an estimated screen luminance Y with a soft clamp near black, then compute a lightness contrast Lc from power curves with different exponents for dark-on-light and light-on-dark polarity. Lc thresholds depend on font size and weight.",
+    "source": {
+      "title": "APCA (apca-w3 repository)",
+      "authors": "Andrew Somers (Myndex)",
+      "year": null,
+      "url": "https://github.com/Myndex/apca-w3",
+      "kind": "repo"
+    },
+    "implementation_refs": [
+      {
+        "title": "Myndex/apca-w3",
+        "url": "https://github.com/Myndex/apca-w3",
+        "license": "custom (W3/AGWG web-content-only licence)"
+      }
+    ],
+    "license": "custom: apca-w3 LICENSE limits use to WCAG web content; not OSI",
+    "visual_result": "Readable text by design; polarity-aware contrast scores.",
+    "difficulty": 1,
+    "cost": "O(1) per colour pair; low",
+    "roblox_fit": "Easy in Luau for design-time checks. Licence restricts use: check terms before shipping APCA in a game.",
+    "offline_fit": "Use in audit tools.",
+    "combos": [
+      "oklab",
+      "itti-koch-saliency"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": ".claude/skills/hierarchy-audit/examples/Perceptual.luau",
+    "kit_note": "Kit already uses APCA 0.0.98G constants; the apca-w3 licence text restricts use to web content, so review before shipping in-game."
+  },
+  {
+    "id": "ciede2000",
+    "name": "CIEDE2000 colour difference",
+    "family": "H",
+    "principle": "Delta E_00 combines lightness, chroma and hue differences in CIELAB with weighting functions S_L, S_C, S_H, a rotation term R_T for the blue region, and a chroma-dependent correction of a*. Sharma et al. give test data and note small discontinuities in the hue terms.",
+    "source": {
+      "title": "The CIEDE2000 Color-Difference Formula: Implementation Notes, Supplementary Test Data, and Mathematical Observations",
+      "authors": "Gaurav Sharma, Wencheng Wu, Edul N. Dalal",
+      "year": 2005,
+      "url": "https://hajim.rochester.edu/ece/sites/gsharma/papers/CIEDE2000CRNAFeb05.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Reliable 'are these two rarity colours distinguishable?' checks.",
+    "difficulty": 2,
+    "cost": "O(1) per pair (trig heavy); low",
+    "roblox_fit": "Fine in Luau or Python for design-time palette audits.",
+    "offline_fit": "Use in audit tools; validate against the published test data.",
+    "combos": [
+      "oklab",
+      "machado-cvd"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "Kit's Perceptual.deltaE is Euclidean OKLab distance, not CIEDE2000."
+  },
+  {
+    "id": "itti-koch-saliency",
+    "name": "Itti-Koch-Niebur saliency map",
+    "family": "H",
+    "principle": "Build Gaussian pyramids of intensity, colour opponency (R-G, B-Y) and orientation; take centre-surround differences across scales, normalise each map to promote few strong peaks, and sum into one saliency map; a winner-take-all network picks fixations in order.",
+    "source": {
+      "title": "A Model of Saliency-Based Visual Attention for Rapid Scene Analysis",
+      "authors": "Laurent Itti, Christof Koch, Ernst Niebur",
+      "year": 1998,
+      "url": "https://sites.krieger.jhu.edu/cns/files/2021/08/Itti_etal98.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Predicts where the eye lands first on a screenshot.",
+    "difficulty": 3,
+    "cost": "O(pixels x scales); med (offline)",
+    "roblox_fit": "Offline/design-time on screenshots; too heavy per frame and not needed at runtime.",
+    "offline_fit": "Python audit tool (best).",
+    "combos": [
+      "apca",
+      "oklab",
+      "wcag-flash"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "tools/hierarchy/hierarchy.py",
+    "kit_note": "Implemented 'in spirit' (centre-surround on OKLab channels)."
+  },
+  {
+    "id": "machado-cvd",
+    "name": "Machado colour vision deficiency simulation",
+    "family": "H",
+    "principle": "Models each cone type's spectral sensitivity shift for anomalous trichromacy and dichromacy within a stage (opponent-colour) model, giving a 3x3 matrix per deficiency type and severity that is applied to linear RGB.",
+    "source": {
+      "title": "A Physiologically-based Model for Simulation of Color Vision Deficiency",
+      "authors": "Gustavo M. Machado, Manuel M. Oliveira, Leandro A. F. Fernandes",
+      "year": 2009,
+      "url": "https://www.inf.ufrgs.br/~oliveira/pubs_files/CVD_Simulation/CVD_Simulation.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Preview of protan/deutan/tritan views of the UI.",
+    "difficulty": 1,
+    "cost": "One 3x3 matrix per pixel; low",
+    "roblox_fit": "Excellent: per colour in Luau for rarity-ladder checks; per pixel offline for screenshots.",
+    "offline_fit": "Python audit tool.",
+    "combos": [
+      "oklab",
+      "ciede2000",
+      "apca"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": ".claude/skills/hierarchy-audit/examples/Perceptual.luau"
+  },
+  {
+    "id": "wcag-flash",
+    "name": "WCAG 2.3.1 flash thresholds",
+    "family": "H",
+    "principle": "Content fails if it has more than three general flashes or three red flashes in any one-second period; a general flash is a pair of opposing relative-luminance changes of 10% or more where the darker state is below 0.80, over a large enough area of the screen.",
+    "source": {
+      "title": "Understanding Success Criterion 2.3.1: Three Flashes or Below Threshold",
+      "authors": "W3C WAI",
+      "year": null,
+      "url": "https://www.w3.org/WAI/WCAG21/Understanding/three-flashes-or-below-threshold",
+      "kind": "docs"
+    },
+    "implementation_refs": [],
+    "license": "W3C document (no code)",
+    "visual_result": "Photosensitive-safe VFX.",
+    "difficulty": 2,
+    "cost": "O(pixels x frames) offline; low",
+    "roblox_fit": "Enforce at design time on captured GIFs; in game, cap bright full-screen flashes to <= 3 per second and respect a reduced-flashing setting.",
+    "offline_fit": "Python audit on effect captures.",
+    "combos": [
+      "itti-koch-saliency",
+      "taa"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "tools/hierarchy/hierarchy.py"
+  },
+  {
+    "id": "dirty-rectangles",
+    "name": "Dirty rectangles / cached cell rendering",
+    "family": "I",
+    "principle": "Track which screen regions changed and only redraw/upload those. The cell variant hashes the draw commands overlapping each grid cell and redraws only cells whose hash differs from last frame, so the app can 'redraw everything' cheaply.",
+    "source": {
+      "title": "Cached Software Rendering",
+      "authors": "rxi",
+      "year": 2020,
+      "url": "https://rxi.github.io/cached_software_rendering.html",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "No visual change; big frame-time savings when most of the UI is static.",
+    "difficulty": 2,
+    "cost": "O(changed area); low",
+    "roblox_fit": "Excellent: EditableImage WritePixelsBuffer uploads cost scale with area; tile-level dirty flags cut upload work.",
+    "offline_fit": "n/a",
+    "combos": [
+      "rect-bin-packing",
+      "dynamic-resolution",
+      "meshlets"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/IndexedFrame.luau",
+    "kit_note": "Per-16x16-tile dirty tracking."
+  },
+  {
+    "id": "rect-bin-packing",
+    "name": "Rectangle bin packing for texture atlases",
+    "family": "I",
+    "principle": "Place rectangles into a fixed bin with heuristics: Shelf (rows), Skyline (track the top contour), Guillotine (split free space) and MaxRects (keep all maximal free rectangles); best-short-side-fit style rules choose placement.",
+    "source": {
+      "title": "A Thousand Ways to Pack the Bin - A Practical Approach to Two-Dimensional Rectangle Bin Packing",
+      "authors": "Jukka Jylänki",
+      "year": 2010,
+      "url": "https://github.com/juj/RectangleBinPack",
+      "kind": "repo"
+    },
+    "implementation_refs": [
+      {
+        "title": "juj/RectangleBinPack",
+        "url": "https://github.com/juj/RectangleBinPack",
+        "license": "public domain"
+      }
+    ],
+    "license": "public domain (code)",
+    "visual_result": "No visual change; fewer images and draw calls.",
+    "difficulty": 2,
+    "cost": "O(n log n) to O(n^2) per pack; low",
+    "roblox_fit": "Good: share one EditableImage across many small dynamic surfaces (memory budget is per image); pack offline for static sprite sheets.",
+    "offline_fit": "Pack sprite sheets offline.",
+    "combos": [
+      "dirty-rectangles"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/Atlas.luau",
+    "kit_note": "Shelf packing with per-shelf free lists."
+  },
+  {
+    "id": "dynamic-resolution",
+    "name": "Dynamic resolution rendering",
+    "family": "I",
+    "principle": "Render the scene into a viewport covering a variable fraction of the render target and scale it to the output; adjust the fraction each frame from measured GPU/CPU time. Keep UI at native resolution.",
+    "source": {
+      "title": "Dynamic Resolution Rendering",
+      "authors": "Doug Binks (Intel)",
+      "year": 2011,
+      "url": "https://www.intel.com/content/dam/develop/external/us/en/documents/dynamicresolutionrendering-183334.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Steady frame rate; slight softness under load.",
+    "difficulty": 2,
+    "cost": "Controller O(1); saves O(pixels); low",
+    "roblox_fit": "Good for a custom EditableImage renderer: pick 0.5x-1x of the image size from a frame-time EMA, let ImageLabel scaling do the upsample (ResampleMode Pixelated for pixel art).",
+    "offline_fit": "n/a",
+    "combos": [
+      "taa",
+      "dirty-rectangles",
+      "framerate-independent-damping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "spatial-hashing",
+    "name": "Spatial hashing for neighbour queries",
+    "family": "I",
+    "principle": "Map each object's cell (floor(x/s), floor(y/s), floor(z/s)) to a hash table bucket with a large-prime XOR hash; neighbour queries check only nearby cells. Cell size near the object size and a table size well above the object count keep collisions low.",
+    "source": {
+      "title": "Optimized Spatial Hashing for Collision Detection of Deformable Objects",
+      "authors": "Matthias Teschner, Bruno Heidelberger, Matthias Müller, Danat Pomeranets, Markus Gross",
+      "year": 2003,
+      "url": "https://cgweb.informatik.uni-freiburg.de/publications/2003_VMV_collisionDetectionHashing.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "No visual change; enables crowds, particles, boids, SPH.",
+    "difficulty": 1,
+    "cost": "O(N) build, O(1) average query; low",
+    "roblox_fit": "Excellent in Luau with buffers as linked lists.",
+    "offline_fit": "n/a",
+    "combos": [
+      "boids",
+      "sph-fluids",
+      "position-based-fluids"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/Crowd.luau"
+  },
+  {
+    "id": "wave-function-collapse",
+    "name": "Wave function collapse",
+    "family": "J",
+    "principle": "Every output cell starts as the set of all tiles/patterns allowed by adjacency rules learned from a sample; repeatedly collapse the lowest-entropy cell to one option (weighted by frequency) and propagate constraints to neighbours; restart or backtrack on contradiction.",
+    "source": {
+      "title": "WaveFunctionCollapse",
+      "authors": "Maxim Gumin",
+      "year": 2016,
+      "url": "https://github.com/mxgmn/WaveFunctionCollapse",
+      "kind": "repo"
+    },
+    "implementation_refs": [
+      {
+        "title": "mxgmn/WaveFunctionCollapse",
+        "url": "https://github.com/mxgmn/WaveFunctionCollapse",
+        "license": "MIT"
+      }
+    ],
+    "license": "MIT (code; sample images may carry separate terms)",
+    "visual_result": "Coherent tile maps, ornaments and UI borders that look hand-designed.",
+    "difficulty": 3,
+    "cost": "O(cells x patterns) per collapse step; med",
+    "roblox_fit": "Good at small sizes (32x32 tiles) in Luau at load time; avoid running per frame.",
+    "offline_fit": "Generate offline or at level load.",
+    "combos": [
+      "poisson-disk-bridson",
+      "cellular-automata-caves",
+      "greedy-meshing"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "poisson-disk-bridson",
+    "name": "Fast Poisson disk sampling (Bridson)",
+    "family": "J",
+    "principle": "Use a background grid of cell size r/sqrt(n); from an active list pick a point, try k candidates in the annulus [r, 2r], accept one if no grid neighbour is closer than r, else retire the point. O(N) for N samples in any dimension.",
+    "source": {
+      "title": "Fast Poisson Disk Sampling in Arbitrary Dimensions",
+      "authors": "Robert Bridson",
+      "year": 2007,
+      "url": "https://www.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [
+      {
+        "title": "thinks/poisson-disk-sampling",
+        "url": "https://github.com/thinks/poisson-disk-sampling",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Even, natural scatter of props, stars, sparkles with no clumps.",
+    "difficulty": 1,
+    "cost": "O(N x k); low",
+    "roblox_fit": "Excellent in Luau; also seeds Worley/JFA.",
+    "offline_fit": "n/a",
+    "combos": [
+      "worley-noise",
+      "jump-flooding",
+      "wave-function-collapse"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": ".claude/skills/procedural-world/examples/Poisson.luau"
+  },
+  {
+    "id": "greedy-meshing",
+    "name": "Greedy meshing for voxels",
+    "family": "J",
+    "principle": "For each axis and slice, build a 2D mask of visible faces with matching type, then repeatedly take the first unvisited cell, extend it as far as possible in u, then in v, emit one quad and clear the mask. Far fewer quads than one per face (with T-junctions).",
+    "source": {
+      "title": "Meshing in a Minecraft Game",
+      "authors": "Mikola Lysenko",
+      "year": 2012,
+      "url": "https://0fps.net/2012/06/30/meshing-in-a-minecraft-game/",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Same look, far fewer triangles for voxel worlds.",
+    "difficulty": 2,
+    "cost": "O(voxels) per chunk rebuild; low",
+    "roblox_fit": "Good for EditableMesh voxel chunks (triangle budget per mesh matters); rebuild only edited chunks.",
+    "offline_fit": "Mesh offline for static voxel art.",
+    "combos": [
+      "marching-cubes",
+      "surface-nets",
+      "meshlets"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "marching-cubes",
+    "name": "Marching cubes / marching squares",
+    "family": "J",
+    "principle": "Classify each cell by which of its 8 corners (4 in 2D) are inside the iso-surface, look up the triangle (segment) configuration in a 256-entry (16) table, and place vertices on edges by linear interpolation of the field values.",
+    "source": {
+      "title": "Marching Cubes: A High Resolution 3D Surface Construction Algorithm",
+      "authors": "William E. Lorensen, Harvey E. Cline",
+      "year": 1987,
+      "url": "https://courses.cs.duke.edu/cps124/fall01/resources/p163-lorensen.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Smooth blobby terrain, metaball meshes, contour outlines.",
+    "difficulty": 2,
+    "cost": "O(cells); low-med",
+    "roblox_fit": "2D marching squares is cheap for EditableImage/EditableMesh contours; 3D in Luau is fine for small chunks (32^3).",
+    "offline_fit": "Mesh offline.",
+    "combos": [
+      "metaballs",
+      "surface-nets",
+      "dual-contouring",
+      "cellular-automata-caves"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/mesh/ContourMesh.luau",
+    "kit_note": "2D marching squares (also in lib/pixelfx/fx/CaveCA.luau autotiling); no 3D marching cubes."
+  },
+  {
+    "id": "dual-contouring",
+    "name": "Dual contouring of Hermite data",
+    "family": "J",
+    "principle": "Place one vertex per sign-changing cell at the minimiser of a quadratic error function sum (n_i . (x - p_i))^2 built from edge intersection points p_i and normals n_i, then connect vertices of the 4 cells around each sign-changing edge. Preserves sharp features; octree simplification via QEF merging.",
+    "source": {
+      "title": "Dual Contouring of Hermite Data",
+      "authors": "Tao Ju, Frank Losasso, Scott Schaefer, Joe Warren",
+      "year": 2002,
+      "url": "https://www.cs.wustl.edu/~taoju/research/dualContour.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Destructible terrain and CSG shapes with crisp edges.",
+    "difficulty": 4,
+    "cost": "O(cells) plus a small least-squares solve per cell; med",
+    "roblox_fit": "Possible for small EditableMesh chunks; the QEF solve needs care (SVD/clamping) in Luau.",
+    "offline_fit": "Offline is easier.",
+    "combos": [
+      "marching-cubes",
+      "surface-nets"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "surface-nets",
+    "name": "Naive surface nets",
+    "family": "J",
+    "principle": "A dual method: one vertex per cell that straddles the surface, placed at the average of the cell's edge crossings, then quads joining the vertices of the 4 cells around each crossing edge. Smoother and fewer triangles than marching cubes, but no sharp features.",
+    "source": {
+      "title": "Smooth Voxel Terrain (Part 2)",
+      "authors": "Mikola Lysenko",
+      "year": 2012,
+      "url": "https://0fps.net/2012/07/12/smooth-voxel-terrain-part-2/",
+      "kind": "blog"
+    },
+    "implementation_refs": [
+      {
+        "title": "mikolalysenko/isosurface",
+        "url": "https://github.com/mikolalysenko/isosurface",
+        "license": "MIT"
+      }
+    ],
+    "license": "paper (no code license)",
+    "visual_result": "Smooth sculptable terrain and blobs.",
+    "difficulty": 2,
+    "cost": "O(cells); low",
+    "roblox_fit": "Good for EditableMesh chunks in Luau; simpler than dual contouring.",
+    "offline_fit": "Mesh offline.",
+    "combos": [
+      "marching-cubes",
+      "dual-contouring",
+      "greedy-meshing"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "cellular-automata-caves",
+    "name": "Cellular-automata cave generation",
+    "family": "J",
+    "principle": "Fill a grid randomly (e.g. ~50% rock), then apply a few steps of a rule such as 'a cell becomes rock if at least T of its 8 neighbours are rock'; seed per chunk for infinite, consistent worlds.",
+    "source": {
+      "title": "Cellular Automata for Real-time Generation of Infinite Cave Levels",
+      "authors": "Lawrence Johnson, Georgios N. Yannakakis, Julian Togelius",
+      "year": 2010,
+      "url": "https://www.um.edu.mt/library/oar/bitstream/123456789/22895/1/Cellular_automata_for_real-time_generation_of.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Organic caves and blobby regions.",
+    "difficulty": 1,
+    "cost": "O(cells x steps); low",
+    "roblox_fit": "Excellent in Luau; autotile edges with marching squares.",
+    "offline_fit": "n/a",
+    "combos": [
+      "marching-cubes",
+      "wave-function-collapse",
+      "poisson-disk-bridson"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/CaveCA.luau"
+  },
+  {
+    "id": "blackbody-color",
+    "name": "Blackbody colour temperature to RGB (fitted)",
+    "family": "X-other",
+    "principle": "Fit piecewise curves (log and power functions of T/100) for R, G, B to blackbody chromaticity data over 1000-40000 K: red saturates below ~6600 K, blue is 0 below ~2000 K. A cheap approximation of integrating Planck's law against colour matching functions.",
+    "source": {
+      "title": "How to Convert Temperature (K) to RGB: Algorithm and Sample Code",
+      "authors": "Tanner Helland",
+      "year": 2012,
+      "url": "https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html",
+      "kind": "blog"
+    },
+    "implementation_refs": [],
+    "license": "blog (code license not stated)",
+    "visual_result": "Physically ordered heat glow: red -> orange -> white -> blue-white.",
+    "difficulty": 1,
+    "cost": "O(1) per temperature; low",
+    "roblox_fit": "Excellent: generate UIGradient keypoints or a 1D lookup for heat, forge and star effects.",
+    "offline_fit": "Bake a ramp.",
+    "combos": [
+      "thin-film-iridescence",
+      "taa"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "lib/surfacebake/React.luau uses a hand-made 'blackbody-ish' ramp, not this fit."
+  },
+  {
+    "id": "diffraction-shader",
+    "name": "Diffraction shaders (gratings, CD sheen)",
+    "family": "X-other",
+    "principle": "Treat surface micro-structure as a height profile and evaluate the Kirchhoff scattering integral with Fourier analysis; for a periodic grating of spacing d, bright orders appear where d (sin theta_o - sin theta_i) = m lambda, spreading white light into rainbow bands.",
+    "source": {
+      "title": "Diffraction Shaders",
+      "authors": "Jos Stam",
+      "year": 1999,
+      "url": "https://www.dgp.toronto.edu/~stam/reality/Research/Diffraction/index.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Holographic foil, CD rainbows, iridescent scratches on rarity cards.",
+    "difficulty": 3,
+    "cost": "O(pixels x wavelengths or orders); med",
+    "roblox_fit": "Simplified grating form per texel in EditableImage with a few wavelength samples, or bake an angle->colour ramp and drive it from the view/tilt angle.",
+    "offline_fit": "Bake ramps or foil textures.",
+    "combos": [
+      "thin-film-iridescence",
+      "opal-play-of-colour",
+      "domain-warping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no",
+    "kit_note": "lib/celestialrithm/MaterialField.luau 'holo' is a sine pattern, not a diffraction model."
+  },
+  {
+    "id": "opal-play-of-colour",
+    "name": "Opal play-of-colour (stratified structural colour)",
+    "family": "X-other",
+    "principle": "Opal is ordered silica spheres (150-300 nm) that Bragg-diffract light, m lambda = 2 n d cos theta, so each domain flashes a hue that shifts with angle. Imura et al. model it with a stratified amorphous structure and a multi-channel ray tracer.",
+    "source": {
+      "title": "Rendering of 'Play of Color' using Stratified Model based on Amorphous Structure of Opal",
+      "authors": "Masataka Imura, Takaaki Abe, Ichiroh Kanaya, Yoshihiro Yasumuro, Yoshitsugu Manabe, Kunihiro Chihara",
+      "year": 2003,
+      "url": "https://dblp.uni-trier.de/rec/conf/dicta/ImuraAKYMC03.html",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Patchy flashes of saturated colour that change with tilt (gem rarity).",
+    "difficulty": 4,
+    "cost": "Offline ray tracing; high (runtime approximation is cheap)",
+    "roblox_fit": "Approximate: Voronoi domains (worley-noise) each with a Bragg hue from view angle, per texel in EditableImage; bake variants.",
+    "offline_fit": "Bake.",
+    "combos": [
+      "worley-noise",
+      "diffraction-shader",
+      "thin-film-iridescence"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "gravitational-lensing",
+    "name": "Gravitational lensing (ray-bundle renderer)",
+    "family": "X-other",
+    "principle": "Trace light rays and ray bundles backwards through curved (Kerr) spacetime by integrating geodesics, sampling the background where they escape; spin drags space so multiple images of a star appear. For stylised use, a radial deflection alpha proportional to 1/r reproduces an Einstein ring.",
+    "source": {
+      "title": "Gravitational Lensing by Spinning Black Holes in Astrophysics, and in the Movie Interstellar",
+      "authors": "Oliver James, Eugénie von Tunzelmann, Paul Franklin, Kip S. Thorne",
+      "year": 2015,
+      "url": "https://arxiv.org/abs/1502.03808v2",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Black-hole portals, warping rings, cosmic UI backgrounds.",
+    "difficulty": 4,
+    "cost": "Full geodesics high; stylised radial warp O(pixels) low",
+    "roblox_fit": "Stylised radial UV warp of a background texture per texel in EditableImage is cheap; the full Kerr renderer is offline only.",
+    "offline_fit": "Bake backgrounds with the full model if desired.",
+    "combos": [
+      "screen-space-refraction",
+      "domain-warping"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "rosensweig-instability",
+    "name": "Rosensweig (normal-field) ferrofluid instability",
+    "family": "X-other",
+    "principle": "A perpendicular magnetic field destabilises a flat ferrofluid surface once magnetisation exceeds a critical value set by gravity and surface tension; the surface then forms a hexagonal array of peaks with spacing near the critical wavelength 2 pi sqrt(sigma/(rho g)).",
+    "source": {
+      "title": "The Interfacial Stability of a Ferromagnetic Fluid",
+      "authors": "M. D. Cowley, R. E. Rosensweig",
+      "year": 1967,
+      "url": "https://cambridge.org/core/journals/journal-of-fluid-mechanics/article/interfacial-stability-of-a-ferromagnetic-fluid/B40DFB1706780F071CDC7B0DFBFF7FCD",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Spiky ferrofluid blobs that rise with a magnet (boss, UI orb).",
+    "difficulty": 3,
+    "cost": "Stylised: hex lattice of spikes O(pixels) or O(vertices); low",
+    "roblox_fit": "Stylise: displace an EditableMesh sphere/plane by a hex lattice of peaks scaled by a field strength; no physics sim needed.",
+    "offline_fit": "Bake displacement maps.",
+    "combos": [
+      "metaballs",
+      "smooth-min",
+      "heightfield-shallow-water"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "no"
+  },
+  {
+    "id": "radiance-cascades",
+    "name": "Radiance cascades (2D global illumination)",
+    "family": "X-other",
+    "principle": "Store radiance probes in cascades where each level doubles probe spacing and quadruples angular resolution while covering a farther ray interval; merging cascades from coarse to fine gives near-noise-free GI at roughly constant cost per cascade.",
+    "source": {
+      "title": "Radiance Cascades: A Novel High-Resolution Formal Solution for Multidimensional Non-LTE Radiative Transfer",
+      "authors": "Christopher M. J. Osborne, Alexander Sannikov",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2408.14425v1",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Soft light bleeding and shadows from emissive pixels in 2D scenes.",
+    "difficulty": 4,
+    "cost": "O(pixels / s0^2 x cascades); med-high",
+    "roblox_fit": "Feasible on CPU at low res with distance-field ray marching; the kit has a real-time CPU variant.",
+    "offline_fit": "Bake lightmaps.",
+    "combos": [
+      "felzenszwalb-edt",
+      "jump-flooding",
+      "sh-irradiance"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/fx/RadianceCascades.luau",
+    "kit_note": "Kit cites Sannikov 2023 (original write-up); the arXiv paper is the citable version."
+  },
+  {
+    "id": "voxel-space",
+    "name": "Voxel Space heightmap terrain",
+    "family": "X-other",
+    "principle": "For each depth step from far to near (or near to far with a y-buffer), project a horizontal line across the height and colour maps onto the screen and draw vertical spans whose height is (camera height - map height)/z scaled; occlusion falls out of draw order.",
+    "source": {
+      "title": "VoxelSpace",
+      "authors": "Sebastian Macke",
+      "year": null,
+      "url": "https://github.com/s-macke/VoxelSpace",
+      "kind": "repo"
+    },
+    "implementation_refs": [
+      {
+        "title": "s-macke/VoxelSpace",
+        "url": "https://github.com/s-macke/VoxelSpace",
+        "license": "MIT (Comanche maps excluded)"
+      }
+    ],
+    "license": "MIT (code; Comanche maps excluded)",
+    "visual_result": "Retro 2.5D terrain fly-overs in a single image.",
+    "difficulty": 2,
+    "cost": "O(screen width x depth steps); low-med",
+    "roblox_fit": "Good: pure CPU column rendering into an EditableImage.",
+    "offline_fit": "n/a",
+    "combos": [
+      "dynamic-resolution",
+      "improved-perlin-noise"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/frontier/fx/VoxelSpace.luau"
+  },
+  {
+    "id": "void-and-cluster",
+    "name": "Void-and-cluster blue-noise dither arrays",
+    "family": "X-other",
+    "principle": "Start from a random binary pattern, repeatedly swap the tightest cluster pixel into the largest void (measured with a Gaussian filter) until stable, then rank every pixel by removing clusters and filling voids to build a threshold array with blue-noise spectrum.",
+    "source": {
+      "title": "The Void-and-Cluster Method for Dither Array Generation",
+      "authors": "Robert Ulichney",
+      "year": 1993,
+      "url": "https://staging--surmblog.netlify.app/things/ditherpunk/bluenoise-1993.pdf",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Even, clump-free dissolves and dithers.",
+    "difficulty": 2,
+    "cost": "Generation O(n^2 x filter) once; lookup O(1); low at runtime",
+    "roblox_fit": "Generate once (or offline) and reuse; threshold per pixel in EditableImage.",
+    "offline_fit": "Bake the array.",
+    "combos": [
+      "bayer-dither",
+      "oklab"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/BlueNoiseDissolve.luau",
+    "kit_note": "Source PDF URL is an unofficial mirror; the citation (SPIE vol. 1913) is confirmed by patent references."
+  },
+  {
+    "id": "bayer-dither",
+    "name": "Bayer ordered dithering",
+    "family": "X-other",
+    "principle": "Threshold each pixel against a recursively defined index matrix M_2n = [[4M, 4M+2], [4M+3, 4M+1]] (normalised). Patterns are regular and temporally stable, ideal for low-palette pixel art.",
+    "source": {
+      "title": "An Optimum Method for Two-Level Rendition of Continuous-Tone Pictures",
+      "authors": "Bryce E. Bayer",
+      "year": 1973,
+      "url": null,
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Retro cross-hatch gradients, stable dithered fades.",
+    "difficulty": 1,
+    "cost": "O(1) per pixel; low",
+    "roblox_fit": "Excellent in EditableImage pixel renderers.",
+    "offline_fit": "n/a",
+    "combos": [
+      "void-and-cluster",
+      "oklab"
+    ],
+    "verification": "unverified-source",
+    "implemented_in_kit": "lib/pixelfx/fx/PaletteDither.luau",
+    "kit_note": "Citation seen only in secondary references (page numbers conflict); no primary URL verified."
+  },
+  {
+    "id": "phyllotaxis-vogel",
+    "name": "Vogel phyllotaxis spiral",
+    "family": "X-other",
+    "principle": "Place seed n at angle n x 137.508 degrees (the golden angle) and radius c sqrt(n); the points pack evenly with interlocking Fibonacci spirals.",
+    "source": {
+      "title": "A Better Way to Construct the Sunflower Head",
+      "authors": "H. Vogel",
+      "year": 1979,
+      "url": "https://scilit.com/publications/1ebc3552fc558e614d07555c96839b9d",
+      "kind": "paper"
+    },
+    "implementation_refs": [],
+    "license": "paper (no code license)",
+    "visual_result": "Sunflower bursts, petal rings, sigils, even radial scatter.",
+    "difficulty": 1,
+    "cost": "O(N); low",
+    "roblox_fit": "Excellent: positions for UI sparkles or pixel blooms.",
+    "offline_fit": "n/a",
+    "combos": [
+      "poisson-disk-bridson",
+      "boids"
+    ],
+    "verification": "source-verified",
+    "implemented_in_kit": "lib/pixelfx/fx/Phyllotaxis.luau"
+  }
+]

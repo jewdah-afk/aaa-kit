@@ -1,1 +1,5 @@
 __pycache__/
+# Generated, deterministic catalogs (rebuilt by tools/check_all.sh; ~27 MB together)
+docs/algorithm-vault/recipes.jsonl
+docs/algorithm-vault/vault.sqlite
+docs/celestialrithm/ui_recipe_catalog.jsonl

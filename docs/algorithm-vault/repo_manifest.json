@@ -1,0 +1,31 @@
+{
+  "repository": "jewdah-afk/aaa-kit",
+  "ref": "main",
+  "inspected_paths": [
+    "CLAUDE.md",
+    "README.md",
+    "HIERARCHY.md",
+    "LEXICON.md",
+    "lexicon.json",
+    "docs/playbooks/figma-to-roblox-ui.md",
+    "docs/research/83-audio-hierarchy.md",
+    ".claude/skills/editable-image/SKILL.md",
+    ".claude/skills/editable-mesh/SKILL.md",
+    ".claude/skills/hierarchy-audit/SKILL.md",
+    "lib/frontier/Atlas.luau",
+    "lib/frontier/Uploader.luau",
+    "lib/frontier/IndexedFrame.luau",
+    "lib/frontier/ImagePool.luau",
+    "lib/frontier/mesh/HeightfieldMesh.luau",
+    "lib/frontier/mesh/ContourMesh.luau",
+    "lib/frontier/fx/RadianceCascades.luau",
+    "lib/frontier/combo/Fracture.luau",
+    "lib/frontier/combo/SandTable.luau",
+    "lib/frontier/combo/Lightmap.luau",
+    "lib/pixelfx/README.md",
+    "tools/hierarchy/hierarchy.py",
+    "docs/research/40-editableimage-technique-cookbook.md",
+    "docs/research/41-editablemesh-technique-cookbook.md"
+  ],
+  "note": "Paths verified via GitHub API tree and selected documents, not a complete source-code mirror."
+}
