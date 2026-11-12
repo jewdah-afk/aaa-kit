@@ -51,6 +51,7 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 8. **No third-party IP in public material.** Use generic names ("orbiting tome", not a real game's item name).
 9. **No secrets in source.** Use `HttpService:GetSecret` or environment config, and never paste key values in chat.
 10. **Small commits on a branch** with messages that say what changed.
+11. **Show a screenshot of completed work.** Every finished piece ends with an image sent to the user: a render, a capture of the page, or a capture of the results table when the work has no visual of its own.
 
 ## Checks
 
