@@ -1,95 +1,99 @@
-<!-- Paste into Discord one block at a time: each "message" below is under Discord's 2,000-character limit. -->
+<!-- Paste into Discord one block at a time: each message below is under Discord's 2,000-character limit. -->
 
 # aaa-kit: Discord guide
 
-Five messages, ready to paste. Each block between the `---` lines fits in one Discord message.
+Four messages for a forum or suggestions post. Title: `aaa-kit: free Claude Code skill vault for Roblox devs`. Attach 2-4 GIFs from `media/gifs/` (all under 6 MB), e.g. `surfaces/react-ice-vs-lava-sphere.gif`, `surfaces/dissolve-gold-torus.gif`, `tier5-holo.gif`, `surfaces/depth-shell-fur.gif`, plus `media/map-guide/map_hero.jpg`.
 
 ---
 
-# 🎮 aaa-kit: the game-dev super repo
-**One repo that makes every Roblox game (and every Claude session) start at a AAA bar.**
+<!-- Message 1: the post (1924 characters) -->
+
+# aaa-kit: a Claude Code skill vault for Roblox devs
+Free, open source. Clone it, open it in Claude Code, say **hi**, and Claude starts working like it knows Roblox at a AAA bar: UI, VFX, rewards, materials, economy, worlds and clean Luau.
 <https://github.com/jewdah-afk/aaa-kit>
 
-**What's inside**
-> 📐 **Hierarchy:** the rules for what owns the screen and how loud it may be
-> 🧠 **15 Claude skills:** HUD, rewards, VFX, materials, shaders, worlds, economy, Luau…
-> 📚 **30 research chapters + 10 playbooks:** what works and *how we actually did it*
-> 🧪 **3 tested Luau libraries:** pixels, meshes, and textures baked onto models
-> 🗣️ **464-term lexicon:** design words with ready-to-paste prompt phrases
-> 🔧 **Tools:** kit doctor, hierarchy auditor, Figma pipeline, GIF recorder, one-command checks
-> 🎞️ **Labs + 36 GIFs:** every effect running live
+## What's in it
+- **16 skills** that load by themselves when your ask matches, each with a tested example (full list below), plus **22 LihFolk skills** one install away
+- **Lexicon (hyperlexicon)**: 464 real design terms across 15 areas. Each has a meaning, when to use it, what it pairs with and a phrase to paste into a prompt
+- **HIERARCHY.md**: 6 loudness tiers, so effects stop fighting over the screen
+- **Framework**: a 5-layer Roblox project structure and a starter game with 48 tests
+- **Luau libraries**, tested headless: `frontier` (EditableImage/Mesh pushed to the limit), `pixelfx` (15 pixel effects), `surfacebake` (procedural materials baked onto your meshes)
+- **36 research docs, 1000+ algorithm ideas, 10 playbooks** (Figma to Roblox UI, VFX craft, look-dev)
+- **Tools**: a hierarchy auditor (where the eye goes on a screenshot, plus contrast, colour-blind and flash checks), economy calculator, and 4 review agents (`ui-qa`, `style-guard`, `visual-hierarchy`, `roblox-feasibility`)
 
-**Start in 10 seconds**
+## How it helps
+Vague ask like "make the shop better"? The prompt amplifier turns it into a real brief. Say "chest opening" and the reward skill brings the beats, timing and juice.
+
+## Example
+**loudness tier** → `put this in loudness tier 2: bright on the onset frame, back to baseline within 12 frames`
+```lua
+Apply.bakeMeshPart(workspace.Barrel, Presets.rustedIron, { size = 512 })
 ```
-git clone https://github.com/jewdah-afk/aaa-kit
-```
-Open it in Claude Code and type **`hi`**. The kit doctor checks your PC (lune, rojo, selene, node, python, ffmpeg…), lists what's missing with install commands, and suggests next steps.
-Type something vague like **"make the shop cool"** and the prompt amplifier turns it into a full brief with solid / bold / insane options, then gets to work.
+
+## Start
+`git clone https://github.com/jewdah-afk/aaa-kit`, open it in Claude Code, type `hi`. It checks your setup first. Want the skills in your own game? Copy `.claude/skills/` into it.
+
+-# Code MIT · docs CC BY-ND 4.0 · WIP, drop suggestions below
 
 ---
 
-# 📐 Hierarchy: the core idea
-Every pixel has a job. `HIERARCHY.md` decides what wins:
-• **Loudness tiers 1–6:** 1 moments & rewards → 2 combat → 3 HUD → 4 world → 5 materials → 6 generative engines
-• **Pixel ownership:** effects never cover threats, UI or ceremony
-• **Intensity ladder:** calm → build → surge → ceremony → boss → finale. Every system reads it
-• **Colour jobs, rarity ladder, figure-ground gate, one loud element per panel**
+<!-- Message 2: first reply (1781 characters) -->
 
-**Now backed by science** (attention, contrast, timing, audio), and every rule has a number:
-✅ text contrast with **APCA** (75+ for numbers you read in play)
-✅ **colour-blind** checks (it caught Rare vs Epic looking the same, now fixed)
-✅ **flash safety**: ≤ 3 flashes/s (WCAG). Every GIF is checked automatically
-✅ enemy wind-ups ≥ 600 ms; reward beats ≥ 500 ms apart
-
-**Measure it:** `tools/hierarchy` takes a screenshot and predicts where the eye lands 1st → 5th, then flags competitors, squint value and colour-blind failures.
-
----
-
-# 🧠 Skills, playbooks, research
-**Skills** load automatically when your request matches:
-`ui-hud` · `reward-moments` · `vfx` · `materials` · `shaders-and-sdf` · `algorithms` · `procedural-world` · `game-economy` · `editable-image` · `editable-mesh` · `roblox-luau-standards` · `art-direction` · `hierarchy-audit` · `prompt-amplifier` · `kit-doctor`
-Each one has a method, its hierarchy rules, a tested Luau example and a self-check.
-
-**Playbooks: how we did everything**
-Figma → Roblox UI (the kit, exporter and node-for-node renderer) · UI motion & sound · icon pipeline · world hierarchy · VFX craft · look-dev loop · Studio workflow · working with Claude (handouts, owner rules) · parity & porting · **procedural textures on models**
-
-**Review agents:** `ui-qa` · `style-guard` · `visual-hierarchy` · `roblox-feasibility`
-
-**Research:** EditableImage/Mesh APIs + cookbooks, Luau performance, VFX & game feel, architecture, security, procgen, NPC AI, live ops, QA, big numbers, incremental design, hierarchy science.
+## All 16 skills
+Each is a `SKILL.md` Claude loads by itself, with a tested example in `.claude/skills/<name>/examples/`. ✅ = checks passing in lune
+- `ui-hud`: counters, bars, cooldowns, shop cards · `Odometer` ✅12 · Figma→Roblox playbook
+- `vfx`: impacts, hit-stop, shake, trails, lightning, dissolves · `Impact` ✅7 · VFX craft playbook
+- `reward-moments`: chest/egg opens, RNG reels, level-ups, rebirth · `RewardSequence`+`Reel` ✅15
+- `materials`: chrome, gem, glass, holo, molten, rarity as material · `RarityStyle` ✅6 · `surfacebake`
+- `editable-image`: pixel renderers, procedural textures · `PixelFrame` ✅11 · `frontier`, `pixelfx`, API research
+- `editable-mesh`: runtime geometry, terrain, deformation, LOD · `GridMesh` ✅9 · API + 3D maths research
+- `shaders-and-sdf`: SDFs, raymarching, noise, thin film, no real shaders needed · `Sdf` ✅13 · depth lab
+- `algorithms`: noise, jump flood, cellular automata, reaction-diffusion · `Chain` ✅7
+- `procedural-world`: maps, biomes, dungeons, scatter, L-system trees · `Poisson` ✅4 · world playbook
+- `game-economy`: cost curves, numbers past 1e308, buy-max, prestige · `Curves` ✅10 · `EternityNum`
+- `roblox-luau-standards`: structure, remotes, server checks, saves, receipts · `Receipts` ✅7 · starter game
+- `art-direction`: palettes, values, contrast, silhouettes · `Contrast` ✅8 · HIERARCHY.md
+- `hierarchy-audit`: where the eye goes, contrast, colour-blind, flash safety · `Perceptual` ✅25 · `tools/hierarchy`
+- `prompt-amplifier`: turns "make it better" into a full brief · hook tests ✅12
+- `kit-doctor`: say hi, it checks your PC and repo · `tools/doctor.py`
+- `lihfolk-stud-voxel`: stud/LEGO voxel models, rigged GLB out · Oak build `RIG_OK`
+-# Routing: 40/40 sample prompts pick the right skill (`tools/check_skills.py`)
 
 ---
 
-# 🧪 Libraries (pure Luau, headless-tested)
-**frontier:** EditableImage/EditableMesh at the limits: image pool, atlas, falling sand, 2D GI, voxel terrain, lightmaps, fracture…
-**pixelfx:** 15 pixel effects: lightning, frost, dissolve, bloom, a 1,000-enemy crowd…
-**surfacebake:** ⭐ **algorithm textures baked onto YOUR models**
-• Reads a mesh's UVs and computes every texel at its 3D point, so there are **no seams**
-• Wear follows real geometry: chipped edges, grime in crevices, moss on top faces
-• **15 materials:** rust, painted metal, gold, marble, wood, lava, ice, slime, sci-fi panels, carbon fibre, copper patina…
-• Outputs colour + normal + roughness + metal → `SurfaceAppearance`
-• **Realtime:** rune pulse, lava flow, dissolve, scan, frost spread (~1–2 ms/frame at 128²)
-• **Reactive:** hits heat metal and ripple, frost fights lava, shields flare with spin, fur lags on a spring
-• **Depth without shaders:** parallax windows, rooms behind windows, infinite zoom, shell fur
+<!-- Message 3 (1664 characters) -->
 
-Every number is measured (`BENCH.md`) and every limit is written down (verification gate, memory budget, one image upload per frame).
+## LihFolk vault: 22 more skills (separate repo)
+<https://github.com/lihfolk-cy/v2-vault> · in Claude Code: `/plugin marketplace add lihfolk-cy/v2-vault` then `/plugin install lihfolk@lihfolk`
+Backed by 1,300+ vault notes you can also read in Obsidian. Scored **91–94%** on four blind-graded test sets (`benchmark/`). A hook catches 17 common Roblox mistakes as files are written.
+- **Ready code:** `lihfolk-systems` (data, net, currency, shop, inventory, eggs, codes, daily, leaderboard) · `lihfolk-ui` · `lihfolk-vfx` · `lihfolk-sfx` · `lihfolk-figma` (Figma → ScreenGui, tested)
+- **Building:** `lihfolk-worldbuilding` · `roblox-blender-modeling` · `roblox-asset-import` · `lihfolk-assets` · `lihfolk-tutorial` · `roblox-trend-game` · `roblox-system-builder` · `roblox-ui-builder`
+- **Safety:** `roblox-secure-remotes` · `roblox-anti-exploit-review` · `roblox-datastore-safety` · `roblox-monetization-compliance` · `roblox-performance-audit` · `roblox-debugging`
+- **Judging:** `quality-score` (0–10 rubrics) · `council-method` (blind multi-agent verdict) · `lihfolk` (vault router)
+
+## Stud Voxel pack (inside aaa-kit)
+`lihfolk-stud-voxel`: stud/LEGO voxel models built in headless Blender, exported as rigged GLB for Roblox. 25 examples that rebuild exactly: 7 animated critters (duck, fox, red panda…), 12 bosses (rhino, dragon, hydra, kraken, T-rex…), plus a mech, lich, mimic and train. It also covers buildings (shop, tower, gate), props (oak, pine, well, lamp, fence) and terrain (cliff, waterfall, walls). Each boss ships its concept sheet and a side-by-side.
+-# Proof: the Oak test build prints `RIG_OK` at 7,928 triangles (Roblox's mesh cap is 20,000)
 
 ---
 
-# 🎞️ See it · ✅ trust it · 📜 use it
-**Labs** (open the HTML in `examples/web`):
-• Effects hierarchy: 48 effects by tier
-• Algorithm lab · tier simulator · economy calculator
-• Surface bake lab: pick a material and model, add motion, **tap to hit**
-• Depth lab: parallax, interiors, infinite zoom, fur
-• `media/gifs`: 36 looping clips (dissolve and frost on four surfaces, ice vs lava…)
+<!-- Message 4 (1267 characters) -->
 
-**One command checks everything:**
-```
-bash tools/check_all.sh
-```
-Luau compile + tests, links, skill routing, lexicon, hook, flash safety, web pages at phone + desktop. Green means green.
+## Look around first
+Clone it and open these in a browser (no install needed):
+- `examples/web/showcase.html`: the whole kit on one page. A dimension ladder (tesseract, Hopf fibration, penteract), a surface lab and the hyperlexicon, all running live
+- `examples/web/effects-gallery.html`: 48 effects sorted by loudness tier
+- `examples/web/surface-bake.html`: 15 algorithm materials and 5 live motions on 3D models
+- `examples/web/depth-lab.html`: parallax windows, interior mapping, infinite zoom, shell fur
+- `examples/web/algorithm-lab.html`: the algorithms one by one
+- `docs/playbooks/map-guide.md`: a stud map built from the pack, with screenshots and a `.glb` you can import
+- `media/gifs/`: 36 looping GIFs of materials, generative engines and surface effects
 
-**House rules:** server validates everything · balance lives in data · calm by default · no secrets in source · no third-party IP · Studio is the last check, not the first.
+## The six tiers
+1 Moments and rewards · 2 Combat and impact · 3 HUD · 4 World and atmosphere · 5 Materials · 6 Generative engines
+Only one thing is loud at a time, and the numbers are researched: text contrast Lc 75+, flashes at most 3 per second, 500 ms between reward beats.
 
-📜 **License:** code MIT · docs CC BY-ND 4.0 (use and share, don't remix the docs)
-💬 Questions? Ask here, or type `hi` to the kit 👋
+## Where to start reading
+`README.md` → `HIERARCHY.md` → `LEXICON.md` (40-term starter pack) → `docs/playbooks/`
+
+Run `bash tools/check_all.sh` to check everything: Luau compile, tests, links, skills, lexicon and pages.

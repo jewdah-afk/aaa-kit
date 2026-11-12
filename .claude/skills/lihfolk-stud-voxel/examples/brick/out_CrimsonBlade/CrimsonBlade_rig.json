@@ -1,0 +1,41 @@
+{
+ "id": "CrimsonBlade",
+ "glb": "CrimsonBlade_rig.glb",
+ "studs_per_brick": 0.20833333333333334,
+ "max_tris_per_piece": 20000,
+ "note": "pivots: roblox = model space in studs after the 3D Importer (Y up, front = -Z); blender = studs in the .glb source scene",
+ "bones": [
+  {
+   "name": "root",
+   "parent": null,
+   "roblox_head": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "roblox_tail": [
+    0.0,
+    42.917,
+    0.0
+   ],
+   "blender_head": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "blender_tail": [
+    0.0,
+    0.0,
+    42.91666793823242
+   ],
+   "bricks": 5874
+  }
+ ],
+ "pieces": [
+  {
+   "name": "root",
+   "bone": "root",
+   "tris": 1862
+  }
+ ]
+}
