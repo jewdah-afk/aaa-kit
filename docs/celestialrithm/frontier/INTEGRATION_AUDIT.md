@@ -9,7 +9,6 @@ What came in, what overlapped, what conflicted, what's outdated, and what's miss
 | `AAA_KIT_CELESTIALRITHM_UNIVERSAL_UI_WORLD_PATCH_VERIFIED.zip` | 78 files: algorithm vault, Celestialrithm docs, Luau prototypes, offline renderers, the approved visual target GIF | Installed (75 files). The package's root `README.md` would have overwritten the kit's, so it lives at [PATCH_README.md](../PATCH_README.md). `MANIFEST.json` and `install_into_aaa_kit.py` were not committed: the manifest's hashes describe the zip, not the repo. |
 | `AAA_Algorithm_Vault_CORE_mobile.zip` | 17 files | **Exact duplicate**: all 13 shared files are byte-identical (SHA-256) to the patch's copies, and its `CLAUDE_VAULT_ADDENDUM.md` equals `docs/celestialrithm/CLAUDE_VAULT_ADDENDUM.md`. Nothing extra to install; its `qa/LOCAL_QA.md` is summarised below. |
 | `LihFolk-Stud-Voxel-SOURCE-LITE.zip` | 71 files: skill docs, Blender build scripts, Luau builder/animator, example scripts, rig JSON | Installed as a Claude skill at `~/.claude/skills/lihfolk-stud-voxel/`. **Not committed to this repo** (see Licences). |
-| ObsidianVault | Private knowledge vault | Checked: no Celestialrithm, LihFolk or Algorithm Vault notes exist there. Related sources: `Cursed Survivors/Research/Render Deep Dive`, `UI FX Stack`, `Algorithm Compendium`. |
 
 ## Duplicates and conflicts
 
