@@ -17,11 +17,11 @@ before budgeting on them. Voxel-art advice came from low-authority pages and is 
   a GLB and need the 3D Importer by hand. Nothing checks the model after that step.
 - **A Blender-free route now exists and is tested.** `BrickBoxes.luau` holds a brick grid in
   pure Luau and merges it into boxes; `BrickBuild.luau` turns those into studded Parts on the
-  same Motor6D rig the critters use. A real 118,656-brick model merged to **160 Parts in
+  same Motor6D rig the critters use. A 118,656-brick test grid merged to **160 Parts in
   15 ms** under lune.
 - **The hard rules can be linted without rendering.** Floating bricks, palette size and part
   count are now checked in Luau, so a model can fail fast before anyone opens Studio.
-- **59 of the 76 reference images have no model yet.** They are the build queue (below).
+- **Only the pack's own 17 concept sheets count as references.** All 17 are built; new models need a new concept sheet first.
 
 ## What the skill does today, and where it loses
 
@@ -73,9 +73,9 @@ Studio, and it removes every manual step.
 | Stepped ball, 32³ grid | 8,280 | 1,560 | 90 | 2 ms |
 | Stepped ball, 64³ grid | 81,456 | 7,440 | 423 | 45 ms |
 | Stepped ball, 100³ grid | 333,584 | 19,216 | 1,043 | 386 ms |
-| Snowman grunt (8 colours, 4-brick voxels) | 118,656 | 19,558 | 160 | 15 ms |
+| Test mob grid (8 colours, 4-brick voxels) | 118,656 | 19,558 | 160 | 15 ms |
 
-The snowman is the friendly case: chunky 4-brick voxels and few colours. A finely detailed
+The test mob is the friendly case: chunky 4-brick voxels and few colours. A finely detailed
 boss with tone bands and many bones will need more boxes; that has not been measured.
 
 ## Upgrade plan, ranked
@@ -95,40 +95,20 @@ boss with tone bands and many bones will need more boxes; that has not been meas
 | 11 | Phase swap: a second grid per boss phase, swapped per bone | silhouette shows the phase | lune: both grids lint | idea |
 | 12 | LOD grid: halve the resolution, re-merge | far crowds for a fraction of the Parts | lune: box count drops at least 4x | idea |
 
-## The 76 references
+## References
 
-**Built (17 concept sheets, all in `examples/concepts/`):** AbyssalAngler, BoneHydra,
-EmberDragon, FrostMammoth, Kraken, LichKing, LivingArmor, MimicChest, ScarecrowKing,
-ScorpionKing, StormGriffin, SwampCroc, TyrantRex, VenomWidow, VolcanoTortoise, WarMech,
-WarRhino.
+The pack's references are the 17 concept sheets it ships in `examples/concepts/`, each with a
+built model: AbyssalAngler, BoneHydra, EmberDragon, FrostMammoth, Kraken, LichKing,
+LivingArmor, MimicChest, ScarecrowKing, ScorpionKing, StormGriffin, SwampCroc, TyrantRex,
+VenomWidow, VolcanoTortoise, WarMech, WarRhino.
 
-**Not built (59 files on branch `codex/christmas-concept-sheets`, under
-`refs/lihfolk-voxel/concepts/`):** 21 concept sheets plus a 38-image render pack for the
-Ornament Hydra. Queue, easiest first:
+The AI-generated Christmas sheets on branch `codex/christmas-concept-sheets` are **not** part
+of the pack and are not merged here. They are not used as references in this chapter.
 
-| # | Sheet | Type | Copy | What it teaches |
-|---|---|---|---|---|
-| 1 | snowman-grunt | mob | `BrickBoxes` from scratch | first all-Luau model; 4-brick voxels |
-| 2 | snow-fox-pup | pet | arctic_fox (box rig) | recolour + ear and tail accents |
-| 3 | polar-bear-cub | pet | red_panda (box rig) | pale creature needing dark markings |
-| 4 | snowy-owl | pet | owl (box rig) | wreath and bow accessories |
-| 5 | penguin-courier | pet | penguin (box rig) | held props: satchel, parcels |
-| 6 | christmas-pet-faces | 12 pet heads | box-rig heads | a head-swap set from one body |
-| 7 | gift-mimic | mob boss | mimic_chest | ribbon and bow as plates, lid jaw |
-| 8 | ice-golem-sentinel | boss | war_mech | one glow core, hat as a soft mass on hard plates |
-| 9 | snowman-brute | boss | living_armor | helmet and pauldrons over a round body |
-| 10 | frost-yeti | boss | frost_mammoth fur + war_rhino stance | knuckle-walker, fur tufts, ice claws |
-| 11 | coal-king | boss | lich_king | robe, crown, sack, lantern staff |
-| 12 | silent-night-conductor | boss | lich_king | tree-shaped robe, candle crown, bell staff |
-| 13 | workshop-siege-nutcracker | boss | war_mech | gift-box fist, wind-up key, chimneys |
-| 14 | yule-wyrm | boss | ember_dragon | antlers, ribbon wings |
-| 15 | ornament-hydra (6 sheets + 38 renders) | boss | bone_hydra | the best-documented target: ortho, orbit and palette sheets |
-| 16 | christmas-boss-lineup | overview | n/a | scale check across the four bosses |
-
-**Proposed after the queue** (no reference yet; each needs a concept sheet first): a mount
-with a rider seat bone, a two-part boss that splits, a turret that tracks, a destructible
-crate set, a modular dungeon wall kit, a boat with a water ring, a market stall set, a
-weapon rack traced from the user's own pictures.
+**Proposed builds** (each needs its own concept sheet first): a mount with a rider seat
+bone, a two-part boss that splits, a turret that tracks, a destructible crate set, a modular
+dungeon wall kit, a boat with a water ring, a market stall set, a weapon rack traced from the
+user's own pictures.
 
 ## Not tested
 

@@ -66,7 +66,7 @@ Why HIERARCHY.md works, with the perception, timing and audio research behind ea
 
 | # | Chapter | Answers |
 |---|---------|---------|
-| 90 | [Stud Voxel in Studio](90-stud-voxel-in-studio.md) | Three routes from a brick grid into Studio, the lune-tested Parts route, measured box counts, the ranked upgrade plan and the 76-reference build queue |
+| 90 | [Stud Voxel in Studio](90-stud-voxel-in-studio.md) | Three routes from a brick grid into Studio, the lune-tested Parts route, measured box counts, and the ranked upgrade plan |
 
 ## Method
 

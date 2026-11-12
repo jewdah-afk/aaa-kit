@@ -1,10 +1,10 @@
 """Shared core of the brick pipeline: grid, sculpt helpers, clean-up, mesh, render, sheet and rig export in one module.
 
 The older examples each carry ~200 lines of the same grid/mesh/render code. A model written on this core is only its
-sculpt: see examples/brick/snowman_grunt_brick.py (smallest), gift_mimic_brick.py, ice_golem_brick.py.
+sculpt. No shipped example uses this core yet.
 
     from brick_core import Model, hx
-    M = Model('SnowmanGrunt', __file__, lo=(-40, 0, -30), hi=(40, 80, 30))     # brick coords: x right, y up, front = -z
+    M = Model('MyMob', __file__, lo=(-40, 0, -30), hi=(40, 80, 30))     # brick coords: x right, y up, front = -z
     X, Y, Z = M.X, M.Y, M.Z
     M.put(M.ell((0, 20, 0), (18, 18, 18)) < 0, hx('f2f2f0'), p=M.part())       # mask, colour, part id (seams between parts)
     M.finish(rig=[('root', None, (0, 0, 0), (0, 6, 0)), ...], overrides=[...], lights=[((x, y, z), colour, energy)])

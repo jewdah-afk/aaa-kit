@@ -13,7 +13,7 @@
 --       Bones = { { "root", nil, { 24, 0, 20 } }, { "head", "root", { 24, 40, 20 } } },   -- name, parent, pivot in cells
 --       StudsPerBrick = 2.5,
 --       MaterialVariant = nil,                                      -- name of a MaterialVariant with the square stud tile
---   }, CFrame.new(0, 0, 0), "Snowman")
+--   }, CFrame.new(0, 0, 0), "MyMob")
 --   model.Parent = workspace
 local STUD_FACES = { "TopSurface", "BottomSurface", "FrontSurface", "BackSurface", "LeftSurface", "RightSurface" }
 
