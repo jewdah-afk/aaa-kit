@@ -258,7 +258,8 @@ class Scene:
                 gy0, gx0 = c['cy'] - 170, c['cx'] - 150
                 yy2, xx2 = np.mgrid[0:340, 0:300].astype(F32)
                 dd = kc.sd_round_rect(xx2 - 150, yy2 - 170 + 6, 118, 147, 14)
-                halo = np.exp(-np.clip(dd, 0, None) / 9.0) * (dd > 0) * (.28 + .06 * math.sin(t * 2.4))
+                # falls to exactly 0 by 26 px: a tail that is tiny in linear light still shows after sRGB on a dark panel
+                halo = np.exp(-np.clip(dd, 0, None) / 9.0) * (dd > 0) * np.clip(1 - dd / 26.0, 0, 1) ** 2 * (.28 + .06 * math.sin(t * 2.4))
                 cv[gy0:gy0 + 340, gx0:gx0 + 300] += hex_rgb(RARITY['legendary']) * halo[..., None]
             ic = c['icon'] if owner else c['icon_dim']
             overlays.append((ic, c['cx'] - 60, c['cy'] - 92))

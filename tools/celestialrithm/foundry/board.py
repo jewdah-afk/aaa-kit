@@ -111,7 +111,8 @@ def background(W, Hh, panel):
 
 # ----------------------------------------------------------------- board
 class Board:
-    def __init__(self, ids, cols, W=1280, Hh=720, seed=7, quality='high', shell=None, reduced_motion=False):
+    def __init__(self, ids, cols, W=1280, Hh=720, seed=7, quality='high', shell=None, reduced_motion=False, rate=1.0, vibrance=1.0):
+        self.rate, self.vibrance = rate, vibrance
         self.ids, self.cols = ids, cols
         self.rows = math.ceil(len(ids) / cols)
         self.W, self.H = W, Hh
@@ -135,7 +136,7 @@ class Board:
         canvas = self.bg.copy()
         phases = []
         n = len(self.ids)
-        tt = t * (.2 if self.reduced else 1.0)
+        tt = t * (.2 if self.reduced else self.rate)
         for i, (mat, tint, (cx, cy)) in enumerate(zip(self.mats, self.tints, self.centres)):
             p, ph = 0.0, 'idle'
             for s in starts[i]:
@@ -145,6 +146,9 @@ class Board:
             t0 = time.perf_counter()
             face, glow = mat.frame(tt, max(p, 0.0) if not self.reduced else 0.0)
             self.timing[self.ids[i]].append((time.perf_counter() - t0) * 1000)
+            if self.vibrance != 1.0:                           # luminance-preserving saturation in linear light
+                lum = (face * np.array([.2126, .7152, .0722], F32)).sum(-1, keepdims=True)
+                face = np.clip(lum + (face - lum) * self.vibrance, 0, 1)
             # one sweep owner at a time, cycling through keys
             k = int(t / sweep_period * n * .5) % n if not self.reduced else -1
             local = (t / sweep_period * n * .5) % 1
@@ -194,12 +198,14 @@ def main():
     ap.add_argument('--out', required=True, help='output path stem (no extension)')
     ap.add_argument('--still', type=float, default=None, help='render one frame at this time to <out>.png and exit')
     ap.add_argument('--reduced-motion', action='store_true')
+    ap.add_argument('--rate', type=float, default=1.0, help='material clock multiplier (motion energy)')
+    ap.add_argument('--vibrance', type=float, default=1.0, help='face saturation multiplier, luminance kept')
     ap.add_argument('--gif-width', type=int, default=560)
     a = ap.parse_args()
     ids = [s for s in a.ids.split(',') if s] or SETS[a.set]
     W, Hh = map(int, a.size.split('x'))
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
-    board = Board(ids, a.cols, W, Hh, seed=a.seed, reduced_motion=a.reduced_motion)
+    board = Board(ids, a.cols, W, Hh, seed=a.seed, reduced_motion=a.reduced_motion, rate=a.rate, vibrance=a.vibrance)
     starts = schedule(len(ids), a.seconds)
     if a.still is not None:
         n = int(a.still * 60)
@@ -235,7 +241,7 @@ def main():
     timing = {m: {'mean_ms': round(float(np.mean(v)), 2), 'p95_ms': round(float(np.percentile(v, 95)), 2)} for m, v in board.timing.items()}
     meta = {'ids': ids, 'cols': a.cols, 'size': [W, Hh], 'seed': a.seed, 'seconds': a.seconds, 'fps_requested': a.fps,
             'frames_rendered': n, 'mp4': {k: st.get(k) for k in ('codec_name', 'profile', 'pix_fmt', 'width', 'height', 'r_frame_rate', 'avg_frame_rate', 'nb_read_frames')},
-            'duration_s': float(pr['format']['duration']), 'reduced_motion': a.reduced_motion,
+            'duration_s': float(pr['format']['duration']), 'reduced_motion': a.reduced_motion, 'rate': a.rate, 'vibrance': a.vibrance,
             'offline_ms_per_face_python': timing, 'wall_s': round(wall, 1),
             'note': '60 fps here is the encoded output cadence of an offline NumPy render. It says nothing about Roblox runtime frame time.',
             'press_starts_s': starts}
