@@ -37,6 +37,7 @@ echo "== skills";        python3 tools/check_skills.py | tail -1
 echo "== lexicon";       python3 tools/check_lexicon.py | tail -1
 echo "== hook";          python3 tools/hooks/test_amplify.py | tail -1
 echo "== hierarchy";     python3 tools/hierarchy/test_hierarchy.py 2>&1 | tail -1
+echo "== voicestudio";   python3 .claude/skills/voicestudio-sfx/examples/test_vs_client.py | tail -1
 for g in media/gifs/*.gif media/gifs/*/*.gif; do python3 tools/hierarchy/hierarchy.py flash "$g" > /dev/null || { echo "flash check failed: $g"; exit 1; }; done
 echo "flash: $(ls media/gifs/*.gif media/gifs/*/*.gif | wc -l) GIFs pass WCAG 2.3.1"
 echo "== web examples";  node tools/check_examples.mjs | tail -1

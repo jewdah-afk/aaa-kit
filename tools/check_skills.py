@@ -34,6 +34,7 @@ SAMPLES = {
     "prompt-amplifier": ["make it cool", "fix the ui", "make it better"],
     "kit-doctor": ["hi", "what do I need installed on my pc", "is my game good, audit it"],
     "lihfolk-stud-voxel": ["make a stud voxel duck pet", "build a LEGO-style boss like the rhino", "blocky voxel watchtower for my map"],
+    "voicestudio-sfx": ["generate a sound effect for the coin pickup", "make sfx for the sword swing", "npc voice line for the shopkeeper"],
     "hierarchy-audit": ["does the eye go to the buy button", "check contrast of this text", "is this flashing effect safe", "colour blind check on the rarity colours"],
 }
 STOP = set("a an the and or of to in for on with is it this that use when any make my me i how what which".split())
