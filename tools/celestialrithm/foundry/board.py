@@ -223,8 +223,8 @@ def main():
         img = None
         for i in range(n + 1):
             img, _ = board.render(i / 60, starts)
-        Image.fromarray(img).save(out.with_suffix('.png'))
-        print('still', out.with_suffix('.png'))
+        Image.fromarray(img).save(out.with_name(out.name + '.png'))
+        print('still', out.with_name(out.name + '.png'))
         return
     total = int(round(a.seconds * a.fps))
     keep = {int(total * f) for f in (.08, .3, .5, .72)}
@@ -239,15 +239,15 @@ def main():
             if i in keep:
                 stills[i] = img
             yield img
-    n = encode(gen(), out.with_suffix('.mp4'), W, Hh, a.fps)
+    n = encode(gen(), out.with_name(out.name + '.mp4'), W, Hh, a.fps)
     wall = time.perf_counter() - t_start
-    make_gif(out.with_suffix('.mp4'), out.with_suffix('.gif'), width=a.gif_width)
+    make_gif(out.with_name(out.name + '.mp4'), out.with_name(out.name + '.gif'), width=a.gif_width)
     ks = sorted(stills)
     sheet = Image.new('RGB', (W, Hh * len(ks)))
     for j, k in enumerate(ks):
         sheet.paste(Image.fromarray(stills[k]), (0, Hh * j))
     sheet.save(out.with_name(out.name + '-sheet.png'), optimize=True)
-    pr = probe(out.with_suffix('.mp4'))
+    pr = probe(out.with_name(out.name + '.mp4'))
     st = pr['streams'][0]
     timing = {m: {'mean_ms': round(float(np.mean(v)), 2), 'p95_ms': round(float(np.percentile(v, 95)), 2)} for m, v in board.timing.items()}
     meta = {'ids': ids, 'cols': a.cols, 'size': [W, Hh], 'seed': a.seed, 'seconds': a.seconds, 'fps_requested': a.fps,
@@ -256,7 +256,7 @@ def main():
             'offline_ms_per_face_python': timing, 'wall_s': round(wall, 1),
             'note': '60 fps here is the encoded output cadence of an offline NumPy render. It says nothing about Roblox runtime frame time.',
             'press_starts_s': starts}
-    out.with_suffix('.json').write_text(json.dumps(meta, indent=1))
+    out.with_name(out.name + '.json').write_text(json.dumps(meta, indent=1))
     print(json.dumps({k: meta[k] for k in ('frames_rendered', 'mp4', 'duration_s', 'wall_s')}))
 
 

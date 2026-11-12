@@ -357,7 +357,7 @@ def main():
         img = None
         for i in range(int(a.still * a.fps) + 1):
             img = sc.render(i / a.fps)
-        Image.fromarray(img).save(out.with_suffix('.png')); print('still'); return
+        Image.fromarray(img).save(out.with_name(out.name + '.png')); print('still'); return
     total = int(a.seconds * a.fps)
     keep = {int(x * a.fps) for x in (1.0, 2.45, 3.9, 5.0, 6.7, 9.0)}
     stills = {}
@@ -368,17 +368,17 @@ def main():
             if i in keep:
                 stills[i] = f
             yield f
-    n = encode(gen(), out.with_suffix('.mp4'), W, H, a.fps)
-    make_gif(out.with_suffix('.mp4'), out.with_suffix('.gif'), width=560, fps=15, start=1.8, dur=6)
+    n = encode(gen(), out.with_name(out.name + '.mp4'), W, H, a.fps)
+    make_gif(out.with_name(out.name + '.mp4'), out.with_name(out.name + '.gif'), width=560, fps=15, start=1.8, dur=6)
     ks = sorted(stills)
     sheet = Image.new('RGB', (W * 2, H * 3))
     for j, k in enumerate(ks):
         sheet.paste(Image.fromarray(stills[k]), ((j % 2) * W, (j // 2) * H))
     sheet.resize((W, int(H * 1.5)), Image.LANCZOS).save(out.with_name(out.name + '-sheet.png'), optimize=True)
-    pr = probe(out.with_suffix('.mp4')); st = pr['streams'][0]
+    pr = probe(out.with_name(out.name + '.mp4')); st = pr['streams'][0]
     meta = {'frames_rendered': n, 'mp4': st, 'events': EVENTS, 'offline_ms_per_frame_mean': round(float(np.mean(sc.timing)), 1),
             'note': 'Offline NumPy render; 60 fps is output cadence only. Hierarchy: one loud element per panel (HIERARCHY.md s13).'}
-    out.with_suffix('.json').write_text(json.dumps(meta, indent=1))
+    out.with_name(out.name + '.json').write_text(json.dumps(meta, indent=1))
     print(json.dumps({'frames': n, 'fps': st.get('avg_frame_rate'), 'ms': meta['offline_ms_per_frame_mean']}))
 
 

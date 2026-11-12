@@ -85,10 +85,10 @@ def main():
         yield from still_segment(M / 'frontier/lineage/round0-first-pass.jpg', 2, '3  Foundry, first pass (still)', 'real field methods, before QA: gloss wash, weak solar / holo / crystal')
         yield from mp4_segment(M / 'frontier/board-core12.mp4', 1.4, 6, '4  Foundry after 6 QA rounds', '60 fps offline render · stationary keys · press timeline per key')
         yield from mp4_segment(M / 'frontier/breakdown-hydroglass.mp4', 2.6, 4, '5  Layer breakdown: Hydroglass', 'height -> normals -> refraction caustics -> grade -> face -> shell')
-    n = encode(gen(), out.with_suffix('.mp4'), W, H, FPS)
-    make_gif(out.with_suffix('.mp4'), out.with_suffix('.gif'), width=480, fps=12, start=0, dur=19)
-    st = probe(out.with_suffix('.mp4'))['streams'][0]
-    out.with_suffix('.json').write_text(json.dumps({'frames': n, 'mp4': st, 'segments': segs}, indent=1))
+    n = encode(gen(), out.with_name(out.name + '.mp4'), W, H, FPS)
+    make_gif(out.with_name(out.name + '.mp4'), out.with_name(out.name + '.gif'), width=480, fps=12, start=0, dur=19)
+    st = probe(out.with_name(out.name + '.mp4'))['streams'][0]
+    out.with_name(out.name + '.json').write_text(json.dumps({'frames': n, 'mp4': st, 'segments': segs}, indent=1))
     print(n, st['avg_frame_rate'])
 
 

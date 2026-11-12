@@ -76,15 +76,15 @@ def main():
             if i in keep:
                 stills[i] = f
             yield f
-    n = encode(gen(), out.with_suffix('.mp4'), W, H, a.fps)
-    make_gif(out.with_suffix('.mp4'), out.with_suffix('.gif'), width=560, fps=15, start=2.0, dur=5)
+    n = encode(gen(), out.with_name(out.name + '.mp4'), W, H, a.fps)
+    make_gif(out.with_name(out.name + '.mp4'), out.with_name(out.name + '.gif'), width=560, fps=15, start=2.0, dur=5)
     ks = sorted(stills)
     sheet = Image.new('RGB', (W, H * len(ks)))
     for j, k in enumerate(ks):
         sheet.paste(Image.fromarray(stills[k]), (0, H * j))
     sheet.save(out.with_name(out.name + '-sheet.png'), optimize=True)
-    st = probe(out.with_suffix('.mp4'))['streams'][0]
-    out.with_suffix('.json').write_text(json.dumps({'frames_rendered': n, 'mp4': st, 'material': 'hydroglass', 'seed': 4, 'press_at_s': 3.0}, indent=1))
+    st = probe(out.with_name(out.name + '.mp4'))['streams'][0]
+    out.with_name(out.name + '.json').write_text(json.dumps({'frames_rendered': n, 'mp4': st, 'material': 'hydroglass', 'seed': 4, 'press_at_s': 3.0}, indent=1))
     print(n, st['avg_frame_rate'])
 
 

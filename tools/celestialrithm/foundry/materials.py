@@ -212,7 +212,7 @@ class BioSlime(Material):
                        [(0, H('#173d04')), (.35, H('#3e8d0a')), (.7, H('#7bd317')), (1, H('#c6ff4a'))])
         sss = H('#c8ff50') * (smoothstep(1.2, 3.0, field) * .18)[..., None]
         spec = op.blinn(nx, ny, nz, -.3, -.75, .6, 70) * 1.2
-        rgb = base * (.5 + .5 * wrap)[..., None] + sss + spec[..., None]
+        rgb = base * (.42 + .42 * wrap)[..., None] + sss + spec[..., None]   # deeper than crystal ice (tritan pass)
         bub_glow = np.zeros_like(x)
         for (bx, by0, br, sp) in self.bub:
             by = (by0 - t * sp) % 1.15 - .07
@@ -252,7 +252,7 @@ class CrystalIce(Material):
         r = np.sqrt((x - x.mean()) ** 2 + (y - .5) ** 2)
         crack = np.exp(-((r - press * 1.4) / .12) ** 2) * press * edge * 3 + press * edge * .6   # front + lit fracture net at peak
         frost = (fl.hash01((self.x * 997).astype(np.int64) * 131 + (self.y * 991).astype(np.int64)) > .985) * .5
-        rgb = base * (.7 + .4 * diff)[..., None] + glint[..., None] + streak[..., None] * H('#e8f6ff') * .35 + edge[..., None] * H('#e8f6ff') * .45 + crack[..., None] * H('#bff0ff') + frost[..., None] * .5
+        rgb = base * (.8 + .42 * diff)[..., None] + H('#dff0ff') * .06 + glint[..., None] + streak[..., None] * H('#e8f6ff') * .35 + edge[..., None] * H('#e8f6ff') * .45 + crack[..., None] * H('#bff0ff') + frost[..., None] * .5
         return op.tonemap(rgb), np.clip(glint * .4 + crack, 0, 1)
 
 
@@ -476,7 +476,7 @@ class Nebula(Material):
             d, *_ = n.warp(self.xh * (1.2 + .5 * i) + t * sp, self.yh * (1.2 + .5 * i), t * .07 + i * 3.1, amount=1.3, octaves=3)
             d = self.up(d)
             dens = np.clip(d * 1.6 + .1, 0, 1) ** 1.6
-            emit = cols[i] * (dens * .9)[..., None]
+            emit = cols[i] * (dens * .62)[..., None]          # darker than prism gel: tritan-safe by lightness
             rgb += trans[..., None] * emit
             trans *= np.exp(-dens * .9)
         cx, cy = x.max() * .5, .5
