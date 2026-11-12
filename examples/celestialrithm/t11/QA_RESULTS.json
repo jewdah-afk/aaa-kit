@@ -1,0 +1,44 @@
+{
+  "checks": {
+    "exists_T11_hero_60fps.mp4": true,
+    "exists_T11_preview.gif": true,
+    "exists_four_states.jpg": true,
+    "exists_hydro_press.obj": true,
+    "exists_prism_press.obj": true,
+    "exists_solar_press.obj": true,
+    "exists_hydro_hero.png": true,
+    "exists_prism_hero.png": true,
+    "exists_solar_hero.png": true,
+    "hydro_geometry_counts": true,
+    "prism_geometry_counts": true,
+    "solar_geometry_counts": true,
+    "60fps_exact": true,
+    "240_encoded_frames": true,
+    "size_960x540": true,
+    "decoded_240_frames": true,
+    "frames_change": true,
+    "label_region_contrast_proxy": true,
+    "no_missing_frame_files": true
+  },
+  "passed": 19,
+  "total": 19,
+  "ffprobe": {
+    "width": 960,
+    "height": 540,
+    "avg_frame_rate": "60/1",
+    "duration": "4.000000",
+    "nb_frames": "240"
+  },
+  "sequential_frame_mean_differences": {
+    "min": 0.04686213991769547,
+    "median": 0.09272569444444445,
+    "max": 2.3392007458847734
+  },
+  "grayscale_label_85th_percentile": 255.0,
+  "grayscale_surround_median": 149.0,
+  "caveats": [
+    "Frame differences include video compression",
+    "Grayscale pixel contrast is not APCA, saliency or eye tracking",
+    "Only offline performance tested. No Studio execution or hardware benchmark"
+  ]
+}

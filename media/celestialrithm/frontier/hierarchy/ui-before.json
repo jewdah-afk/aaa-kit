@@ -1,0 +1,78 @@
+{
+  "size": [
+    1280,
+    720
+  ],
+  "fixations": [
+    {
+      "x": 676,
+      "y": 284,
+      "salience": 1.0,
+      "in_focus": false
+    },
+    {
+      "x": 60,
+      "y": 43,
+      "salience": 0.829,
+      "in_focus": false
+    },
+    {
+      "x": 892,
+      "y": 315,
+      "salience": 0.763,
+      "in_focus": false
+    },
+    {
+      "x": 1092,
+      "y": 300,
+      "salience": 0.599,
+      "in_focus": false
+    },
+    {
+      "x": 899,
+      "y": 187,
+      "salience": 0.658,
+      "in_focus": false
+    }
+  ],
+  "clutter": {
+    "edge_density": 0.1685,
+    "chroma_std": 0.0299
+  },
+  "focus": [
+    [
+      304,
+      151,
+      232,
+      373
+    ]
+  ],
+  "focus_area": 0.0939,
+  "focus_share": 0.1283,
+  "lift": 1.37,
+  "competitor": {
+    "x": 676,
+    "y": 284,
+    "ratio": 1.99
+  },
+  "squint_gap": 0.003,
+  "cvd": {
+    "deutan": {
+      "first_fixation_in_focus": false,
+      "lift": 1.2
+    },
+    "protan": {
+      "first_fixation_in_focus": false,
+      "lift": 1.06
+    }
+  },
+  "verdict": "FAIL",
+  "reasons": [
+    "first predicted fixation is outside the focus",
+    "focus lift 1.37 (want >= 1.5: the focus should hold more than its share)",
+    "a competitor at (676,284) reaches 199% of the focus peak",
+    "squint value gap 0.003 OKLab L (want >= 0.08)",
+    "under deutan simulation the first fixation leaves the focus",
+    "under protan simulation the first fixation leaves the focus"
+  ]
+}
