@@ -60,8 +60,8 @@ SampleModels.StudSlime = {
 		-- eyes: dark flush blocks with one flat shine each, then blush and a small mouth
 		{ op = "paint", shape = "ellipsoid", c = { -3.7, 8.6, -9.4 }, r = { 1.55, 2.25, 2.6 }, color = "eye" },
 		{ op = "paint", shape = "ellipsoid", c = { 3.7, 8.6, -9.4 }, r = { 1.55, 2.25, 2.6 }, color = "eye" },
-		{ op = "paint", shape = "sphere", c = { -4.1, 9.6, -9.6 }, r = 0.85, color = "shine" },
-		{ op = "paint", shape = "sphere", c = { 3.3, 9.6, -9.6 }, r = 0.85, color = "shine" },
+		{ op = "paint", shape = "sphere", c = { -4.1, 9.7, -8.2 }, r = 1.0, color = "shine" },
+		{ op = "paint", shape = "sphere", c = { 3.3, 9.7, -8.2 }, r = 1.0, color = "shine" },
 		{ op = "paint", shape = "ellipsoid", c = { -6.6, 6.6, -8.4 }, r = { 1.7, 1.0, 2.4 }, color = "blush" },
 		{ op = "paint", shape = "ellipsoid", c = { 6.6, 6.6, -8.4 }, r = { 1.7, 1.0, 2.4 }, color = "blush" },
 		{ op = "paint", shape = "box", c = { 0, 6.7, -9.6 }, h = { 0.9, 0.45, 2.0 }, color = "eye" },
