@@ -17,8 +17,8 @@ before budgeting on them. Voxel-art advice came from low-authority pages and is 
   a GLB and need the 3D Importer by hand. Nothing checks the model after that step.
 - **A Blender-free route now exists and is tested.** `BrickBoxes.luau` holds a brick grid in
   pure Luau and merges it into boxes; `BrickBuild.luau` turns those into studded Parts on the
-  same Motor6D rig the critters use. A 118,656-brick test grid merged to **160 Parts in
-  15 ms** under lune.
+  same Motor6D rig the critters use. It suits chunky models only: the shipped bosses merge
+  to 2,000–42,000 Parts each (measured below).
 - **The hard rules can be linted without rendering.** Floating bricks, palette size and part
   count are now checked in Luau, so a model can fail fast before anyone opens Studio.
 - **Only the pack's own 17 concept sheets count as references.** All 17 are built; new models need a new concept sheet first.
@@ -58,25 +58,37 @@ before budgeting on them. Voxel-art advice came from low-authority pages and is 
 | Animates with | Roblox Animator, Bones | `ModelAnimator`, Motor6D | Bones (beta) |
 | Stud look | baked texture x vertex colour | engine studs or a `MaterialVariant` | UVs + texture |
 | Headless test | Blender re-import only | lune, full coverage of the pure part | none (needs the engine) |
-| Best for | finished hero bosses | mobs, pets, props, fast iteration, anything built by an agent | destructible or morphing models |
+| Best for | bosses and any finely detailed model | chunky pets, mobs and props on a coarse grid | destructible or morphing models |
 
-**Recommendation: make B the default for iteration and for small models, keep A for the
-final export of large bosses.** B is the only route whose correctness can be proven without
-Studio, and it removes every manual step.
+**Recommendation: use B for chunky pets, mobs and props sculpted at a coarse grid, and keep A
+for bosses.** B is the only route whose correctness can be proven without Studio and it
+removes every manual step, but the measurements below rule it out for the shipped bosses as
+they are sculpted today.
 
 ## Measured
 
-`BrickBoxes.boxes()` under lune 0.10.5, single bone:
+`BrickBoxes.boxes()` under lune 0.10.5 on the grids of five shipped models, dumped from their
+Python scripts with the bone labels the rig export uses. Boxes never cross a bone or a colour.
 
-| Model | Bricks | Exposed bricks | Boxes (Parts) | Merge time |
-|---|---|---|---|---|
-| Stepped ball, 32³ grid | 8,280 | 1,560 | 90 | 2 ms |
-| Stepped ball, 64³ grid | 81,456 | 7,440 | 423 | 45 ms |
-| Stepped ball, 100³ grid | 333,584 | 19,216 | 1,043 | 386 ms |
-| Test mob grid (8 colours, 4-brick voxels) | 118,656 | 19,558 | 160 | 15 ms |
+| Model | Bones | Bricks | Exposed bricks | Colours at export | Boxes (Parts) | Merge time |
+|---|---|---|---|---|---|---|
+| war_rhino | 15 | 70,328 | 13,562 | 15 | 2,009 | 11 ms |
+| mimic_chest | 18 | 167,396 | 33,024 | 27 | 5,343 | 36 ms |
+| living_armor | 26 | 147,331 | 37,399 | 126 | 8,695 | 25 ms |
+| kraken | 34 | 128,130 | 31,464 | 56 | 9,649 | 24 ms |
+| ember_dragon | 40 | 967,233 | 154,752 | 92 | 41,758 | 258 ms |
 
-The test mob is the friendly case: chunky 4-brick voxels and few colours. A finely detailed
-boss with tone bands and many bones will need more boxes; that has not been measured.
+For scale, stepped single-colour balls merge far better: 90 boxes on a 32³ grid, 423 on 64³,
+1,043 on 100³.
+
+Two things follow:
+
+- **The shipped bosses are too detailed for the Parts route.** They need 2,000 to 42,000
+  Parts each, one Part for every 4 to 7 exposed bricks. The merge is fast; the instance
+  count is the problem.
+- **Four of the five carry more than 16 colours into the export** (27 to 126 distinct
+  values, glow included), against the skill's own 16-colour rule. The cause was not
+  investigated here; every extra colour also splits boxes.
 
 ## Upgrade plan, ranked
 
@@ -85,7 +97,7 @@ boss with tone bands and many bones will need more boxes; that has not been meas
 | 1 | `BrickBoxes.luau`: grid, sculpt helpers, greedy box merge | removes Blender and the importer from the loop | lune, 13 checks | **done** |
 | 2 | `BrickBoxes.lint`: floating bricks, colours, exposed count | the Rejected list becomes machine-checked | lune | **done** |
 | 3 | `BrickBuild.luau`: Parts + Motor6D rig from a grid | same runtime for brick and box models | compile only | written, **not run in Studio** |
-| 4 | Export the Python grid to a `BrickBoxes` data module | the 25 shipped models gain the Parts route without re-sculpting | lune: load, lint, count boxes | next |
+| 4 | Enforce the 16-colour rule at export; find why four of five measured bosses exceed it | the rule exists and is not holding; fewer colours also means fewer boxes | lune lint on the dumped grid | next |
 | 5 | Stud check in Studio: engine studs vs a `MaterialVariant` tile, one stud per 2x2 bricks | the stud look is the pack's identity and is unverified on this route | Studio only | open |
 | 6 | Part budget per tier in data: pet, mob, boss | keeps phones safe; lint fails over budget | lune | next |
 | 7 | Score in the loop: silhouette IoU per ortho view against the concept, written to JSON | "closer to the concept" becomes a number | Python, no Blender needed for the compare | next |
@@ -115,7 +127,7 @@ user's own pictures.
 - Nothing in this chapter ran in Roblox Studio. `BrickBuild.luau` is compile-checked only.
 - No phone measurements. Part and triangle budgets above are planning figures.
 - The stud appearance on Parts (engine studs or a `MaterialVariant`) is unverified.
-- Box counts for a multi-bone, finely detailed boss are unmeasured.
+- Only 5 of the 20 shipped creature models were measured. No coarse-grid mob was measured: the only one tried was removed from this branch.
 
 ## Sources
 
