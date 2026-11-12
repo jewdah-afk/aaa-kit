@@ -49,7 +49,7 @@ A generated world has to be readable before it's beautiful. The player must see 
 
 ## Process
 
-For 3D worlds, follow the [world hierarchy playbook](../../../docs/playbooks/world-hierarchy.md): seven tiers, foreground/midground/background composition, the squint value check, and one Explorer tree owned by a single module.
+For 3D worlds, follow the [world hierarchy playbook](../../../docs/playbooks/world-hierarchy.md): seven tiers, foreground/midground/background composition, the squint value check, and one Explorer tree owned by a single module. For a worked stud example (layout, numbers, a downloadable `.glb`), see the [stud map guide](../../../docs/playbooks/map-guide.md).
 
 ## Example
 

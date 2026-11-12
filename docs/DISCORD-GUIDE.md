@@ -2,7 +2,7 @@
 
 # aaa-kit: Discord guide
 
-Four messages for a forum or suggestions post. Title: `aaa-kit: free Claude Code skill vault for Roblox devs`. Attach 2-4 GIFs from `media/gifs/` (all under 6 MB), e.g. `surfaces/react-ice-vs-lava-sphere.gif`, `surfaces/dissolve-gold-torus.gif`, `tier5-holo.gif`, `surfaces/depth-shell-fur.gif`.
+Four messages for a forum or suggestions post. Title: `aaa-kit: free Claude Code skill vault for Roblox devs`. Attach 2-4 GIFs from `media/gifs/` (all under 6 MB), e.g. `surfaces/react-ice-vs-lava-sphere.gif`, `surfaces/dissolve-gold-torus.gif`, `tier5-holo.gif`, `surfaces/depth-shell-fur.gif`, plus `media/map-guide/map_hero.jpg`.
 
 ---
 
@@ -77,7 +77,7 @@ Backed by 1,300+ vault notes you can also read in Obsidian. Scored **91–94%** 
 
 ---
 
-<!-- Message 4 (1157 characters) -->
+<!-- Message 4 (1267 characters) -->
 
 ## Look around first
 Clone it and open these in a browser (no install needed):
@@ -86,6 +86,7 @@ Clone it and open these in a browser (no install needed):
 - `examples/web/surface-bake.html`: 15 algorithm materials and 5 live motions on 3D models
 - `examples/web/depth-lab.html`: parallax windows, interior mapping, infinite zoom, shell fur
 - `examples/web/algorithm-lab.html`: the algorithms one by one
+- `docs/playbooks/map-guide.md`: a stud map built from the pack, with screenshots and a `.glb` you can import
 - `media/gifs/`: 36 looping GIFs of materials, generative engines and surface effects
 
 ## The six tiers
