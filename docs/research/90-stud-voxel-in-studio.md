@@ -86,9 +86,10 @@ Two things follow:
 - **The shipped bosses are too detailed for the Parts route.** They need 2,000 to 42,000
   Parts each, one Part for every 4 to 7 exposed bricks. The merge is fast; the instance
   count is the problem.
-- **Four of the five carry more than 16 colours into the export** (27 to 126 distinct
-  values, glow included), against the skill's own 16-colour rule. The cause was not
-  investigated here; every extra colour also splits boxes.
+The "Colours at export" column counts every shaded glow brick as its own colour, so it
+overstates the palette. Counted properly (solid colours only, one per glow kind) war_rhino has
+12 and living_armor 14: within the 16-colour rule. `scripts/audit.py` now does this count for
+every creature model and writes `examples/AUDIT.md`.
 
 ## Upgrade plan, ranked
 
@@ -97,7 +98,7 @@ Two things follow:
 | 1 | `BrickBoxes.luau`: grid, sculpt helpers, greedy box merge | removes Blender and the importer from the loop | lune, 13 checks | **done** |
 | 2 | `BrickBoxes.lint`: floating bricks, colours, exposed count | the Rejected list becomes machine-checked | lune | **done** |
 | 3 | `BrickBuild.luau`: Parts + Motor6D rig from a grid | same runtime for brick and box models | compile only | written, **not run in Studio** |
-| 4 | Enforce the 16-colour rule at export; find why four of five measured bosses exceed it | the rule exists and is not holding; fewer colours also means fewer boxes | lune lint on the dumped grid | next |
+| 4 | `scripts/audit.py`: every creature model checked against the colour, glow and floating rules, no rendering | the self-check becomes a script; gives a baseline to beat | Python + lune | **done** |
 | 5 | Stud check in Studio: engine studs vs a `MaterialVariant` tile, one stud per 2x2 bricks | the stud look is the pack's identity and is unverified on this route | Studio only | open |
 | 6 | Part budget per tier in data: pet, mob, boss | keeps phones safe; lint fails over budget | lune | next |
 | 7 | Score in the loop: silhouette IoU per ortho view against the concept, written to JSON | "closer to the concept" becomes a number | Python, no Blender needed for the compare | next |
