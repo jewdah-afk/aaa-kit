@@ -18,6 +18,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from . import director as D
 from . import keycap as kc
 from . import materials as M
 from .fields import F32, blur, smoothstep
@@ -111,8 +112,10 @@ def background(W, Hh, panel):
 
 # ----------------------------------------------------------------- board
 class Board:
-    def __init__(self, ids, cols, W=1280, Hh=720, seed=7, quality='high', shell=None, reduced_motion=False, rate=1.0, vibrance=1.0):
+    def __init__(self, ids, cols, W=1280, Hh=720, seed=7, quality='high', shell=None, reduced_motion=False, rate=1.0, vibrance=1.0, director=True, gains=None):
         self.rate, self.vibrance = rate, vibrance
+        self.director = director
+        self.gains = gains if gains is not None else (D.load_gains() if director else {})
         self.ids, self.cols = ids, cols
         self.rows = math.ceil(len(ids) / cols)
         self.W, self.H = W, Hh
@@ -137,12 +140,17 @@ class Board:
         phases = []
         n = len(self.ids)
         tt = t * (.2 if self.reduced else self.rate)
-        for i, (mat, tint, (cx, cy)) in enumerate(zip(self.mats, self.tints, self.centres)):
+        presses = []
+        for i in range(n):
             p, ph = 0.0, 'idle'
             for s in starts[i]:
                 q, qph = press_curve(t - s)
                 if qph != 'idle':
                     p, ph = q, qph
+            presses.append((p, ph))
+        attn = D.attention([max(p, 0) for p, _ in presses]) if self.director else [(1.0, 1.0)] * n
+        for i, (mat, tint, (cx, cy)) in enumerate(zip(self.mats, self.tints, self.centres)):
+            p, ph = presses[i]
             t0 = time.perf_counter()
             face, glow = mat.frame(tt, max(p, 0.0) if not self.reduced else 0.0)
             self.timing[self.ids[i]].append((time.perf_counter() - t0) * 1000)
@@ -154,6 +162,8 @@ class Board:
             local = (t / sweep_period * n * .5) % 1
             sweep = local * 1.3 - .15 if (k == i and local < .7) else -1
             exposure = 1 + .1 * min(p, 0)                     # anticipation dims slightly
+            if self.director:
+                face, glow = D.apply(face, glow, self.gains.get(self.ids[i], 1.0), *attn[i])
             kc.compose(canvas, cx, cy, self.shell, face * exposure, glow, tint, tt, sweep=sweep, press=max(p, 0))
             phases.append(ph)
         return np.clip(linear_to_srgb(canvas) * 255 + .5, 0, 255).astype(np.uint8), phases
@@ -199,13 +209,14 @@ def main():
     ap.add_argument('--still', type=float, default=None, help='render one frame at this time to <out>.png and exit')
     ap.add_argument('--reduced-motion', action='store_true')
     ap.add_argument('--rate', type=float, default=1.0, help='material clock multiplier (motion energy)')
+    ap.add_argument('--no-director', action='store_true', help='control: no loudness calibration or attention handoff')
     ap.add_argument('--vibrance', type=float, default=1.0, help='face saturation multiplier, luminance kept')
     ap.add_argument('--gif-width', type=int, default=560)
     a = ap.parse_args()
     ids = [s for s in a.ids.split(',') if s] or SETS[a.set]
     W, Hh = map(int, a.size.split('x'))
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
-    board = Board(ids, a.cols, W, Hh, seed=a.seed, reduced_motion=a.reduced_motion, rate=a.rate, vibrance=a.vibrance)
+    board = Board(ids, a.cols, W, Hh, seed=a.seed, reduced_motion=a.reduced_motion, rate=a.rate, vibrance=a.vibrance, director=not a.no_director)
     starts = schedule(len(ids), a.seconds)
     if a.still is not None:
         n = int(a.still * 60)
@@ -241,7 +252,7 @@ def main():
     timing = {m: {'mean_ms': round(float(np.mean(v)), 2), 'p95_ms': round(float(np.percentile(v, 95)), 2)} for m, v in board.timing.items()}
     meta = {'ids': ids, 'cols': a.cols, 'size': [W, Hh], 'seed': a.seed, 'seconds': a.seconds, 'fps_requested': a.fps,
             'frames_rendered': n, 'mp4': {k: st.get(k) for k in ('codec_name', 'profile', 'pix_fmt', 'width', 'height', 'r_frame_rate', 'avg_frame_rate', 'nb_read_frames')},
-            'duration_s': float(pr['format']['duration']), 'reduced_motion': a.reduced_motion, 'rate': a.rate, 'vibrance': a.vibrance,
+            'duration_s': float(pr['format']['duration']), 'reduced_motion': a.reduced_motion, 'rate': a.rate, 'vibrance': a.vibrance, 'director': not a.no_director,
             'offline_ms_per_face_python': timing, 'wall_s': round(wall, 1),
             'note': '60 fps here is the encoded output cadence of an offline NumPy render. It says nothing about Roblox runtime frame time.',
             'press_starts_s': starts}

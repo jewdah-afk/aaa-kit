@@ -1,0 +1,238 @@
+{
+ "board": "media/celestialrithm/frontier/board-core12",
+ "ids": [
+  "hydroglass",
+  "prism_gel",
+  "solar_plasma",
+  "bio_slime",
+  "crystal_ice",
+  "holo_foil",
+  "void",
+  "electric_glass",
+  "molten_core",
+  "verdant_coral",
+  "opal",
+  "nebula"
+ ],
+ "A_activation": [
+  {
+   "id": "hydroglass",
+   "t": 2.03,
+   "first_in_focus": false,
+   "lift": 0.98,
+   "competitor": 4.71,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "prism_gel",
+   "t": 2.65,
+   "first_in_focus": false,
+   "lift": 4.04,
+   "competitor": 1.21,
+   "verdict": "FAIL",
+   "deutan": true,
+   "protan": false
+  },
+  {
+   "id": "solar_plasma",
+   "t": 3.27,
+   "first_in_focus": false,
+   "lift": 3.29,
+   "competitor": 1.51,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "bio_slime",
+   "t": 3.89,
+   "first_in_focus": false,
+   "lift": 3.44,
+   "competitor": 1.29,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "crystal_ice",
+   "t": 4.51,
+   "first_in_focus": false,
+   "lift": 1.19,
+   "competitor": 3.24,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "holo_foil",
+   "t": 5.13,
+   "first_in_focus": false,
+   "lift": 1.57,
+   "competitor": 2.57,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "void",
+   "t": 5.75,
+   "first_in_focus": false,
+   "lift": 2.18,
+   "competitor": 1.19,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": true
+  },
+  {
+   "id": "electric_glass",
+   "t": 6.37,
+   "first_in_focus": false,
+   "lift": 1.67,
+   "competitor": 3.24,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "molten_core",
+   "t": 6.99,
+   "first_in_focus": false,
+   "lift": 2.57,
+   "competitor": 1.32,
+   "verdict": "FAIL",
+   "deutan": true,
+   "protan": false
+  },
+  {
+   "id": "verdant_coral",
+   "t": 7.61,
+   "first_in_focus": false,
+   "lift": 2.59,
+   "competitor": 2.36,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "opal",
+   "t": 8.23,
+   "first_in_focus": false,
+   "lift": 0.72,
+   "competitor": 7.7,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  },
+  {
+   "id": "nebula",
+   "t": 8.85,
+   "first_in_focus": false,
+   "lift": 3.55,
+   "competitor": 1.28,
+   "verdict": "FAIL",
+   "deutan": false,
+   "protan": false
+  }
+ ],
+ "B_rest": {
+  "t": 1.1,
+  "lift_per_key": {
+   "hydroglass": 0.77,
+   "prism_gel": 2.24,
+   "solar_plasma": 3.11,
+   "bio_slime": 3.34,
+   "crystal_ice": 1.05,
+   "holo_foil": 0.97,
+   "void": 2.62,
+   "electric_glass": 0.8,
+   "molten_core": 0.72,
+   "verdant_coral": 4.31,
+   "opal": 0.63,
+   "nebula": 1.06
+  },
+  "max_over_median": 4.09,
+  "loudest": "verdant_coral",
+  "quietest": "opal",
+  "accidental_owner": true,
+  "first_fixation": {
+   "x": 790,
+   "y": 324,
+   "salience": 1.0,
+   "in_focus": false
+  }
+ },
+ "C_cvd": {
+  "normal": {
+   "min_pair": [
+    0.0476,
+    "prism_gel",
+    "nebula"
+   ],
+   "collisions_below_0.04": []
+  },
+  "deutan": {
+   "min_pair": [
+    0.0478,
+    "prism_gel",
+    "nebula"
+   ],
+   "collisions_below_0.04": []
+  },
+  "protan": {
+   "min_pair": [
+    0.0407,
+    "prism_gel",
+    "nebula"
+   ],
+   "collisions_below_0.04": []
+  },
+  "tritan": {
+   "min_pair": [
+    0.0239,
+    "prism_gel",
+    "nebula"
+   ],
+   "collisions_below_0.04": [
+    [
+     0.0239,
+     "prism_gel",
+     "nebula"
+    ],
+    [
+     0.0371,
+     "bio_slime",
+     "crystal_ice"
+    ]
+   ]
+  }
+ },
+ "D_flash": {
+  "frames": 720,
+  "seconds": 12.0,
+  "area_limit_fraction": 0.0278,
+  "general": {
+   "worst_area_fraction_over_3_per_s": 0.0039,
+   "at_s": 5.63
+  },
+  "red": {
+   "worst_area_fraction_over_3_per_s": 0.0,
+   "at_s": 0.0
+  },
+  "verdict": "PASS"
+ },
+ "summary": {
+  "activation_owner_pass": "0/12",
+  "activation_full_PASS": 0,
+  "rest_accidental_owner": true,
+  "rest_max_over_median": 4.09,
+  "cvd_collisions": {
+   "normal": 0,
+   "deutan": 0,
+   "protan": 0,
+   "tritan": 2
+  },
+  "flash": "PASS"
+ }
+}
