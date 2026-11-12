@@ -172,3 +172,4 @@ blender -b --factory-startup --python examples/brick/props_brick.py -- render Oa
 - [ ] 16 colours or fewer; glow only where intended; one outline.
 - [ ] Nothing floats (26-connected); doors fit a player; buildings read as roof, walls and base.
 - [ ] Rig exported (`RIG_OK`) and every piece is at or under 20,000 triangles.
+- [ ] After any change to `scripts/` or a brick example: `bash scripts/regress.sh` prints `REGRESS_OK` (the 18 shipped props, buildings and terrain pieces rebuild to identical rig data).
