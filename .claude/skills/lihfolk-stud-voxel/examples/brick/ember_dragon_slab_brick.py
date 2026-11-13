@@ -398,6 +398,12 @@ def build(name, mask, with_studs):
     me = bpy.data.meshes.new(name); me.from_pydata(Vb.tolist(), [], np.concatenate(faces).tolist())
     ca = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
     ca.data.foreach_set('color', np.concatenate([lin(np.clip(Cv, 0, 1)), np.ones((len(Cv), 1))], 1).ravel())
+    # POSITION PASS data: every face carries the brick coordinates of its centre, scaled 0..1 over the grid, so a render
+    # of this attribute tells each pixel which brick it shows (scripts/fx_bake.py reads it to run effects in 3D)
+    cen_ = np.repeat(Vt.reshape(-1, 4, 3).mean(1), 4, axis=0); pn = np.clip((cen_ - lo) / (hi - lo), 0, 1)
+    pa = me.color_attributes.new('Pos', 'FLOAT_COLOR', 'POINT')
+    pa.data.foreach_set('color', np.concatenate([pn, np.ones((len(pn), 1))], 1).ravel())
+    me.color_attributes.active_color = ca; me.color_attributes.render_color_index = 0
     ul = me.uv_layers.new(name='UVMap')
     li = np.zeros(len(me.loops), np.int64); me.loops.foreach_get('vertex_index', li)
     ul.data.foreach_set('uv', UV[li].ravel())
@@ -464,6 +470,15 @@ def render_all():
         if ortho: return Vector(c), 3000, 2.08 * max(qr.max(), qu.max())
         th = 18.0 / lens
         return Vector(c), 1.04 * max(((qr / th) + qf).max(), ((qu / th) + qf).max()), None
+    def pos_pass(p):                                                  # flat render of the 'Pos' attribute, 16 bit, linear
+        keng = sc.render.engine; sc.render.engine = 'BLENDER_WORKBENCH'; sh.light = 'FLAT'; sh.color_type = 'VERTEX'
+        sh.show_shadows = False; sh.show_cavity = False; g.hide_render = True; sc.render.film_transparent = True
+        for o in [body, belly] + GL: o.data.color_attributes.render_color_index = 1; o.data.color_attributes.active_color_index = 1
+        sc.view_settings.view_transform = 'Raw'; sc.render.image_settings.color_depth = '16'
+        sc.render.filepath = p[:-4] + '_pos.png'; bpy.ops.render.render(write_still=True)
+        for o in [body, belly] + GL: o.data.color_attributes.render_color_index = 0; o.data.color_attributes.active_color_index = 0
+        sc.view_settings.view_transform = 'Standard'; sc.render.image_settings.color_depth = '8'
+        sc.render.film_transparent = False; g.hide_render = False; sh.color_type = 'OBJECT'; sc.render.engine = keng
     def view(name, tgt, dist, az, el, lens=50, ortho=None):
         dv = Vector((math.cos(math.radians(el)) * math.sin(math.radians(az)), -math.cos(math.radians(el)) * math.cos(math.radians(az)), math.sin(math.radians(el))))
         if tgt is None: t, dist, ortho = fit(dv, lens, ortho)
@@ -472,6 +487,7 @@ def render_all():
         cam.data.type = 'ORTHO' if ortho else 'PERSP'
         if ortho: cam.data.ortho_scale = ortho
         p = os.path.join(REN, '%s_%s.png' % (ID, name))
+        if POS_ONLY: pos_pass(p); return
         sc.render.engine = ENG; sc.render.film_transparent = False; sc.render.filepath = p; bpy.ops.render.render(write_still=True)
         sc.render.engine = 'BLENDER_WORKBENCH'; sh.light = 'FLAT'; sh.color_type = 'OBJECT'; sh.show_shadows = False; sh.show_cavity = False
         g.hide_render = True; sc.render.film_transparent = True; sc.render.filepath = p[:-4] + '_mask.png'; bpy.ops.render.render(write_still=True)
@@ -479,6 +495,7 @@ def render_all():
         body.color = (0, 0, 0, 1); belly.color = (0, 0, 0, 1)
         sc.render.filepath = p[:-4] + '_glow.png'; bpy.ops.render.render(write_still=True)
         sc.world.color = keep_; g.hide_render = False; body.color = (1, 1, 1, 1); belly.color = (1, 1, 1, 1)
+        pos_pass(p)
     cen = None; D = 0                                  # None = auto tight framing
     for nm, az, el in (('ortho_front', 0, 0), ('ortho_side', 90, 0), ('ortho_back', 180, 0), ('ortho_top', 0, 89.9)):
         if not ONLY or nm in ONLY: view(nm, None, 0, az, el, ortho=True)
@@ -491,7 +508,9 @@ def render_all():
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 ONLY = [a for a in argv if a != 'render']
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, ID + '.blend'))
+POS_ONLY = bool(os.environ.get('SV_POS_ONLY'))                       # render only the position pass, then stop (no rig export)
 if 'render' in argv: render_all()
+if POS_ONLY: print('POS_OK'); raise SystemExit(0)
 
 # ---------------------------------------------------------------- rig (always): bones in brick coords, L = +x
 X, Y, Z = np.meshgrid(cx.astype(np.float32), cy.astype(np.float32), cz.astype(np.float32), indexing='ij')   # brick coords

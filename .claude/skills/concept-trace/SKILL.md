@@ -27,7 +27,8 @@ All tools live in the Stud Voxel skill's `scripts/` folder.
 5. **Paint by job.** The slab's outer layer takes the lit tone (faces that look up are lighter); everything under it is the dark wall. Lift the base colour until the model reaches six or more value bands.
 6. **Measure again**, and keep the pair of numbers in the notes. Then render in Blender and look: the numbers place things, the eye judges appeal.
 7. **Check it in motion.** `python3 scripts/rig_anim.py <ID_rig.glb> out.mp4` plays walk, charge and idle on the exported rig in a fast preview. Thick slabs on limbs clip into the body: give them clearance.
-8. **Check the first look.** Run `hierarchy-audit` on the 3/4 render with the head as the focus.
+8. **Bake effects in 3D (optional).** A model file's position pass (`SV_POS_ONLY=1`, see `ember_dragon_slab_brick.py`) writes which brick each pixel shows; `python3 scripts/fx_bake.py out.mp4 --grid nx,ny,nz --mouth x,y,z <view_fx.png>` then runs wing waves, per-brick twinkle and a mouth pulse on the warm bricks in seconds. `scripts/hue_anim.py` is the simpler screen-space version.
+9. **Check the first look.** Run `hierarchy-audit` on the 3/4 render with the head as the focus.
 
 ### Working marks
 
