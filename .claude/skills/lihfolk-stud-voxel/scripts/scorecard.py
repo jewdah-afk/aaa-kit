@@ -264,7 +264,7 @@ def score(key, concept=None, save_views=None):
     return out
 
 
-ALIAS = {'war_rhino_plated': 'WarRhino'}                      # a rebuild is matched against the original's concept sheet
+ALIAS = {'war_rhino_plated': 'WarRhino', 'ember_dragon_slab': 'EmberDragon'}                      # a rebuild is matched against the original's concept sheet
 
 
 def concept_of(name, ID):
