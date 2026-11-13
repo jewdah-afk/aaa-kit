@@ -98,6 +98,13 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 - Colours = vertex colours (COLOR_0) x base texture `stud_mul.png` (2 x stud overlay, world UVs); glow pieces = emissive, untextured (set them to Neon in Studio).
 - Roblox: Avatar/3D Importer -> the `.glb`, Rig type: keep bones (custom rig), scale unit = Stud; it lands as one Model with a MeshPart per piece and Bones. Add `AnimationController` + `Animator`, animate in the Animation Editor. Front ends up as LookVector (the importer turns GLBs 180 about Y).
 
+## Hologram blueprint (any brick model)
+`python3 scripts/blueprint.py examples/brick/<model>_brick.py --out <dir> [--luau Module.luau] [--html page.html] [--cache grid.npz]` turns a brick model into fixed 3D points without Blender (numpy only; it runs the script's shape code and rig table and skips the renderer). Look for `BLUEPRINT_OK`.
+- Out: rig joints + bones (named vertices), outline points (surface on every `--ring`-th Z and Y plane + the centre profile), voxel slots (one per `--cell` bricks on the shell, with colour and baked light), and the `rest_front` / `rest_34` cameras so the points can be drawn over those renders.
+- Symmetric models are mirrored: the -x half is the +x half reflected, so every point has an exact twin. `--no-mirror` keeps both halves as built.
+- Use it for a holographic preview of a boss, a build or summon sequence where bricks fly into the slots, or a morph between models. The runtime maths (1:1 assignment, per-slot timing) is [lib/hologram](../../../lib/hologram/README.md); the live demo is [examples/web/dragon-hologram.html](../../../examples/web/dragon-hologram.html).
+- The script must have the standard `# ---- mesh` and `# ---- rig (always)` section markers (the boss examples do). Only `ember_dragon` has been run through it so far.
+
 ## Rejected (don't repeat)
 Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 

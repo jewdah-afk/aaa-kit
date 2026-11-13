@@ -20,6 +20,9 @@ done_line=$(cd lib/surfacebake/qa && lune run test_motion.luau | grep -a '^@@DON
 echo "test_motion.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "surfacebake motion check failed"; exit 1; }
 done_line=$(cd lib/surfacebake/qa && lune run test_react.luau | grep -a '^@@DONE')
 echo "test_react.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "surfacebake react check failed"; exit 1; }
+echo "== lib/hologram"
+done_line=$(cd lib/hologram/qa && lune run test_hologram.luau | grep -a '^@@DONE')
+echo "test_hologram.luau: $done_line"; [ "$done_line" = "@@DONE 0" ] || { echo "hologram check failed"; exit 1; }
 echo "== lib/pixelfx";   (cd lib/pixelfx/qa && lune run run.luau > /dev/null && echo "run.luau ok")
 echo "== doctor";        python3 tools/doctor.py --brief | head -1
 echo "== selene"

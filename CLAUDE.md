@@ -24,7 +24,7 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 | [docs/FRAMEWORK.md](docs/FRAMEWORK.md) | Where code goes in a Roblox game, and the rules that keep it safe |
 | [LEXICON.md](LEXICON.md) / [lexicon.json](lexicon.json) | 400+ design terms, each with a ready-to-paste prompt phrase |
 | [.claude/skills/](.claude/skills/) | Procedures for HUD, rewards, VFX, EditableImage/Mesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, hierarchy audit, prompt amplification and the kit doctor |
-| [lib/](lib/README.md) | Tested Luau libraries: frontier (EditableImage/EditableMesh at the limits), pixelfx (15 pixel effects) and surfacebake (algorithm textures baked onto model assets) |
+| [lib/](lib/README.md) | Tested Luau libraries: frontier (EditableImage/EditableMesh at the limits), pixelfx (15 pixel effects), surfacebake (algorithm textures baked onto model assets) and hologram (a model as mirrored 3D points and voxel slots, with a 1:1 build transform) |
 | [docs/playbooks/](docs/playbooks/README.md) | How we did everything: Figma UI pipeline, motion + sound, icons, world hierarchy, VFX, procedural textures on models, look-dev loop, Studio, handouts. Follow these before inventing a process |
 | [docs/research/](docs/research/README.md) | 31 research chapters: EditableImage/Mesh APIs and cookbooks, Luau performance, VFX, architecture, security, procgen, AI, live ops, QA, and hierarchy science |
 | `tools/doctor.py` | Checks this PC's toolchain and a game repo against the kit's standards |
