@@ -67,6 +67,14 @@ One loop for every route. Do not skip a step; do not add detail before step 4 pa
 5. Send the sheet (+ loop GIF) with SendUserFile. No MP4s or Studio install unless asked.
 6. Before calling it done: nothing floats, 16 colours or fewer, `RIG_OK` printed, and after any change to `scripts/` or a brick example `bash scripts/regress.sh` prints `REGRESS_OK`.
 
+## Scorecard and baseline
+
+Every brick creature is scored the same way, from its brick grid, in seconds and without rendering: [why and how](../../../docs/research/91-readable-voxel-surfaces.md).
+- `python3 scripts/scorecard.py dump` (needs Blender's `bpy`) caches each model's grid; `score` prints the table; `baseline` freezes it to `examples/BASELINE.json` and `examples/SCORECARD.md`; `check` fails if a model drops.
+- Measures: `match` (silhouette vs the concept sheet), `bands`, `edges`, `flat`, `contrast`, `relief` (real layering), `backed` (edges that are geometry, not paint), `small` (detail left at 48 px tall), plus the colour, glow and triangle rules. `structure` sums them to 0-100.
+- Anchors approved by eye: swamp_croc, war_rhino, kraken. The numbers only say "not worse than before"; the look is judged on the Blender sheet.
+- The measuring views (`$SV_CACHE/views/<model>_<view>.png`) are a one-second preview of a sculpt: use them between Blender renders.
+
 ## Rules for every model
 
 - Big shapes first: compare silhouettes to the concept before details. Recurring misses: wings as flat triangles (build separate feather/finger blocks), necks too short so heads clump, bodies too slim (bulk legs/chest 1.3x), beaks too long from the front, shells/cones as thin spires.
@@ -195,4 +203,5 @@ blender -b --factory-startup --python examples/brick/props_brick.py -- render Oa
 - [ ] 16 colours or fewer; glow only where intended; one outline.
 - [ ] Nothing floats (26-connected); doors fit a player; buildings read as roof, walls and base.
 - [ ] Rig exported (`RIG_OK`) and every piece is at or under 20,000 triangles.
+- [ ] Scorecard: `python3 scripts/scorecard.py file <model.py> <concept.jpg>` for a new model; after any change `python3 scripts/scorecard.py check` prints `SCORE_OK` (no model below `examples/BASELINE.json`).
 - [ ] After any change to `scripts/` or a brick example: `bash scripts/regress.sh` prints `REGRESS_OK` (the 18 shipped props, buildings and terrain pieces rebuild to identical rig data).

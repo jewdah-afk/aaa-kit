@@ -67,6 +67,7 @@ Why HIERARCHY.md works, with the perception, timing and audio research behind ea
 | # | Chapter | Answers |
 |---|---------|---------|
 | 90 | [Stud Voxel in Studio](90-stud-voxel-in-studio.md) | Three routes from a brick grid into Studio, the lune-tested Parts route, measured box counts, and the ranked upgrade plan |
+| 91 | [Readable voxel surfaces](91-readable-voxel-surfaces.md) | How overlap, lip shadow and value bands make armour, scales and fur read; headless surface measures; the surface types in the 17 models |
 
 ## Method
 
