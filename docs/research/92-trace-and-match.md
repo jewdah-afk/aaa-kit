@@ -52,7 +52,12 @@ bricks) for a cleaner surface.
 | Shipped (diagonal folds) | 0.76 | 1.78 | 1.49 | 83 | 15 % | 60 % |
 | First rebuild (hand-laid rings) | 0.78 | 1.16 | 1.50 | 95 | 29 % | 80 % |
 | Traced rebuild | 0.79 | 0.73 | 1.14 | 91 | 29 % | 79 % |
-| Traced, faceted slabs (current) | 0.79 | 0.84 | 1.37 | 92 | 30 % | 74 % |
+| Traced, faceted slabs | 0.79 | 0.84 | 1.37 | 92 | 30 % | 74 % |
+| Traced slabs, deeper steps, light tops over dark walls (current) | 0.79 | 0.81 | 1.52 | 89 | 31 % | 74 % |
+
+The current version scores lower on `structure` only because its edge share (33 %) is past the
+25 % the score rewards; its value bands rose from 5.7 to 7.0 and small-size survival from 0.77
+to 0.80. By eye it is the closest to the concept.
 
 ## 4. Decisions
 

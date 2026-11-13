@@ -22,7 +22,7 @@ col = np.zeros((*n, 3)); kind = np.zeros(n, np.int8); stud = np.zeros(n, bool)  
 pid = np.zeros(n, np.int32); lvl = np.zeros(n)                                      # plate id / plate height level
 
 def hx(h): return np.array([int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)])
-PLATE = hx('56709e'); HEADC = hx('5c77a6'); HIDE = hx('1f2a40'); HOOF = hx('3a3e47'); HOOFL = hx('5e636d')
+PLATE = hx('6a84b4'); HEADC = hx('5c77a6'); HIDE = hx('1f2a40'); HOOF = hx('3a3e47'); HOOFL = hx('5e636d')
 BLACK = hx('0c0e12'); IVORY = hx('f6e0b0'); COLLAR = hx('3c4456'); TUFT = hx('252b38')
 GLOW = {2: hx('ff7a18')}                                       # eyes: ONE flat glow colour (no hot centre / rim / glint)
 
@@ -85,6 +85,7 @@ SNAP = np.array([0, .5, 1.0])
 body_zone = (Y > BELLY_Y) & (d > -2.5)
 surf = (np.abs(d) < .8) & body_zone & (X > 0)
 shell = np.zeros(n, bool); L_ = np.zeros(n); face = np.ones(n)
+STEP = 1.4                                                             # bricks of height per plate level: deep steps show their side walls
 for i in np.unique(plate[surf]):
     P = np.stack([AX[surf & (plate == i)], Y[surf & (plate == i)], Z[surf & (plate == i)]], 1)
     if len(P) < 12: continue
@@ -93,9 +94,11 @@ for i in np.unique(plate[surf]):
     q = nrm / np.abs(nrm).max(); q = np.sign(q) * SNAP[np.argmin(np.abs(np.abs(q)[:, None] - SNAP[None]), 1)]
     nrm = q / np.linalg.norm(q)
     h = AX * nrm[0] + Y * nrm[1] + Z * nrm[2]
-    top = np.quantile(P.dot(nrm), .5) + float(plev[i]) - .5              # the slab's flat outer face
-    m_ = (plate == i) & body_zone & (((h <= top) & (d < float(plev[i]) + .6)) | (d < .5))   # never far off the body, never a hole
-    shell |= m_; L_[m_] = float(plev[i]); face[m_] = .84 + .26 * max(nrm[1], 0) + .05 * float(plev[i])   # faces that look up are lighter
+    rise = STEP * float(plev[i]) - .9
+    top = np.quantile(P.dot(nrm), .5) + rise                             # the slab's flat outer face
+    m_ = (plate == i) & body_zone & (((h <= top) & (d < rise + 1.1)) | (d < .5))   # never far off the body, never a hole
+    shell |= m_; L_[m_] = float(plev[i]); face[m_] = .86 + .34 * max(nrm[1], 0) + .04 * float(plev[i])   # faces that look up are lighter
+    face[m_ & (h <= top - 1.0) & (d < rise + .1)] *= .58                                   # everything under the outer layer is the slab's dark side wall
 TONE = (1.0, .95, 1.05)
 put(shell, PLATE, p=0, l=0)
 col[shell] = PLATE[None] * (np.array(TONE)[plate[shell] % 3] * face[shell])[:, None]
@@ -178,11 +181,11 @@ for ax in range(3):
     for s in (1, -1):
         np_ = np.roll(pid, s, axis=ax); nl = np.roll(lvl, s, axis=ax)
         rim |= (pid >= 2000) & (np_ >= 2000) & (np_ != pid) & (nl < lvl)
-col[rim & ~dark & (kind == 1)] *= 1.22                                             # hard light edge on the proud plate
-col *= np.clip(.62 + .55 * (Y / 50.0), .62, 1.18)[..., None]                      # lit tops, dark underside
+col[rim & ~dark & (kind == 1)] *= 1.08                                             # hard light edge on the proud plate
+col *= np.clip(.76 + .40 * (Y / 50.0), .76, 1.16)[..., None]                      # lit tops, dark underside
 col = np.clip(col, 0, 1)
 # voxel-style: VOXEL SIZE = 1 unit (= 2.5 studs in game). PALETTE <= 16: snap every solid brick to its nearest entry.
-PAL = np.array([hx(h) for h in ('7d97c8', '5f79a8', '4a6090', '384a72', '27344f',      # armour: light / main / side / dark / shadow
+PAL = np.array([hx(h) for h in ('9db4de', '7d97c8', '5f79a8', '4a6090', '384a72', '27344f',      # armour: light / main / side / dark / shadow
                                  '1a2236', '121828',                                  # seam / deep crease
                                  '6c88ba',                                            # head highlight
                                  '3a3e47', '5e636d', '0b0d11',                        # hoof / hoof light / black
