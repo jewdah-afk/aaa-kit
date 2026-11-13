@@ -105,6 +105,12 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 - Use it for a holographic preview of a boss, a build or summon sequence where bricks fly into the slots, or a morph between models. The runtime maths (1:1 assignment, per-slot timing) is [lib/hologram](../../../lib/hologram/README.md); the live demo is [examples/web/dragon-hologram.html](../../../examples/web/dragon-hologram.html).
 - The script must have the standard `# ---- mesh` and `# ---- rig (always)` section markers (the boss examples do). Only `ember_dragon` has been run through it so far.
 
+### From a picture instead of a script
+`python3 scripts/hull_ref.py <front.png> <threequarter.png> --name <ID> --out <dir> [--luau Module.luau] [--html page.html]` builds the voxel model from two pictures of a symmetric model on a plain background (numpy + Pillow). Look for `HULL_OK`.
+- Steps: cut out both silhouettes, search the 3/4 camera position until the carve fills both, keep a voxel only if it and its mirror twin are inside both silhouettes, peel voxels whose colour disagrees between the pictures, keep only `--depth` voxels behind a seen surface, colour from the pixels, snap to `--colours` (20). The front silhouette is traced into mirrored outline vertices.
+- Pictures must be square, the same size, front view centred. Camera angles default to the pipeline's renders (`--az 35 --el 14 --front-el 8`); two pictures do not pin the angles down, so `--free-angles` is only worth using with care.
+- What it cannot know: the back, the tail and anything hidden in both pictures. The back comes out as a dark shell following the front. Use it for a hologram, a summon build or a first block-out to sculpt from, not as a finished boss.
+
 ## Rejected (don't repeat)
 Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 

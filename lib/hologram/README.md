@@ -6,7 +6,8 @@ A model as a **blueprint**: a fixed, mirrored set of 3D points taken from the sa
 |---|---|
 | `Blueprint.luau` | Pure Luau: decode the slots, Morton-curve 1:1 assignment, source piles, per-slot progress and pose |
 | `EmberDragonBlueprint.luau` | Generated data for the Ember Dragon: rig joints, bones, palette and the voxel slots |
-| `qa/test_hologram.luau` | Headless checks (lune) |
+| `EmberDragonRefBlueprint.luau` | Generated data for the same dragon rebuilt from two pictures (front and 3/4), not from its script |
+| `qa/test_hologram.luau` | Headless checks (lune), run on both data sets |
 
 See it running: [examples/web/dragon-hologram.html](../../examples/web/dragon-hologram.html) (hologram, points drawn over two renders of the model, build scrubber).
 
@@ -29,6 +30,17 @@ python3 scripts/blueprint.py examples/brick/ember_dragon_brick.py \
 ```
 
 It needs numpy only (no Blender): it runs the brick script's shape code and rig table and skips the renderer. The dragon's grid is 20 million bricks, so this takes about four minutes (add `--ring 12` for the outline spacing the page uses); `--cache grid.npz` saves the grid for later runs. `--cell` sets bricks per slot (4), `--ring` the spacing of the outline planes.
+
+## Make one from pictures
+
+```sh
+cd .claude/skills/lihfolk-stud-voxel
+python3 scripts/hull_ref.py front.png threequarter.png --name EmberDragonRef --cell 3 --ring 8 \
+  --luau ../../../lib/hologram/EmberDragonRefBlueprint.luau \
+  --html ../../../examples/web/dragon-hologram.html --photos ember-dragon-ref-front.jpg ember-dragon-ref-34.jpg
+```
+
+Two square pictures of a symmetric model on a plain background: a centred front view and a 3/4 view. The silhouettes are carved into a mirrored voxel shape (a voxel stays only if it and its twin are inside both), trimmed where the pictures disagree on colour or can't see, and coloured from the pixels. It takes about 25 seconds. The result matches the pictures from their own angles; the back and anything hidden in both pictures is a guess (a dark shell), and the tail is missing if no picture shows it. Its units are voxels, not bricks, and `studsPerBrick` is a guess because a picture has no scale.
 
 ## The transform
 

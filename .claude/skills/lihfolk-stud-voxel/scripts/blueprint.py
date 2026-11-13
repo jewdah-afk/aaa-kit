@@ -96,6 +96,12 @@ def load_model(path, cache=None):
 
 def extract(path, cell=4, ring=8, mirror=None, cache=None):
     ns, cap = load_model(path, cache)
+    ns.setdefault('ID', os.path.basename(path))
+    return extract_grid(ns, cap, cell, ring, mirror)
+
+
+def extract_grid(ns, cap, cell=4, ring=8, mirror=None, flat_light=None):
+    """ns = dict(kind, col, lo, ID[, GLOW]); cap = dict(RIG=[(bone, parent, head, tail), ...])."""
     kind, col, lo = ns['kind'], np.clip(ns['col'], 0, 1).copy(), np.array(ns['lo'], float)
     n = np.array(kind.shape); solid = kind > 0
     for k, c in ns.get('GLOW', {}).items(): col[kind == k] = c                    # glow bricks: their flat colour, not the height shading
@@ -168,6 +174,7 @@ def extract(path, cell=4, ring=8, mirror=None, cache=None):
     order = np.lexsort((J[:, 0], J[:, 2], J[:, 1]))                              # build order: bottom-up, front to back
     J = J[order]; pal_s = pal_s[order]
     lt = np.round(light[tuple(J.T)] * 255).astype(np.uint8)
+    if flat_light is not None: lt[:] = flat_light                               # colours that already carry their lighting (from a picture)
     slots = np.concatenate([J.astype(np.uint8), pal_s[:, None].astype(np.uint8), lt[:, None]], 1)
     if cn.max() > 255: raise SystemExit('coarse grid over 255 cells; raise --cell')
 
@@ -183,7 +190,7 @@ def extract(path, cell=4, ring=8, mirror=None, cache=None):
 
     P = lo + .5 + np.argwhere(surf)[::5]
     return dict(
-        name=ns.get('ID', os.path.basename(path)), unit='brick', studsPerBrick=2.5,
+        name=ns.get('ID', 'Model'), unit='brick', studsPerBrick=2.5,
         lo=lo.tolist(), size=n.tolist(), symmetry=dict(iou=round(iou, 4), mirrored=bool(mirror)),
         anchors=anchors, bones=bones, palette=palette, glow=glow,
         cell=cell, slotOrigin=org.tolist(), slotGrid=cn.tolist(), slotCount=len(slots), slots=slots,
@@ -217,6 +224,14 @@ def to_luau(bp):
         bp['cell'], *bp['slotOrigin'], bp['slotCount'], p, g, a, b, rows)
 
 
+def write_html(page_path, js, block='blueprint'):
+    """Refresh the <script id="<block>" type="application/json"> data block of a page."""
+    page = open(page_path, encoding='utf8').read()
+    new, k = re.subn(r'(<script id="%s" type="application/json">).*?(</script>)' % block, lambda m: m.group(1) + js + m.group(2), page, flags=re.S)
+    if k != 1: raise SystemExit('no %s script block in %s' % (block, page_path))
+    open(page_path, 'w', encoding='utf8').write(new)
+
+
 def main():
     ap = argparse.ArgumentParser(description='Extract a hologram blueprint from a brick model script.')
     ap.add_argument('model'); ap.add_argument('--out', default=None)
@@ -233,11 +248,7 @@ def main():
         os.makedirs(a.out, exist_ok=True)
         open(os.path.join(a.out, bp['name'] + '_blueprint.json'), 'w', encoding='utf8').write(js)
     if a.luau: open(a.luau, 'w', encoding='utf8').write(to_luau(bp))
-    if a.html:
-        page = open(a.html, encoding='utf8').read()
-        new, k = re.subn(r'(<script id="blueprint" type="application/json">).*?(</script>)', lambda m: m.group(1) + js + m.group(2), page, flags=re.S)
-        if k != 1: raise SystemExit('no blueprint script block in ' + a.html)
-        open(a.html, 'w', encoding='utf8').write(new)
+    if a.html: write_html(a.html, js)
     print('BLUEPRINT_OK %s: %d anchors, %d bones, %d ring points, %d slots (cell %d), %d colours, symmetry %.3f, mirrored %s' % (
         bp['name'], len(bp['anchors']), len(bp['bones']), bp['ringCount'], bp['slotCount'], bp['cell'], len(bp['palette']),
         bp['symmetry']['iou'], bp['symmetry']['mirrored']))
