@@ -22,7 +22,7 @@ col = np.zeros((*n, 3)); kind = np.zeros(n, np.int8); stud = np.zeros(n, bool)  
 pid = np.zeros(n, np.int32); lvl = np.zeros(n)                                      # plate id / plate height level
 
 def hx(h): return np.array([int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)])
-PLATE = hx('6a84b4'); HEADC = hx('5c77a6'); HIDE = hx('1f2a40'); HOOF = hx('3a3e47'); HOOFL = hx('5e636d')
+PLATE = hx('6a84b4'); HEADC = hx('6f89b8'); HIDE = hx('1f2a40'); HOOF = hx('3a3e47'); HOOFL = hx('5e636d')
 BLACK = hx('0c0e12'); IVORY = hx('f6e0b0'); COLLAR = hx('3c4456'); TUFT = hx('252b38')
 GLOW = {2: hx('ff7a18')}                                       # eyes: ONE flat glow colour (no hot centre / rim / glint)
 
@@ -139,7 +139,15 @@ head = ((AX / hw) ** 5 + (np.abs(Y - hm) / hh) ** 5 < 1) & (Z > -49) & (Z < -26)
 HID = newid()
 put(head, HEADC, p=HID, l=3)
 put(head & (Y < 13.5), HEADC * .84, p=HID, l=3)                                    # jaw, a shade darker
+put(head & (Y > ht - 1.3), HEADC * 1.13, p=HID, l=3)                               # lit top of the skull and snout
 put(head & (Y > 12.5) & (Y < 13.5) & (Z < -36), BLACK, st=False)                   # mouth line
+# collar: a slab ring 2 bricks proud where the head meets the neck, so the head reads as its own mass
+ring_ = ((AX / (hw + 2.2)) ** 5 + (np.abs(Y - hm) / (hh + 2.2)) ** 5 < 1) & (Z > -30) & (Z < -26)
+put(ring_ & ~head, HEADC * 1.06, p=newid(), l=5)
+put(ring_ & ~head & (Z > -27), HEADC * .6, p=newid(), l=4)                         # its dark rear wall
+# jaw slab: 1 brick proud under the cheek, darker, with the mouth line above it
+jaw_ = ((AX / (hw + 1.1)) ** 5 + (np.abs(Y - hm) / (hh + 1.1)) ** 5 < 1) & (Y < 12.5) & (Z > -45) & (Z < -31)
+put(jaw_ & ~head, HEADC * .78, p=newid(), l=4)
 put(box(0, 6.5, 13.5, 20.5, -50, -48.9) | box(0, 5.5, 20.4, 21.5, -50, -48.9), HEADC * 1.03, p=newid(), l=4)   # muzzle front plate
 put(box(3, 5, 17.5, 19.5, -50, -48), BLACK, st=False)                              # nostrils (front)
 put(box(10, 12.6, 14.5, 21.5, -40, -30), HEADC * .96, p=newid(), l=4)              # cheek plates, 2 bricks proud
