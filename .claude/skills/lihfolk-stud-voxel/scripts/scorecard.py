@@ -264,8 +264,11 @@ def score(key, concept=None, save_views=None):
     return out
 
 
+ALIAS = {'war_rhino_plated': 'WarRhino'}                      # a rebuild is matched against the original's concept sheet
+
+
 def concept_of(name, ID):
-    for c in (ID, ''.join(p.title() for p in name.split('_'))):
+    for c in (ID, ''.join(p.title() for p in name.split('_')), ALIAS.get(name, '')):
         p = os.path.join(EX, 'concepts', c + '_concept.jpg')
         if os.path.exists(p): return p
     return None
