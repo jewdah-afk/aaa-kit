@@ -111,6 +111,12 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 - Pictures must be square, the same size, front view centred. Camera angles default to the pipeline's renders (`--az 35 --el 14 --front-el 8`); two pictures do not pin the angles down, so `--free-angles` is only worth using with care.
 - What it cannot know: the back, the tail and anything hidden in both pictures. The back comes out as a dark shell following the front. Use it for a hologram, a summon build or a first block-out to sculpt from, not as a finished boss.
 
+### Vertex map from three flat views (the precise route)
+`python3 scripts/ortho_map.py <front.png> <side.png> <top.png> [--back back.png] --name <ID> --out <dir> [--html page.html]` builds a cell grid where the straight-on front, side and top silhouettes all agree, numbers every corner of every exposed face, and writes each vertex's exact pixel formula per view (`<ID>_vertexmap.json`). Look for `MAP_OK`.
+- Feed it the pipeline's own `ortho_front`, `ortho_side`, `ortho_top`, `ortho_back` renders, or concept views drawn straight-on. Prefer this over `hull_ref.py` whenever those views exist: one cell is always the same number of pixels, so the mapping is exact and the model is solid from every side.
+- Slots are stored in the order of a curved threshold `F` swept through the grid (the reveal order).
+- Limits: hollows no silhouette shows stay filled (open mouth, gap under a wing), wings come out as thick as their side view, and glow halos in a render count as model. Render without the glow pass for a clean map.
+
 ## Rejected (don't repeat)
 Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 

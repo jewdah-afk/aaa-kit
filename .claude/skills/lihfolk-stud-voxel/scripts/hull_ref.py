@@ -211,6 +211,32 @@ def simplify(pts, eps):
     return pts[keep]
 
 
+def finish_colour(surf, I, rgb, seen, colours=20, spread=6):
+    """Seen surface colours -> full colour grid: spread a few voxels, dark tone for the never-seen, snap to a palette, mirror."""
+    shape = surf.shape
+    colg = np.zeros((*shape, 3), np.float32); known = np.zeros(shape, bool)
+    colg[tuple(I[seen].T)] = rgb[seen]; known[tuple(I[seen].T)] = True
+    want = surf & (np.arange(shape[0]) >= shape[0] // 2)[:, None, None]
+    for _ in range(spread):                                   # spread seen colours a few voxels over the unseen surface
+        todo = want & ~known
+        if not todo.any(): break
+        got = False
+        for ax in range(3):
+            for s in (1, -1):
+                take = todo & np.roll(known, s, ax) & ~known
+                if take.any(): colg[take] = np.roll(colg, s, ax)[take]; known |= take; got = True
+        if not got: break
+    todo = want & ~known                                      # never shown in a picture: the model's most common dark colour
+    if todo.any():
+        dark = rgb[seen][rgb[seen].sum(1) < np.median(rgb[seen].sum(1))]
+        colg[todo] = np.median(dark, 0); known |= todo
+    hc = colg[want]
+    pim = Image.fromarray(np.clip(hc, 0, 255).astype(np.uint8).reshape(-1, 1, 3)).quantize(colours, method=Image.Quantize.MEDIANCUT, kmeans=3)
+    pal = np.array(pim.getpalette()[:colours * 3], np.float32).reshape(-1, 3); colg[want] = pal[np.asarray(pim).ravel()]
+    colg[:shape[0] // 2] = colg[::-1][:shape[0] // 2]          # the -x half is the +x half reflected
+    return colg
+
+
 # ------------------------------------------------------------------ main build
 def build(front_img, quarter_img, name='Model', az=35, el=14, front_el=8, cell=2, ring=6, colours=20, eps=7.0, free_angles=False, photo=True, spread=6, depth=12, log=print):
     rgb_f = np.asarray(Image.open(front_img).convert('RGB')); rgb_q = np.asarray(Image.open(quarter_img).convert('RGB'))
@@ -269,26 +295,7 @@ def build(front_img, quarter_img, name='Model', az=35, el=14, front_el=8, cell=2
             idx = np.nonzero(ok)[0]; better = sc > best[idx]
             best[idx[better]] = sc[better]; rgb[idx[better]] = col[better]; seen[idx[better]] = True
     log('coloured from the pictures: %.0f%% of the surface; the rest takes its nearest seen colour' % (100 * seen[half].mean()))
-    colg = np.zeros((*shape, 3), np.float32); known = np.zeros(shape, bool)
-    colg[tuple(I[seen].T)] = rgb[seen]; known[tuple(I[seen].T)] = True
-    want = surf & (np.arange(shape[0]) >= shape[0] // 2)[:, None, None]
-    for _ in range(spread):                                   # spread seen colours a few voxels over the unseen surface
-        todo = want & ~known
-        if not todo.any(): break
-        got = False
-        for ax in range(3):
-            for s in (1, -1):
-                take = todo & np.roll(known, s, ax) & ~known
-                if take.any(): colg[take] = np.roll(colg, s, ax)[take]; known |= take; got = True
-        if not got: break
-    todo = want & ~known                                      # never shown in a picture: the model's most common dark colour
-    if todo.any():
-        dark = rgb[seen][rgb[seen].sum(1) < np.median(rgb[seen].sum(1))]
-        colg[todo] = np.median(dark, 0); known |= todo
-    hc = colg[want]
-    pim = Image.fromarray(np.clip(hc, 0, 255).astype(np.uint8).reshape(-1, 1, 3)).quantize(colours, method=Image.Quantize.MEDIANCUT, kmeans=3)
-    pal = np.array(pim.getpalette()[:colours * 3], np.float32).reshape(-1, 3); colg[want] = pal[np.asarray(pim).ravel()]
-    colg[:shape[0] // 2] = colg[::-1][:shape[0] // 2]          # the -x half is the +x half reflected
+    colg = finish_colour(surf, I, rgb, seen, colours, spread)
     kind = solid.astype(np.int8)
 
     # ---- outline vertices: front silhouette -> simplified loop -> mirrored -> lifted onto the surface

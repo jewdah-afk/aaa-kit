@@ -42,6 +42,18 @@ python3 scripts/hull_ref.py front.png threequarter.png --name EmberDragonRef --c
 
 Two square pictures of a symmetric model on a plain background: a centred front view and a 3/4 view. The silhouettes are carved into a mirrored voxel shape (a voxel stays only if it and its twin are inside both), trimmed where the pictures disagree on colour or can't see, and coloured from the pixels. It takes about 25 seconds. The result matches the pictures from their own angles; the back and anything hidden in both pictures is a guess (a dark shell), and the tail is missing if no picture shows it. Its units are voxels, not bricks, and `studsPerBrick` is a guess because a picture has no scale.
 
+## Make one from three flat views
+
+```sh
+cd .claude/skills/lihfolk-stud-voxel
+M=../../../media/hologram/ortho
+python3 scripts/ortho_map.py $M/ember-dragon-front.png $M/ember-dragon-side.png $M/ember-dragon-top.png \
+  --back $M/ember-dragon-back.png --name EmberDragonOrtho --out out_map \
+  --html ../../../examples/web/dragon-hologram.html --photos ortho/ember-dragon-front.png ortho/ember-dragon-side.png
+```
+
+Straight-on front, side and top views give a solid model and an exact vertex-to-pixel map (`out_map/EmberDragonOrtho_vertexmap.json`: every exposed cell corner with an ID, plus `a`, `L`, `T` per view for `u = L + a*x`, `v = T + a*(Y - y)`). This is the most precise of the picture routes and the page's default model. There is no Luau data module for it yet.
+
 ## The transform
 
 1. Make a source pile with the same count as the slots (`Blueprint.pile`, `Blueprint.shell`, or your own positions).
