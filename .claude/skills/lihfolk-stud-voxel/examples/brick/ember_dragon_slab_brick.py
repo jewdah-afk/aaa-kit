@@ -16,7 +16,7 @@ ID = 'EmberDragonSlab'
 STUD_PNG = os.path.join(HERE, '..', '..', 'assets', 'roblox_square_studs.png')
 
 GS = 1.5                      # LARGE SCALE: designed in the old units, voxelised 1.5x bigger
-lo = np.array((-146.0, -0.5, -188.0)); hi = np.array((146.0, 176.5, 216.0))   # grid units (bricks)
+lo = np.array((-172.0, -0.5, -188.0)); hi = np.array((172.0, 196.5, 216.0))   # grid units (bricks)
 n = (hi - lo).astype(int)
 cx = lo[0] + .5 + np.arange(n[0]); cy = lo[1] + .5 + np.arange(n[1]); cz = lo[2] + .5 + np.arange(n[2])
 X, Y, Z = np.meshgrid((cx / GS).astype(np.float32), (cy / GS).astype(np.float32), (cz / GS).astype(np.float32), indexing='ij'); AX = np.abs(X)   # design coords
@@ -29,6 +29,15 @@ RED = hx('b0221a'); REDD = hx('6e1410'); REDO = hx('dc4a1c')
 BELLY = hx('ffbe2a'); BELLYO = hx('ff8a10'); BELLYS = hx('c85a0a')
 LAVA = hx('ff9a1c'); HORN = hx('7a5e4c'); HORND = hx('5a463a'); IVORY = hx('f0e0c0'); IVORYS = hx('c8b090')
 GLOW = {2: hx('ff5a0a'), 3: hx('ffa21a'), 4: hx('fff0c0')}   # lava orange / hot yellow-orange / white-hot glint
+# COLOUR VARIANTS: SV_VARIANT=frost|venom|void turns the hue of every warm colour (wings, belly, lava, glow, lights) and leaves
+# the charcoal, horns and claws alone. Value and saturation are kept, so the hierarchy is the same in every variant.
+import colorsys
+VARIANT = os.environ.get('SV_VARIANT', 'ember'); HUE = dict(ember=0.0, frost=.52, venom=.27, void=.78)[VARIANT]
+def vr(c):
+    h, l, s_ = colorsys.rgb_to_hls(*[float(v) for v in c]); return np.array(colorsys.hls_to_rgb((h + HUE) % 1.0, l, s_))
+if HUE:
+    GLOW = {k: vr(v) for k, v in GLOW.items()}; ID = ID + '_' + VARIANT
+    RED, REDD, REDO, BELLY, BELLYO, BELLYS, LAVA = (vr(c) for c in (RED, REDD, REDO, BELLY, BELLYO, BELLYS, LAVA))
 
 REC = []                                                                         # rig: masks recording which puts belong to a part
 def unrec(m): REC[:] = [r_ for r_ in REC if r_ is not m]
@@ -105,7 +114,9 @@ order = np.argsort(near, kind='stable'); cuts = np.searchsorted(near[order], np.
 for c in range(NSEED):
     ii = order[cuts[c]:cuts[c + 1]]
     if not len(ii): continue
-    rise = RISE * level[c] - .4
+    thin = seeds[c, 2] < -20 or seeds[c, 2] > 30                         # neck and tail: low, shallow slabs keep their line
+    if thin: level[c] = min(level[c], 2)
+    rise = (RISE * .6 if thin else RISE) * level[c] - .4
     sf = ii[np.abs(dv[ii]) < .6]
     if len(sf) < 12: on[ii] = dv[ii] < rise; continue
     c0 = Pa[sf].mean(0); nrm = np.linalg.svd(Pa[sf] - c0, full_matrices=False)[2][2]
@@ -153,7 +164,7 @@ def prof(rows, power=6):
     hb = np.interp(Z, R[:, 0], R[:, 1]); ht = np.interp(Z, R[:, 0], R[:, 2]); hw = np.interp(Z, R[:, 0], R[:, 3])
     hm = (hb + ht) / 2; hh = (ht - hb) / 2
     return ((AX / hw) ** power + (np.abs(Y - hm) / hh) ** power < 1) & (Z > R[0, 0]) & (Z < R[-1, 0])
-_SAVE = (X, Y, Z, AX); PV = np.array((0, 40, -48.)); HS = 1.2; HOY = 13.0; HOZ = -15.0   # head 1.2x, moved up/forward onto the long neck (above the shoulders)
+_SAVE = (X, Y, Z, AX); PV = np.array((0, 40, -48.)); HS = 1.38; HOY = 13.0; HOZ = -15.0   # head 1.2x, moved up/forward onto the long neck (above the shoulders)
 X = PV[0] + (X - PV[0]) / HS; Y = PV[1] + (Y - PV[1] - HOY) / HS; Z = PV[2] + (Z - PV[2] - HOZ) / HS; AX = np.abs(X)
 HID = newid(); HEADM = np.zeros(n, bool); REC.append(HEADM)
 def profT(rows, k=.6):                                                          # trapezoid section: narrower toward the bottom
@@ -166,8 +177,8 @@ snout = prof(SN, power=4)
 cran = prof([(-62, 37, 49.5, 9.5), (-56, 36, 51.0, 10.0), (-50, 36, 50.5, 9.5), (-46, 37, 48.5, 8.5)])
 JW = [(-76, 29.5, 33.0, 3.2), (-70, 29.0, 33.5, 4.4), (-60, 29.5, 35.0, 6.0), (-50, 31.5, 37.5, 7.5), (-46, 34, 39, 8.0)]
 jaw = profT(JW)
-put(snout | cran, PLATE, p=HID, l=3)
-put(cran & (Y > 47.5), CHAR, p=newid(), l=4)                                     # skull cap plate
+put(snout | cran, STONE * .82, p=HID, l=3)                                       # head a value lighter than the neck behind it
+put(cran & (Y > 47.5), STONE, p=newid(), l=4)                                     # skull cap plate
 put(jaw, CHAR, p=newid(), l=2)
 put(jaw & (Y < 30.6), DEEP, st=False)                                             # chin underside
 head_ = snout | cran | jaw
@@ -208,8 +219,8 @@ put(chain([(0, 50, -58), (0, 54, -56), (0, 57, -53)], [2.2, 1.4, .5]), DEEP, st=
 for (a, b) in (((9.5, 46, -56), (20, 49, -52)), ((9.8, 41.5, -55), (21, 41, -51)), ((9.2, 37.5, -53), (18, 33, -49))):   # cheek spikes fan out sideways
     put(chain([a, b], [2.8, .5]), CHAR, st=False, p=newid(), l=5)
 # horns: brown-grey, swept up and back, tips curving in; banded segments
-HORNP = [(6.5, 49, -52), (11, 54, -48), (12.5, 59, -42), (11, 63.5, -35), (7.5, 66, -29)]
-hm_ = chain(HORNP, [3.4, 3.0, 2.4, 1.6, .55])
+HORNP = [(6.5, 49, -52), (12, 55, -48), (14.5, 61, -41), (13.5, 67, -33), (9, 71, -26)]
+hm_ = chain(HORNP, [4.6, 4.1, 3.3, 2.2, .7])
 put(hm_, HORN, st=False, p=newid(), l=7)
 put(hm_ & (np.floor((Y + .5 * Z) / 3.0) % 2 == 0), HORND, st=False, p=newid(), l=7)
 
@@ -233,9 +244,9 @@ for (fx, fz) in ((27.5, -26), (27.5, 19)):
 WINGM = np.zeros(n, bool); REC.append(WINGM)
 _S = (X, Y, Z, AX); X, Y, Z, AX = _U                                             # wings: unscaled coords
 S0 = (15, 42, -8); S_ = tuple(np.array(S0) * BS)
-def _w(p_, k=1.15): return tuple(np.array(S_) + (np.array(p_) - np.array(S0)) * k)
-E_ = _w((20, 64, -16)); W_ = _w((30, 83, -12)); M_ = _w((52, 92, 22))          # M_ = top of the arched leading edge
-F = [_w((72, 80, 66)), _w((80, 24, 38)), _w((62, 18, 46)), _w((44, 24, 38)), tuple(np.array((15, 40, 21)) * BS)]   # F0 top/back tip ... F4 = body (hip) attach
+def _w(p_, k=1.2): return tuple(np.array(S_) + (np.array(p_) - np.array(S0)) * k)
+E_ = _w((20, 64, -16)); W_ = _w((30, 83, -12)); M_ = _w((56, 100, 20))          # M_ = top of the arched leading edge
+F = [_w((84, 92, 60)), _w((92, 40, 44)), _w((70, 24, 52)), _w((48, 24, 42)), tuple(np.array((15, 40, 21)) * BS)]   # F0 top/back tip ... F4 = body (hip) attach
 def tri(A, Bv, Cv, scal, edge=True, lines=True):
     A = np.array(A, float); Bv = np.array(Bv, float); Cv = np.array(Cv, float)
     e1 = Bv - A; e2 = Cv - A; nr = np.cross(e1, e2); nr /= np.linalg.norm(nr)
@@ -299,6 +310,7 @@ for zi_ in np.where((zd > -60) & (zd < 93))[0]:                                 
         if not len(c_): continue
         yi_ = c_.max()
         if kind[xc, yi_, zi_] == 1 and pid[xc, yi_, zi_] >= 1000:
+            if zd[zi_] < -18 or zd[zi_] > 40: col[xc, yi_, zi_] = LAVA; keep[xc, yi_, zi_] = True; pid[xc, yi_, zi_] = 0; continue   # neck and tail: solid lava bricks, no halo
             kind[xc, yi_, zi_] = 2; col[xc, yi_, zi_] = GLOW[2]
             if yi_ + 1 < n[1] and kind[xc, yi_ + 1, zi_] == 0: kind[xc, yi_ + 1, zi_] = 2; col[xc, yi_ + 1, zi_] = GLOW[2]
 TOPS = {zs: top_at(zs) for zs in range(-58, 95, 7)}                             # sample the back BEFORE adding spikes (no stacking)
@@ -351,6 +363,7 @@ PAL = np.array([hx(h) for h in ('1c1c22', '2a2a31', '3a3a42', '55555e', '0c0c10'
                                  'b0221a', '6e1410', 'dc4a1c',                                # wing red / dark cell / red-orange edge
                                  'ffbe2a', 'ff8a10', 'c85a0a',                                # belly yellow / orange / seam
                                  '7a5e4c', '5a463a', 'f0e0c0', 'c8b090', 'ff9a1c')])          # horn / horn shade / ivory / ivory shade / stone light
+if HUE: PAL[[5, 6, 7, 8, 9, 10, 15]] = [vr(c) for c in PAL[[5, 6, 7, 8, 9, 10, 15]]]
 sol = kind == 1
 cs = col[sol]; dd = ((cs[:, None, :] - PAL[None]) ** 2).sum(-1)
 col[sol] = PAL[np.argmin(dd, 1)]
@@ -422,10 +435,10 @@ def render_all():
     ENG = 'BLENDER_EEVEE' if 'BLENDER_EEVEE' in bpy.types.RenderSettings.bl_rna.properties['engine'].enum_items.keys() else 'BLENDER_EEVEE_NEXT'
     for sx in (1, -1):                                                         # eye lights: glow spills onto brow + snout
         L = bpy.data.objects.new('EyeLight%d' % sx, bpy.data.lights.new('EyeLight%d' % sx, 'POINT')); sc.collection.objects.link(L)
-        L.data.energy = 3000; L.data.color = (1.0, .353, .039); L.data.shadow_soft_size = 1.0
-        L.location = B(9.6 * sx * BS, 59.0 * BS, -83.5 * BS); L.data.energy = 3000 * GS * GS
+        L.data.energy = 3000; L.data.color = tuple(vr((1.0, .353, .039))); L.data.shadow_soft_size = 1.0
+        L.location = B(11.0 * sx * BS, 59.8 * BS, -86.0 * BS); L.data.energy = 3000 * GS * GS
     L = bpy.data.objects.new('MouthLight', bpy.data.lights.new('MouthLight', 'POINT')); sc.collection.objects.link(L)
-    L.data.energy = 2500; L.data.color = (1.0, .45, .08); L.location = B(0, 44.5 * BS, -101 * BS); L.data.energy = 2500 * GS * GS
+    L.data.energy = 2500; L.data.color = tuple(vr((1.0, .45, .08))); L.location = B(0, 44.5 * BS, -101 * BS); L.data.energy = 2500 * GS * GS
     for nm, e, rot, an in (('Sun', 2.8, (52, 0, -12), 22), ('FillL', 1.5, (62, 0, -80), 40), ('FillR', 1.7, (62, 0, 80), 40), ('Back', .9, (60, 0, 170), 40)):
         L = bpy.data.objects.new(nm, bpy.data.lights.new(nm, 'SUN')); sc.collection.objects.link(L)
         L.data.energy = e; L.data.angle = math.radians(an); L.rotation_euler = tuple(math.radians(v) for v in rot)
