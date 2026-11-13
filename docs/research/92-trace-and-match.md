@@ -39,8 +39,11 @@ in Studio or on a phone.
 | Trace | plates resampled to one cell per brick; each plate gets one of four height levels so that touching plates never share a level, lighter plates higher |
 
 The model file reads the traced map and gives each hide brick the plate at its (z, y), so the
-same rows appear on both flanks and wrap over the back. Plate tops stay flat, so studs stay
-whole; every plate edge is a real step of one to three bricks.
+same rows appear on both flanks and wrap over the back. Each plate is then built as one flat
+slab: a plane is fitted to the body surface under the plate, its tilt is snapped to a
+brick-friendly slope, and the slab's outer face is that plane lifted by the plate's level.
+Faces that look up are lighter. The faceted slabs cost a little line placement (0.73 to 0.84
+bricks) for a cleaner surface.
 
 ## 3. Results on the war rhino
 
@@ -49,6 +52,7 @@ whole; every plate edge is a real step of one to three bricks.
 | Shipped (diagonal folds) | 0.76 | 1.78 | 1.49 | 83 | 15 % | 60 % |
 | First rebuild (hand-laid rings) | 0.78 | 1.16 | 1.50 | 95 | 29 % | 80 % |
 | Traced rebuild | 0.79 | 0.73 | 1.14 | 91 | 29 % | 79 % |
+| Traced, faceted slabs (current) | 0.79 | 0.84 | 1.37 | 92 | 30 % | 74 % |
 
 ## 4. Decisions
 
@@ -56,7 +60,7 @@ whole; every plate edge is a real step of one to three bricks.
 |---|---|---|---|
 | How to find plates in the drawing | dark lines between plates; lit top faces; colour clustering | lit top faces | the dark lines do not close into regions at this image size; the lit faces do |
 | How to place plates | hand-laid rings; traced map | traced map | placement comes from the concept and is measured |
-| Plate tops | tilted; flat | flat | a tilt turns into ripples on a brick grid and breaks the studs |
+| Plate tops | free tilt; flat skin offset; flat slab on a fitted plane with a snapped tilt | fitted plane, tilt snapped to flat, 1:2 or 1:1 | a free tilt ripples; a skin offset keeps the barrel's curve; a snapped plane gives a clean face with a regular staircase, and neighbouring slabs step against each other |
 | Fit | bounding box; IoU search; camera solve | IoU search | cheap and good enough for the torso; a camera solve is the next step |
 
 ## Not tested

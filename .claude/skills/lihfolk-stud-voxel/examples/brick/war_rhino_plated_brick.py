@@ -77,10 +77,28 @@ ci = np.clip(np.round(Z - float(TR['z0'])).astype(int), 0, pmap.shape[1] - 1)
 ri = np.clip(np.round(float(TR['ytop']) - Y).astype(int), 0, pmap.shape[0] - 1)
 plate = pmap[ri, ci]; L_ = plev[plate].astype(float)
 BELLY_Y = 13.5                                                         # below this the soft belly hide shows: no plates
-shell = (d < L_ - .5) & (d > -2.5) & (Y > BELLY_Y)
-TONE = (1.0, .94, 1.06)
+# FACETED SLABS: each plate is one flat slab, not a curved skin. A plane is fitted to the body surface under the plate,
+# its tilt is snapped to brick-friendly slopes (flat, 1:2, 1:1), and the slab's outer face is that plane lifted by the
+# plate's level. A snapped tilt makes a regular staircase, which reads as a clean slanted face; neighbouring slabs tilt
+# differently, so their edges step and the silhouette goes lumpy like the concept's.
+SNAP = np.array([0, .5, 1.0])
+body_zone = (Y > BELLY_Y) & (d > -2.5)
+surf = (np.abs(d) < .8) & body_zone & (X > 0)
+shell = np.zeros(n, bool); L_ = np.zeros(n); face = np.ones(n)
+for i in np.unique(plate[surf]):
+    P = np.stack([AX[surf & (plate == i)], Y[surf & (plate == i)], Z[surf & (plate == i)]], 1)
+    if len(P) < 12: continue
+    c0 = P.mean(0); nrm = np.linalg.svd(P - c0, full_matrices=False)[2][2]
+    if nrm.dot(c0 - np.array([0, 24.0, c0[2]])) < 0: nrm = -nrm          # point away from the body's axis
+    q = nrm / np.abs(nrm).max(); q = np.sign(q) * SNAP[np.argmin(np.abs(np.abs(q)[:, None] - SNAP[None]), 1)]
+    nrm = q / np.linalg.norm(q)
+    h = AX * nrm[0] + Y * nrm[1] + Z * nrm[2]
+    top = np.quantile(P.dot(nrm), .5) + float(plev[i]) - .5              # the slab's flat outer face
+    m_ = (plate == i) & body_zone & (((h <= top) & (d < float(plev[i]) + .6)) | (d < .5))   # never far off the body, never a hole
+    shell |= m_; L_[m_] = float(plev[i]); face[m_] = .84 + .26 * max(nrm[1], 0) + .05 * float(plev[i])   # faces that look up are lighter
+TONE = (1.0, .95, 1.05)
 put(shell, PLATE, p=0, l=0)
-col[shell] = (PLATE[None] * (np.array(TONE)[plate[shell] % 3] * (.80 + .09 * L_[shell]))[:, None])   # proud plates lighter
+col[shell] = PLATE[None] * (np.array(TONE)[plate[shell] % 3] * face[shell])[:, None]
 pid[shell] = 2000 + plate[shell]; lvl[shell] = L_[shell]
 put((d < .6) & (d > -2.5) & (Y > 9.5) & (Y <= BELLY_Y), HIDE * 1.4, st=False)                     # belly hide, darker
 # bone spikes along the hump: base on the top surface, raked back
