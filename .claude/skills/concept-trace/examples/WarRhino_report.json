@@ -1,0 +1,93 @@
+{
+ "model": "war_rhino_plated_brick.py",
+ "scorecard": {
+  "id": "FBRhinoPlated",
+  "bones": 15,
+  "bricks": 90392,
+  "studs": [
+   120,
+   132,
+   252
+  ],
+  "colours": 14,
+  "glow_share": 0.0003097619258341446,
+  "max_tris": 5694,
+  "tris": 32936,
+  "pieces": 15,
+  "build_s": 4,
+  "strong": true,
+  "px_at_100": 368,
+  "bands": 7.0,
+  "edges": 0.33394045629339747,
+  "flat": 0.02728004022121669,
+  "contrast": 2.2527399853322567,
+  "relief": 0.2971063953290722,
+  "backed": 0.7383867940299395,
+  "small": 0.7977352319070778,
+  "at100": 1.0,
+  "structure": 88.81496460255296,
+  "match_side": 0.7133981434105694,
+  "match_front": 0.8633070866141732,
+  "match": 0.7883526150123713,
+  "rules": []
+ },
+ "trace": {
+  "model": "file_war_rhino_plated_brick",
+  "iou": 0.796,
+  "fit": {
+   "h": 156,
+   "w": 321,
+   "ty": 5,
+   "tx": 9,
+   "px_per_brick": 3
+  },
+  "outline_c2m": 2.1,
+  "outline_m2c": 1.83,
+  "lines_c2m": 0.85,
+  "lines_m2c": 1.49
+ },
+ "checklist": [
+  {
+   "name": "silhouette overlap (IoU)",
+   "value": 0.796,
+   "mark": ">= 0.75",
+   "ok": true
+  },
+  {
+   "name": "concept plate line to model, bricks",
+   "value": 0.85,
+   "mark": "<= 1.0",
+   "ok": true
+  },
+  {
+   "name": "relief (share of surface on a real step)",
+   "value": 0.297,
+   "mark": ">= 0.2",
+   "ok": true
+  },
+  {
+   "name": "edges backed by geometry",
+   "value": 0.738,
+   "mark": ">= 0.7",
+   "ok": true
+  },
+  {
+   "name": "featureless area",
+   "value": 0.027,
+   "mark": "<= 0.1",
+   "ok": true
+  },
+  {
+   "name": "value bands",
+   "value": 7.0,
+   "mark": ">= 6",
+   "ok": true
+  },
+  {
+   "name": "survives at 48 px",
+   "value": 0.798,
+   "mark": ">= 0.6",
+   "ok": true
+  }
+ ]
+}

@@ -13,7 +13,7 @@ Free, open source. Clone it, open it in Claude Code, say **hi**, and Claude star
 <https://github.com/jewdah-afk/aaa-kit>
 
 ## What's in it
-- **16 skills** that load by themselves when your ask matches, each with a tested example (full list below), plus **22 LihFolk skills** one install away
+- **17 skills** that load by themselves when your ask matches, each with a tested example (full list below), plus **22 LihFolk skills** one install away
 - **Lexicon (hyperlexicon)**: 464 real design terms across 15 areas. Each has a meaning, when to use it, what it pairs with and a phrase to paste into a prompt
 - **HIERARCHY.md**: 6 loudness tiers, so effects stop fighting over the screen
 - **Framework**: a 5-layer Roblox project structure and a starter game with 48 tests
@@ -37,9 +37,9 @@ Apply.bakeMeshPart(workspace.Barrel, Presets.rustedIron, { size = 512 })
 
 ---
 
-<!-- Message 2: first reply (1781 characters) -->
+<!-- Message 2: first reply (1870 characters) -->
 
-## All 16 skills
+## All 17 skills
 Each is a `SKILL.md` Claude loads by itself, with a tested example in `.claude/skills/<name>/examples/`. ✅ = checks passing in lune
 - `ui-hud`: counters, bars, cooldowns, shop cards · `Odometer` ✅12 · Figma→Roblox playbook
 - `vfx`: impacts, hit-stop, shake, trails, lightning, dissolves · `Impact` ✅7 · VFX craft playbook
@@ -57,7 +57,8 @@ Each is a `SKILL.md` Claude loads by itself, with a tested example in `.claude/s
 - `prompt-amplifier`: turns "make it better" into a full brief · hook tests ✅12
 - `kit-doctor`: say hi, it checks your PC and repo · `tools/doctor.py`
 - `lihfolk-stud-voxel`: stud/LEGO voxel models, rigged GLB out · Oak build `RIG_OK`
--# Routing: 40/40 sample prompts pick the right skill (`tools/check_skills.py`)
+- `concept-trace`: match a model to its concept: overlay, trace, slabs · `SLABS_OK`
+-# Routing: 43/43 sample prompts pick the right skill (`tools/check_skills.py`)
 
 ---
 
