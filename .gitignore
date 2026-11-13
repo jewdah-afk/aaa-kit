@@ -1,1 +1,4 @@
 __pycache__/
+
+# stud-voxel build outputs of creature examples (previews are kept in examples/previews)
+.claude/skills/lihfolk-stud-voxel/examples/brick/out_*_brick/

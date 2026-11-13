@@ -9,10 +9,16 @@ Made by LihFolk (LihFolk Studios). Part of the LihFolk pack.
 
 Always copy the closest example and edit it. Every model uses the **default Roblox square stud as a texture** (`assets/roblox_square_studs.png`); never round or modelled studs.
 
-| Method | For | Examples | Run |
+## Pick a route
+
+| Route | For | Examples | Run |
 |---|---|---|---|
 | Box rig | critters, pets, small animated mobs | examples/*.py (duck, arctic_fox, red_panda, penguin, owl, axolotl, bunny) | `powershell -File scripts/run.ps1 <file.py> [render\|all\|export\|video]` |
 | Brick pipeline | bosses, big mobs, vehicles, reference matches | examples/brick/*_brick.py | `powershell -File scripts/run_brick.ps1 <file.py> [views]` |
+| Buildings, props, terrain | shops, towers, gates, trees, weapons, cliffs, walls | shop / tower / gate / props / terrain `_brick.py` | `blender -b --factory-startup --python <file> -- render [Piece]` |
+| BrickBoxes (no Blender) | chunky pets, mobs and props on a coarse grid | `references/roblox/BrickBoxes.luau` | `lune run references/roblox/BrickBoxes.test.luau` |
+
+Linux/macOS: `bash scripts/run_brick.sh <file.py> [views] [res=600]` (uses `$BLENDER_EXE`, `blender` on PATH, or the `bpy` pip module).
 
 ### Catalogue (copy the closest)
 | Example | Copy it for | Notes |
@@ -51,11 +57,36 @@ Outputs: box rig -> `out/<Name>/` (sheet.png, loop.gif, `<Name>Data.luau`, `<Nam
 **Not for:** runtime-generated geometry (`editable-mesh`), smooth sculpted or realistic models, or map layout (`procedural-world`).
 
 ## Method
+
+One loop for every route. Do not skip a step; do not add detail before step 4 passes.
+
 1. Note what it is, 2-4 signature traits, clips (default Idle, Walk, an action, an emote).
 2. A user reference image is the spec: match its silhouette, markings, colours, glow. Otherwise sample 2-3 images online first.
 3. New enemy/boss: make a concept sheet in ChatGPT (browser): "Generate an image: a character concept/turnaround sheet for <creature> for a Roblox game. Style: chunky stud voxel / LEGO-brick look, blocky stepped boxes with studs, bold black silhouette outline, flat cel colours. NOT chibi, NOT cute, NOT a pet: a real, menacing boss with realistic anatomy, aggressive stance. <traits, palette>. Front, side, back, 3/4 views on light grey plus a face close-up." Save it as `concept_<name>.jpg`.
 4. Run, Read the sheet, list defects, patch (Python edits with `encoding='utf8'`), repeat. Compare to the reference side by side, full views and face/feet close-ups.
 5. Send the sheet (+ loop GIF) with SendUserFile. No MP4s or Studio install unless asked.
+6. Before calling it done: nothing floats, 16 colours or fewer, `RIG_OK` printed, and after any change to `scripts/` or a brick example `bash scripts/regress.sh` prints `REGRESS_OK`.
+
+## Scorecard and baseline
+
+Every brick creature is scored the same way, from its brick grid, in seconds and without rendering: [why and how](../../../docs/research/91-readable-voxel-surfaces.md).
+- `python3 scripts/scorecard.py dump` (needs Blender's `bpy`) caches each model's grid; `score` prints the table; `baseline` freezes it to `examples/BASELINE.json` and `examples/SCORECARD.md`; `check` fails if a model drops.
+- `python3 scripts/trace_match.py <model key> <concept.jpg> x0 y0 x1 y1 <out prefix> [plates.npz]` outlines the concept's side view, fits it to the model, writes an overlay with line distances, and traces the concept's plates into a map a model file can read (`examples/brick/war_rhino_plated_brick.py` + `examples/brick/refs/WarRhino_plates.npz`): [trace and match](../../../docs/research/92-trace-and-match.md).
+- Matching a model to its concept is its own skill, [concept-trace](../concept-trace/SKILL.md): `scripts/concept_match.py` (one-command report), `scripts/slabs.py` (flat faceted slabs from a plate map) and `scripts/rig_anim.py` (walk, charge and idle motion studies from the exported rig).
+- Measures: `match` (silhouette vs the concept sheet), `bands`, `edges`, `flat`, `contrast`, `relief` (real layering), `backed` (edges that are geometry, not paint), `small` (detail left at 48 px tall), plus the colour, glow and triangle rules. `structure` sums them to 0-100.
+- Anchors approved by eye: swamp_croc, war_rhino, kraken. The numbers only say "not worse than before"; the look is judged on the Blender sheet.
+- The measuring views (`$SV_CACHE/views/<model>_<view>.png`) are a one-second preview of a sculpt: use them between Blender renders.
+
+## Rules for every model
+
+- Big shapes first: compare silhouettes to the concept before details. Recurring misses: wings as flat triangles (build separate feather/finger blocks), necks too short so heads clump, bodies too slim (bulk legs/chest 1.3x), beaks too long from the front, shells/cones as thin spires.
+- Every model drops bricks not 26-connected to the body before meshing (smoke / ground-resting coins excepted). The Read tool caches images by path: copy a re-rendered image to a new name before reviewing it.
+- Glow budget: `GLOW: strong` halos every glow brick and tints nearby surfaces. Glow only eyes, cores, craters, lures; make cracks, seams, lava rivers, drips and markings SOLID bright bricks (dragon, tortoise, widow hourglass). If a whole surface goes orange/cyan, drop `GLOW: strong` and keep point lights (angler).
+- Glowing eyes = ONE flat glow colour: no hot/white centre, rim colour, glint or pupil inside the glow.
+- **No blocky lights or token pieces** (user rule): never a lone glowing cube/rectangle as a gem, beacon, sign icon, brazier or torch, and no plain cube-on-a-stick finials. Lights sit INSIDE a shaped holder (lantern cage with bars + cap, window frame + mullion, slit with lintel); fire = stepped `flame()` (wide base, narrow tip, small glow core) on a bowl/cup; emblems are drawn shapes (coin ring, crossed swords, stepped spire).
+
+### Rejected (don't repeat)
+Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 
 ## Box rig (duck, fox)
 - Units metres, Z up, front -Y, left +X; `STUDS` = studs per metre (5 for critters).
@@ -80,12 +111,8 @@ One numpy script in Blender: occupancy/colour grids -> exposed faces -> stud tex
 - Studs: square tile, Non-Color, **OVERLAY**, UV = brick coords / 16 (one stud per 2x2 bricks). Glow objects untextured.
 - Render: EEVEE, Standard view, frontal key sun + side fills + back light. `post_glow.py` = one silhouette outline + glow (`GLOW_STRONG=1` for big eye halos). Check 4 ortho silhouettes.
 - Brick models are always rigged (see Rig below).
-- Glowing eyes = ONE flat glow colour: no hot/white centre, rim colour, glint or pupil inside the glow.
 - Held weapons (staff, scythe, sword): build the fist AROUND a straight shaft (shaft through the fist centre, fingers wrapping the front, shaft visible above and below), the arm visibly reaching shoulder -> fist, and the weapon >= 2 bricks clear of body, sleeves, cloth and hat everywhere except the fist. Hold it out at arm's length, angled, not glued to the side. Test it: weapon cells must not overlap any non-hand cell. Pose with intent: bent knees, one foot forward, slight lean/twist, free hand doing something.
-- Glow budget: `GLOW: strong` halos every glow brick and tints nearby surfaces. Glow only eyes, cores, craters, lures; make cracks, seams, lava rivers, drips and markings SOLID bright bricks (dragon, tortoise, widow hourglass). If a whole surface goes orange/cyan, drop `GLOW: strong` and keep point lights (angler).
-- Big shapes first: compare silhouettes to the concept before details. Recurring misses: wings as flat triangles (build separate feather/finger blocks), necks too short so heads clump, bodies too slim (bulk legs/chest 1.3x), beaks too long from the front, shells/cones as thin spires.
 - Many models: one background agent per model with a full brief (copy which example, concept path, traits list, rules, run command, build `side_by_side.png`, report score + gaps); review each side-by-side and send back targeted fixes. Gains stop after ~10 rounds. A ready brief template is `BRIEF.md` in this folder.
-- Every model drops bricks not 26-connected to the body before meshing (smoke / ground-resting coins excepted). The Read tool caches images by path: copy a re-rendered image to a new name before reviewing it.
 - Run `run_brick.ps1 <file.py>` with no view argument to render all views. Keep helper scripts in the model's own folder (a shared scratchpad gets overwritten by parallel agents).
 
 ## Rig (always, brick pipeline)
@@ -97,9 +124,6 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 - 20k rule: Roblox allows ~20k triangles per mesh. Faces are greedy-merged (same colour, coplanar) and each bone is its own mesh (+ one per glow colour), split by region until every piece is <= 20,000 tris.
 - Colours = vertex colours (COLOR_0) x base texture `stud_mul.png` (2 x stud overlay, world UVs); glow pieces = emissive, untextured (set them to Neon in Studio).
 - Roblox: Avatar/3D Importer -> the `.glb`, Rig type: keep bones (custom rig), scale unit = Stud; it lands as one Model with a MeshPart per piece and Bones. Add `AnimationController` + `Animator`, animate in the Animation Editor. Front ends up as LookVector (the importer turns GLBs 180 about Y).
-
-## Rejected (don't repeat)
-Round or modelled studs · overlay on white models · stacked-box or smooth-mesh bosses · hunched golem proportions · chibi enemies · small bosses · covered or protruding eyes · per-part strokes · heavy bloom on normal models · square armour tiles on creatures.
 
 ## Buildings (shops, huts, towers, gates)
 
@@ -117,12 +141,29 @@ Copy the closest of `examples/brick/shop_brick.py` (house/shop), `tower_brick.py
 - **Collision:** export a separate set of plain boxes (floor, walls, roof) for CanCollide; the visual mesh stays CanCollide off. Walkable floors must be flat.
 - **Modular:** big builds = pieces on a fixed grid (e.g. 4x4-stud wall panels, corner, roof, door piece) so they snap together.
 - **Animation (optional):** moving bits (sign swing, windmill, door, smoke) get their own bone, same as creatures.
-- **Props + foliage:** `examples/brick/props_brick.py` (run `-- render <Prop>`: Oak Pine Bush Rocks Well Cart Lamp Fence Gym CrimsonBlade VoidCrystal ThornBow Sniper Pistol Rifle (the four ranged weapons were TRACED 1:1 from a private reference picture, which is not in this public copy, so those four props need your own picture; hand-drawn profiles were "pretty bad and not very close to pic");
-- **Matching a reference picture of a flat-ish object (weapons, signs, icons): TRACE it, don't redraw it.** Save the picture to examples/brick/refs/ (create it), then per object `py scripts/trace_ref.py <img> x0 y0 x1 y1 <cell px> refs/<Name>.npz [colours]` (transparent or white background; keeps only the biggest connected piece so neighbours in the crop drop out; neutral tones reduced to a palette, accents (gold/orange/blue) get their own palette, lights flagged on the raw colour) and build with `g.trace(npz, depth, stroke=1)` (1 cell = 1 fine brick, bevelled edge cells, glow -> its own kind, stroke = 1-brick black outline round the silhouette and holes). Cell size ~ half the picture's own voxel size. See `traced()` in props_brick.py. blades preview `examples/previews/Blades_sheet.png` (built from user references: sharp angular segmented silhouettes = piecewise width profile with shoulders, diagonal cut-ins and barbs; chevron facet colouring; sawtooth only on tip/lower edges; open slots cut through; a PROPS entry may add R and its own GLOW dict); preview `examples/previews/Gym_sheet.png`; preview `examples/previews/Props_sheet.png`). Organic shapes via `g.blob(...)` (lumpy ellipsoid, never a smooth sphere) and `g.fshape(fn, colour_fn)` (any mask in fine bricks). Trees = tapered trunk with root flare + bark rows, 4-6 overlapping leaf clumps shaded underside dark -> top light (`leaf_col`), NO separate light tufts stuck on top (read as weird leaves); pines = notched cone tiers. Ground props sit on a mossy base disc with grass tufts.
-- **Terrain:** `examples/brick/terrain_brick.py` (`-- render <Piece>`: Cliff Waterfall Wall WallCorner; preview `examples/previews/Terrain_sheet.png`). Modules are 60 fine bricks (50 studs) wide so they line up. Cliff = terraced lumpy rock face with strata bands by height + cracks, grass cap that drips over the edge, boulders at the foot. Waterfall = notched cliff, water sheet in 3-tone vertical lanes bulging out as it falls, foam lip, stepped stone pool with splash + ripple rings. Walls = running-bond stone with ONE tone per block (a sine pattern made diagonal stripes), crenels, stepped buttresses, slits, moss on base blocks; corner = round turret + 2 arms.
-- **No blocky lights or token pieces** (user rule): never a lone glowing cube/rectangle as a gem, beacon, sign icon, brazier or torch, and no plain cube-on-a-stick finials. Lights sit INSIDE a shaped holder (lantern cage with bars + cap, window frame + mullion, slit with lintel); fire = stepped `flame()` (wide base, narrow tip, small glow core) on a bowl/cup; emblems are drawn shapes (coin ring, crossed swords, stepped spire).
-A whole area assembled from these pieces, with layout rules and a downloadable `.glb`: the [stud map guide](../../../docs/playbooks/map-guide.md).
 Checklist: door fits a player, nothing floats, roof overhang reads from the front, silhouette reads at 100 studs.
+
+### Props and foliage
+
+- **Props + foliage:** `examples/brick/props_brick.py` (run `-- render <Prop>`: Oak Pine Bush Rocks Well Cart Lamp Fence Gym CrimsonBlade VoidCrystal ThornBow Sniper Pistol Rifle (the four ranged weapons were TRACED 1:1 from a private reference picture, which is not in this public copy, so those four props need your own picture; hand-drawn profiles were "pretty bad and not very close to pic");
+
+### Tracing a reference picture
+
+- **Matching a reference picture of a flat-ish object (weapons, signs, icons): TRACE it, don't redraw it.** Save the picture to examples/brick/refs/ (create it), then per object `py scripts/trace_ref.py <img> x0 y0 x1 y1 <cell px> refs/<Name>.npz [colours]` (transparent or white background; keeps only the biggest connected piece so neighbours in the crop drop out; neutral tones reduced to a palette, accents (gold/orange/blue) get their own palette, lights flagged on the raw colour) and build with `g.trace(npz, depth, stroke=1)` (1 cell = 1 fine brick, bevelled edge cells, glow -> its own kind, stroke = 1-brick black outline round the silhouette and holes). Cell size ~ half the picture's own voxel size. See `traced()` in props_brick.py. blades preview `examples/previews/Blades_sheet.png` (built from user references: sharp angular segmented silhouettes = piecewise width profile with shoulders, diagonal cut-ins and barbs; chevron facet colouring; sawtooth only on tip/lower edges; open slots cut through; a PROPS entry may add R and its own GLOW dict); preview `examples/previews/Gym_sheet.png`; preview `examples/previews/Props_sheet.png`). Organic shapes via `g.blob(...)` (lumpy ellipsoid, never a smooth sphere) and `g.fshape(fn, colour_fn)` (any mask in fine bricks). Trees = tapered trunk with root flare + bark rows, 4-6 overlapping leaf clumps shaded underside dark -> top light (`leaf_col`), NO separate light tufts stuck on top (read as weird leaves); pines = notched cone tiers. Ground props sit on a mossy base disc with grass tufts.
+
+### Terrain
+
+- **Terrain:** `examples/brick/terrain_brick.py` (`-- render <Piece>`: Cliff Waterfall Wall WallCorner; preview `examples/previews/Terrain_sheet.png`). Modules are 60 fine bricks (50 studs) wide so they line up. Cliff = terraced lumpy rock face with strata bands by height + cracks, grass cap that drips over the edge, boulders at the foot. Waterfall = notched cliff, water sheet in 3-tone vertical lanes bulging out as it falls, foam lip, stepped stone pool with splash + ripple rings. Walls = running-bond stone with ONE tone per block (a sine pattern made diagonal stripes), crenels, stepped buttresses, slits, moss on base blocks; corner = round turret + 2 arms.
+
+A whole area assembled from these pieces, with layout rules and a downloadable `.glb`: the [stud map guide](../../../docs/playbooks/map-guide.md).
+
+## Studio route without Blender (BrickBoxes)
+For chunky pets, mobs and props on a coarse grid, build the grid in Luau and skip Blender and the 3D Importer. Research and measurements: [Stud Voxel in Studio](../../../docs/research/90-stud-voxel-in-studio.md).
+- `references/roblox/BrickBoxes.luau` (pure, lune-tested): `BrickBoxes.new(nx, ny, nz)`, `grid:set`, `grid:fill` (box or any test function), `grid:ellipsoid`; each brick stores a palette index and a bone index. Later writes win.
+- `grid:boxes()` merges the bricks into as few boxes as possible: every exposed brick is covered once by a box of its own colour and bone, hidden bricks are free filler. Measured on shipped bosses: war_rhino 2,009 boxes, ember_dragon 41,758, so keep fine-detail bosses on the GLB route.
+- `grid:lint(groundOk)` returns `bricks`, `exposed`, `colours`, `floating`. Fail the model when `floating > 0` or `colours > 16`, before opening Studio.
+- `references/roblox/BrickBuild.luau`: `BrickBuild(grid, { Palette, Glow, Bones, StudsPerBrick, MaterialVariant }, CFrame, name)` builds studded Parts on the same Motor6D rig as `ModelBuild`, so `ModelAnimator` plays clips on it. Compile-checked only: not yet run in Studio.
+- Test: `lune run references/roblox/BrickBoxes.test.luau`.
 
 ## Hierarchy rules it obeys
 
@@ -164,3 +205,5 @@ blender -b --factory-startup --python examples/brick/props_brick.py -- render Oa
 - [ ] 16 colours or fewer; glow only where intended; one outline.
 - [ ] Nothing floats (26-connected); doors fit a player; buildings read as roof, walls and base.
 - [ ] Rig exported (`RIG_OK`) and every piece is at or under 20,000 triangles.
+- [ ] Scorecard: `python3 scripts/scorecard.py file <model.py> <concept.jpg>` for a new model; after any change `python3 scripts/scorecard.py check` prints `SCORE_OK` (no model below `examples/BASELINE.json`).
+- [ ] After any change to `scripts/` or a brick example: `bash scripts/regress.sh` prints `REGRESS_OK` (the 18 shipped props, buildings and terrain pieces rebuild to identical rig data).
