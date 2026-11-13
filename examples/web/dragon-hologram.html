@@ -155,17 +155,20 @@ const b64 = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
 
 // ---- decode -------------------------------------------------------------------------------------
 const slotBytes = b64(BP.slots), N = BP.slotCount, CELL = BP.cell;
-const dst = new Float32Array(N * 3), slotStyle = new Array(N);
-const styleCache = new Map();
+const dst = new Float32Array(N * 3), faceStyle = [new Array(N), new Array(N), new Array(N), new Array(N)]; // top, bottom, x side, z side
+const styleCache = new Map(), FACE = [1.14, 0.55, 0.78, 0.94];
 for (let i = 0; i < N; i++) {
   const o = i * 5, p = slotBytes[o + 3];
   for (let a = 0; a < 3; a++) dst[i * 3 + a] = BP.slotOrigin[a] + (slotBytes[o + a] + 0.5) * CELL;
-  const l = BP.glow[p] ? 16 : slotBytes[o + 4] >> 4, key = p * 17 + l;
-  if (!styleCache.has(key)) {
-    const h = parseInt(BP.palette[p].slice(1), 16), k = BP.glow[p] ? 1 : 0.45 + 0.6 * l / 15;
-    styleCache.set(key, `rgb(${Math.min(255, (h >> 16) * k) | 0},${Math.min(255, (h >> 8 & 255) * k) | 0},${Math.min(255, (h & 255) * k) | 0})`);
+  const l = BP.glow[p] ? 16 : slotBytes[o + 4] >> 4;
+  for (let f = 0; f < 4; f++) {
+    const key = (p * 17 + l) * 4 + f;
+    if (!styleCache.has(key)) {
+      const h = parseInt(BP.palette[p].slice(1), 16), k = BP.glow[p] ? 1 : (0.45 + 0.6 * l / 15) * FACE[f];
+      styleCache.set(key, `rgb(${Math.min(255, (h >> 16) * k) | 0},${Math.min(255, (h >> 8 & 255) * k) | 0},${Math.min(255, (h & 255) * k) | 0})`);
+    }
+    faceStyle[f][i] = styleCache.get(key);
   }
-  slotStyle[i] = styleCache.get(key);
 }
 const ringRaw = new Int16Array(b64(BP.rings).buffer), M = BP.ringCount, rings = new Float32Array(M * 3);
 for (let i = 0; i < M * 3; i++) rings[i] = ringRaw[i] / 2;
@@ -234,7 +237,7 @@ function orbitCam() {
   const dv = [Math.cos(e) * Math.sin(a), Math.sin(e), -Math.cos(e) * Math.cos(a)];
   let r = [-dv[2], 0, dv[0]]; const rl = Math.hypot(r[0], r[2]); r = [r[0] / rl, 0, r[2] / rl];           // cross(dv, up)
   const u = [r[1] * dv[2] - r[2] * dv[1], r[2] * dv[0] - r[0] * dv[2], r[0] * dv[1] - r[1] * dv[0]];     // cross(r, dv)
-  return { c: centre, dv, r, u, dist: radius / th * 0.86, th };
+  return { c: centre, dv, r, u, dist: radius / th * 1.02, th };
 }
 const photos = {};
 for (const [k, f] of Object.entries(BP.photos || { front: "ember-dragon-front.jpg", threeQuarter: "ember-dragon-34.jpg" })) {
@@ -261,11 +264,23 @@ function draw(now) {
       depth[i] = d; sx[i] = W / 2 + (x * r[0] + y * r[1] + z * r[2]) / d * k; sy[i] = H / 2 - (x * u[0] + y * u[1] + z * u[2]) / d * k;
     }
     order.sort((p, q) => depth[q] - depth[p]);
-    let last = "";
+    // each voxel is a real cube: its three camera-facing faces, flat-shaded (top light, x side dark, z side mid)
+    const hx = dv[0] > 0 ? 1 : -1, hy = dv[1] > 0 ? 1 : -1, hz = dv[2] > 0 ? 1 : -1, hc = CELL / 2;
+    const top = faceStyle[hy > 0 ? 0 : 1], sideX = faceStyle[2], sideZ = faceStyle[3];
+    const edge = W / 60 > CELL ? 1 : 0;                                     // thin seams once cubes are big enough to show them
+    g.lineWidth = 1; g.strokeStyle = "rgba(0,0,0,0.28)"; g.lineJoin = "round";
     for (let j = 0; j < N; j++) {
-      const i = order[j], s = CELL * 1.5 * k / depth[i];
-      if (slotStyle[i] !== last) { last = slotStyle[i]; g.fillStyle = last; }
-      g.fillRect(sx[i] - s / 2, sy[i] - s / 2, s, s);
+      const i = order[j], s = hc * k / depth[i], x0 = sx[i], y0 = sy[i];
+      const ax = r[0] * s, ay = -u[0] * s, bx = r[1] * s, by = -u[1] * s, cxx = r[2] * s, cyy = -u[2] * s;   // screen steps for +x, +y, +z
+      const quad = (px, py, qx, qy, tx, ty, st) => {                         // face centre offset p, edge half-vectors q and t
+        g.fillStyle = st; g.beginPath();
+        g.moveTo(x0 + px + qx + tx, y0 + py + qy + ty); g.lineTo(x0 + px - qx + tx, y0 + py - qy + ty);
+        g.lineTo(x0 + px - qx - tx, y0 + py - qy - ty); g.lineTo(x0 + px + qx - tx, y0 + py + qy - ty); g.closePath(); g.fill();
+        if (edge && s > 2.5) g.stroke();
+      };
+      quad(ax * hx, ay * hx, bx, by, cxx, cyy, sideX[i]);
+      quad(cxx * hz, cyy * hz, ax, ay, bx, by, sideZ[i]);
+      quad(bx * hy, by * hy, ax, ay, cxx, cyy, top[i]);
     }
   }
 
