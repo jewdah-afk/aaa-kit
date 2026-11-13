@@ -48,11 +48,11 @@ Two square pictures of a symmetric model on a plain background: a centred front 
 cd .claude/skills/lihfolk-stud-voxel
 M=../../../media/hologram/ortho
 python3 scripts/ortho_map.py $M/ember-dragon-front.png $M/ember-dragon-side.png $M/ember-dragon-top.png \
-  --back $M/ember-dragon-back.png --name EmberDragonOrtho --out out_map \
+  --back $M/ember-dragon-back.png --angled $M/ember-dragon-p34.png 35 14 --name EmberDragonOrtho --out out_map \
   --html ../../../examples/web/dragon-hologram.html --photos ortho/ember-dragon-front.png ortho/ember-dragon-side.png
 ```
 
-Straight-on front, side and top views give a solid model and an exact vertex-to-pixel map (`out_map/EmberDragonOrtho_vertexmap.json`: every exposed cell corner with an ID, plus `a`, `L`, `T` per view for `u = L + a*x`, `v = T + a*(Y - y)`). This is the most precise of the picture routes and the page's default model. There is no Luau data module for it yet.
+Straight-on front, side and top views, trimmed by one angled view and its mirror, give a solid model and an exact vertex-to-pixel map (`out_map/EmberDragonOrtho_vertexmap.json`: every exposed cell corner with an ID, plus `a`, `L`, `T` per view for `u = L + a*x`, `v = T + a*(Y - y)`). This is the most precise of the picture routes and the page's default model. There is no Luau data module for it yet.
 
 ## The transform
 

@@ -13,7 +13,7 @@
 # Hollows that no silhouette shows (a cave in the chest, the inside of a mouth) stay filled.
 #
 # Run: python3 scripts/ortho_map.py front.png side.png top.png [--back back.png] --name EmberDragonOrtho --out out_map
-#        [--px 6] [--html page.html --block blueprint-ortho] [--photos front.png side.png]
+#        [--angled view34.png 35 14 --angled back.png 150 18] [--px 6] [--html page.html --block blueprint-ortho] [--photos front.png side.png]
 import argparse, json, os, sys
 import numpy as np
 from PIL import Image
@@ -38,7 +38,7 @@ def sample(img, x0, y0, step, nu, nv, flip_u=False, flip_v=True):
     return np.swapaxes(a, 0, 1)
 
 
-def build(front, side, top, back=None, name='Model', px=6.0, colours=20, log=print):
+def build(front, side, top, back=None, name='Model', px=6.0, colours=20, extra=(), log=print):
     pics = {k: np.asarray(Image.open(p).convert('RGB')) for k, p in dict(front=front, side=side, top=top, back=back).items() if p}
     sil = {k: H.silhouette(v) for k, v in pics.items()}
     clean = {k: H.fill_edge(pics[k], sil[k]) for k in pics}
@@ -64,6 +64,29 @@ def build(front, side, top, back=None, name='Model', px=6.0, colours=20, log=pri
     cov['front'] &= cov['front'][::-1]; cov['top'] &= cov['top'][::-1]             # symmetric model, symmetric views
     solid = cov['front'][:, :, None] & cov['side'].T[None, :, :] & cov['top'][:, None, :]
     lo = np.array((-nx / 2, 0.0, -nz / 2))
+    log('%d cells occupied after the three flat views' % solid.sum())
+
+    # ---- angled views cut what flat views cannot: the box corners left where two extrusions cross
+    G = np.stack(np.meshgrid(*[lo[i] + .5 + np.arange(n_) for i, n_ in enumerate((nx, ny, nz))], indexing='ij'), -1).reshape(-1, 3)
+    for path, az, el in extra:
+        es = H.silhouette(np.asarray(Image.open(path).convert('RGB')))
+        es = ~H._erode(~es, 2)                                                     # 2 px of slack so thin parts survive
+        v = BP.fit_view(lo + .5 + np.argwhere(solid), az, el)                      # the pipeline frames a view from the model's own bounds
+        x = np.array([*v['c'], v['dist']], float); stepv = np.array([4, 4, 4, 8], float)
+        def cut(x):
+            m = H.inside(H.camera(az, el, x[:3], x[3]), G, es).reshape(solid.shape); return solid & m & m[::-1]
+        def score(x): return H.coverage([H.camera(az, el, x[:3], x[3])], [es], G, cut(x))[0]
+        sc = score(x)
+        while stepv[0] > .2:                                                       # nudge the camera until the cut model fills the silhouette
+            moved = False
+            for i in range(4):
+                for sg in (1, -1):
+                    y = x.copy(); y[i] += sg * stepv[i]; t = score(y)
+                    if t > sc + 1e-5: x, sc, moved = y, t, True; break
+            if not moved: stepv /= 2
+        if sc < .93: log('  %s: fill only %.3f, view skipped' % (os.path.basename(path), sc)); continue
+        before = solid.sum(); solid = cut(x)
+        log('  %s (az %g, el %g): fill %.3f, cut %d cells' % (os.path.basename(path), az, el, sc, before - solid.sum()))
     log('%d cells occupied' % solid.sum())
 
     # ---- how well the grid reproduces each silhouette
@@ -134,9 +157,10 @@ def main():
     ap.add_argument('front'); ap.add_argument('side'); ap.add_argument('top'); ap.add_argument('--back')
     ap.add_argument('--name', default='Model'); ap.add_argument('--out'); ap.add_argument('--px', type=float, default=6, help='picture pixels per cell (front view)')
     ap.add_argument('--colours', type=int, default=20); ap.add_argument('--html'); ap.add_argument('--block', default='blueprint-ortho'); ap.add_argument('--luau')
+    ap.add_argument('--angled', nargs=3, action='append', default=[], metavar=('PNG', 'AZ', 'EL'), help='extra perspective view to carve with (repeatable)')
     ap.add_argument('--photos', nargs=2, metavar=('FRONT', 'SIDE'), help='file names the page should show under the points')
     a = ap.parse_args()
-    bp, vmap = build(a.front, a.side, a.top, a.back, a.name, a.px, a.colours)
+    bp, vmap = build(a.front, a.side, a.top, a.back, a.name, a.px, a.colours, [(p_, float(az), float(el)) for p_, az, el in a.angled])
     if a.photos: bp['photos'] = dict(front=a.photos[0], threeQuarter=a.photos[1])
     js = BP.to_json(bp)
     if a.out:

@@ -114,6 +114,7 @@ Every brick model ends with `scripts/brick_rig.py` (examples: war_rhino = quadru
 ### Vertex map from three flat views (the precise route)
 `python3 scripts/ortho_map.py <front.png> <side.png> <top.png> [--back back.png] --name <ID> --out <dir> [--html page.html]` builds a cell grid where the straight-on front, side and top silhouettes all agree, numbers every corner of every exposed face, and writes each vertex's exact pixel formula per view (`<ID>_vertexmap.json`). Look for `MAP_OK`.
 - Feed it the pipeline's own `ortho_front`, `ortho_side`, `ortho_top`, `ortho_back` renders, or concept views drawn straight-on. Prefer this over `hull_ref.py` whenever those views exist: one cell is always the same number of pixels, so the mapping is exact and the model is solid from every side.
+- Add `--angled <view.png> <az> <el>` for each perspective render you have (the pipeline's `rest_34` is `35 14`). Flat views alone leave box corners where two extrusions cross; an angled view and its mirror cut them to shape. A view whose silhouette cannot be matched is skipped and reported.
 - Slots are stored in the order of a curved threshold `F` swept through the grid (the reveal order).
 - Limits: hollows no silhouette shows stay filled (open mouth, gap under a wing), wings come out as thick as their side view, and glow halos in a render count as model. Render without the glow pass for a clean map.
 
