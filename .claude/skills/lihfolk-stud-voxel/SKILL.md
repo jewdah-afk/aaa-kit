@@ -71,6 +71,7 @@ One loop for every route. Do not skip a step; do not add detail before step 4 pa
 
 Every brick creature is scored the same way, from its brick grid, in seconds and without rendering: [why and how](../../../docs/research/91-readable-voxel-surfaces.md).
 - `python3 scripts/scorecard.py dump` (needs Blender's `bpy`) caches each model's grid; `score` prints the table; `baseline` freezes it to `examples/BASELINE.json` and `examples/SCORECARD.md`; `check` fails if a model drops.
+- `python3 scripts/trace_match.py <model key> <concept.jpg> x0 y0 x1 y1 <out prefix> [plates.npz]` outlines the concept's side view, fits it to the model, writes an overlay with line distances, and traces the concept's plates into a map a model file can read (`examples/brick/war_rhino_plated_brick.py` + `examples/brick/refs/WarRhino_plates.npz`): [trace and match](../../../docs/research/92-trace-and-match.md).
 - Measures: `match` (silhouette vs the concept sheet), `bands`, `edges`, `flat`, `contrast`, `relief` (real layering), `backed` (edges that are geometry, not paint), `small` (detail left at 48 px tall), plus the colour, glow and triangle rules. `structure` sums them to 0-100.
 - Anchors approved by eye: swamp_croc, war_rhino, kraken. The numbers only say "not worse than before"; the look is judged on the Blender sheet.
 - The measuring views (`$SV_CACHE/views/<model>_<view>.png`) are a one-second preview of a sculpt: use them between Blender renders.

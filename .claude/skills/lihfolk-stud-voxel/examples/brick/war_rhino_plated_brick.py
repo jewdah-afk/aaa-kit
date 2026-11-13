@@ -1,7 +1,7 @@
 # SKILL EXAMPLE (plated rebuild, not yet owner-approved): reference = previews/WarRhino_concept.jpg; Roblox square-stud overlay at 2x2, strong eye glow
 # GLOW: strong   (read by scripts/run_brick.ps1: strong = GLOW_STRONG=1 eye halo)
 # War Rhino, plated rebuild (the shipped war_rhino_brick.py stays 1:1 for comparison): smooth anatomy field -> separate
-# armour shields at different heights, shingled front to back (every plate edge is a real brick step) -> grid-exact face + hooves -> brick faces + studs -> EEVEE.
+# armour plates traced from the concept, at different heights (every plate edge is a real brick step) -> grid-exact face + hooves -> brick faces + studs -> EEVEE.
 # Run: blender -b --factory-startup --python rhino_fable.py -- render
 # Design coords: x right, y up, z back (front = -z). 1 voxel = 1 unit (= 2.5 studs in game).
 import bpy, math, os, sys
@@ -13,7 +13,6 @@ sys.path.insert(0, next(p for p in (os.path.join(HERE, '..', '..', 'scripts'), o
 import brick_rig
 OUT = os.path.join(HERE, 'out_' + os.path.splitext(os.path.basename(__file__))[0]); REN = os.path.join(OUT, 'render'); os.makedirs(REN, exist_ok=True)
 ID = 'FBRhinoPlated'
-TILT = 1.6
 
 lo = np.array((-28.0, -0.5, -62.0)); hi = np.array((28.0, 62.5, 54.0))
 n = (hi - lo).astype(int)
@@ -67,34 +66,23 @@ for sx in (1, -1):
     d = smin(d, sd_ell((11.5 * sx, 21.0, -13), (6.0, 10.0, 7.0)), 3)  # shoulder / upper front leg
     d = smin(d, sd_ell((11.5 * sx, 23.0, 25), (6.5, 11.5, 9.0)), 3)   # thigh
 put(d < 0, HIDE, st=False)
-# LAYERED PLATE ARMOUR (research ch. 91): the hide is covered by separate shields that sit at different heights, so every
-# plate edge is a real step of 1-3 bricks. Rings run front to back, each ring is cut into bands round the girth, and the
-# cuts are staggered ring to ring. Every plate tilts up towards its rear edge, so it overhangs the plate behind it (shingle).
-# Sizes vary: the shoulder and hip shields are the biggest and the proudest.
-TH = np.arctan2(AX, Y - 22.0)                                          # 0 = spine, pi = belly
-def ring_z(z0, lean, sweep): return z0 + lean * (Y - 25.0) + sweep * TH
-RINGS = [ring_z(-27.5, .10, 0), ring_z(-21.0, .10, .8), ring_z(-4.0, -.20, 1.5), ring_z(6.5, 0, 1.0), ring_z(16.0, .25, -1.0), ring_z(31.0, .10, -.5)]
-LAY = [((1.1, 2.0), (1, 2, 1)),                                        # (cuts round the girth, plate level top -> bottom)
-       ((.70, 1.60), (3, 1, 2)),                                       # neck ring
-       ((.45, 1.75), (2, 4, 1)),                                       # shoulder: one big shield
-       ((.80, 1.40, 2.05), (3, 1, 3, 1)),
-       ((.50, 1.15, 1.90), (1, 3, 1, 2)),
-       ((.55, 1.70), (3, 4, 1)),                                       # hip: one big shield
-       ((1.0, 1.9), (1, 3, 1))]                                        # rump
-BELLY = 2.4                                                            # past this angle the soft belly hide shows: no plates
-ring = np.zeros(n, np.int32)
-for f in RINGS: ring += (Z > f).astype(np.int32)
-zf = np.full(n, -34.0); zr = np.full(n, 42.0)                          # front / rear edge of the ring each brick is in
-for i, f in enumerate(RINGS):
-    zr = np.where(ring == i, f, zr); zf = np.where(ring == i + 1, f, zf)
-tilt = TILT * (np.clip((Z - zf) / np.maximum(zr - zf, 1), 0, 1) - .5)   # rear edge up, front edge down
-TONE = (1.0, .93, 1.07)
-for i, (cuts, lv) in enumerate(LAY):
-    edges = (0.0,) + cuts + (BELLY,)
-    for j, L in enumerate(lv):
-        m_ = (ring == i) & (TH >= edges[j]) & (TH < edges[j + 1]) & (d < L - .5 + tilt) & (d > -2.5) & (Y > 9.5)
-        put(m_, PLATE * TONE[(i * 2 + j) % 3] * (.80 + .09 * L), p=2000 + i * 10 + j, l=float(L))   # proud plates lighter, low plates darker
-put((d < .6) & (d > -2.5) & (TH >= BELLY) & (Y > 9.5) & (kind == 1), HIDE * 1.4, st=False)        # belly hide, darker
+# TRACED PLATE ARMOUR (research ch. 91, 92): the plates are traced from the concept's side view by scripts/trace_match.py
+# (refs/WarRhino_plates.npz: one cell per brick of the side view = a plate number, and a height level per plate chosen so
+# touching plates never share a level). Each brick of the hide looks up its plate by (z, y), so the plates lie in the
+# concept's horizontal rows on both flanks and wrap over the back. Tops are flat (studs stay whole); every plate edge is a
+# real step of 1-3 bricks.
+TR = np.load(os.path.join(HERE, 'refs', 'WarRhino_plates.npz'))
+pmap, plev = TR['plate'], TR['level']
+ci = np.clip(np.round(Z - float(TR['z0'])).astype(int), 0, pmap.shape[1] - 1)
+ri = np.clip(np.round(float(TR['ytop']) - Y).astype(int), 0, pmap.shape[0] - 1)
+plate = pmap[ri, ci]; L_ = plev[plate].astype(float)
+BELLY_Y = 13.5                                                         # below this the soft belly hide shows: no plates
+shell = (d < L_ - .5) & (d > -2.5) & (Y > BELLY_Y)
+TONE = (1.0, .94, 1.06)
+put(shell, PLATE, p=0, l=0)
+col[shell] = (PLATE[None] * (np.array(TONE)[plate[shell] % 3] * (.80 + .09 * L_[shell]))[:, None])   # proud plates lighter
+pid[shell] = 2000 + plate[shell]; lvl[shell] = L_[shell]
+put((d < .6) & (d > -2.5) & (Y > 9.5) & (Y <= BELLY_Y), HIDE * 1.4, st=False)                     # belly hide, darker
 # bone spikes along the hump: base on the top surface, raked back
 BONE = hx('8a7350')
 for zs, L in ((-20, 4.5), (-13, 6.0), (-6, 6.5), (1, 5.5), (8, 4.0)):
