@@ -29,6 +29,16 @@ Clickable HUD plates that look like they were built from the same bricks as the 
 8. **Spec board.** For every proposal, publish tokens, anatomy (exploded), states (rest, hover, pressed, disabled, notify), the luck ladder, the motion table and the easing curves, cloned from the real mockup plates so the two can't drift.
 9. Run the self-check, then the `ui-qa` and `visual-hierarchy` agents.
 
+### v5: socket buttons and the 4×4 checker (current)
+
+- **Clickables only** (HUD buttons, hotbar 1–9 + 0, window close, buy, tabs, filters) are socketed and studded. Balance, luck, window headers and cards stay flat: studs mean "you can press this".
+- **Socket:** a dark well (8 px margin) holding a cap: ink rim, a 10 px side (the depth) and the face. Press = the cap sinks 8 px into the well in 40 ms (Quad Out) and rises in 90 ms. No bounce. Selected tabs stay pressed. `examples/SocketSpec.luau` holds the numbers, `examples/StudSocket.luau` builds and wires it.
+- **1:1 studs:** one stud is always 12 px at 1080p. Faces are whole 4×4 blocks (multiples of 48 px; `SocketSpec.isWholeBlocks`, `snap`). The stud tile (8×8 studs = 96 px) starts at the face's top-left.
+- **On/off 4×4 pattern:** three face layers over the family gradient: the block mask (`studs_checker_blocks.png`, dark blocks −15%, light +9%), then the map stud as overlay (`studs_checker_overlay.png` in Figma, `_light` + `_dark` in Roblox). Bake with `tools/lookdev/stud_checker.py`.
+- **Type:** Montserrat Black / ExtraBold, mitred ink stroke ≈ 9% of size, soft 50% shadow. No Fredoka or Luckiest Guy; round joins and hard drops read as bubbly.
+- **Windows:** flat header in the window's family colour with a voxel icon breaking the top-left, a ruby 1-block close socket, sections in caps, cards with a rarity-coloured stroke. Shop follows the IMI 2 flow: balance + jumps to packs, featured, packs, passes (OWNED), supporter tiers, codes, Purchase Options with Gift.
+- **Animal icons:** render the kit's critters with `tools/lookdev/critter_icon.py` (Cycles, no GPU) and outline them with `voxel_icons.sticker`.
+
 ## Hierarchy rules it obeys
 
 - §2: plates are tier 3; the luck meter is tier 2 while a throw is in flight, then rests back to tier 3 (60% opacity, CALM size).
@@ -46,7 +56,7 @@ Clickable HUD plates that look like they were built from the same bricks as the 
 
 ## Example
 
-`examples/LuckMeter.luau` (test: `examples/LuckMeter.test.luau`), `examples/StudPlateSpec.luau` (test: `examples/StudPlateSpec.test.luau`), `examples/StudPlate.luau` (builder) and `examples/StudMotion.luau` (motion table).
+`examples/SocketSpec.luau` (test: `examples/SocketSpec.test.luau`) and `examples/StudSocket.luau` (v5 socket buttons), `examples/LuckMeter.luau` (test: `examples/LuckMeter.test.luau`), `examples/StudPlateSpec.luau` (test: `examples/StudPlateSpec.test.luau`), `examples/StudPlate.luau` (builder) and `examples/StudMotion.luau` (motion table).
 
 ```lua
 local StudPlate = require("./examples/StudPlate")
@@ -74,7 +84,8 @@ Throw.Landed:Connect(luck.rest)
 
 ## Self-check
 
-- [ ] Studs: one tiled fill per face from the map's tile, starting at the top-left, 22 px pitch; no stud layers, no centred grid, no stretching.
+- [ ] Studs only on clickables; one stud = 12 px; every studded face is whole 4×4 blocks; tiles start at the face's top-left; no stud layers, no stretching.
+- [ ] Press sinks the cap into its socket (8 px, 40 ms down / 90 ms up), no bounce.
 - [ ] Every clickable tile is square with a voxel-render icon that contrasts with its plate.
 - [ ] Hidden buttons are hidden in `Spec.BUTTONS`, not deleted.
 - [ ] The luck meter has no plate and reads at 844×390 (≥ 28 px digits after scaling).
