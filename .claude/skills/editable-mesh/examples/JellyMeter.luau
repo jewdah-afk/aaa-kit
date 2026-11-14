@@ -31,10 +31,11 @@ JellyMeter.Default = { Height = 6, Radius = 0.7, Rings = 14, Segments = 24, Corn
 
 -- Colour ramp by level (sRGB stops; lerped in a perceptual-ish way via gamma 2.2).
 local STOPS = {
-	{ 0.00, Color3.fromRGB(255, 64, 54) },
-	{ 0.30, Color3.fromRGB(255, 140, 34) },
-	{ 0.60, Color3.fromRGB(255, 232, 96) },
-	{ 1.00, Color3.fromRGB(88, 214, 74) },
+	{ 0.00, Color3.fromRGB(255, 28, 36) },
+	{ 0.15, Color3.fromRGB(255, 34, 34) },
+	{ 0.40, Color3.fromRGB(255, 136, 0) },
+	{ 0.65, Color3.fromRGB(255, 236, 20) },
+	{ 1.00, Color3.fromRGB(48, 232, 52) },
 }
 
 local function lin(c: number): number
@@ -96,7 +97,7 @@ function JellyMeter.liquid(p: Params, level: number, slosh: number, ripple: numb
 		return Color3.new(math.clamp(c.R * k, 0, 1), math.clamp(c.G * k, 0, 1), math.clamp(c.B * k, 0, 1))
 	end
 	table.insert(pos, Vector3.new(0, 0, 0))
-	table.insert(col, shade(base, 0.55))
+	table.insert(col, shade(base, 0.85))
 	for k = 2, p.Rings do
 		-- the first B rings follow the rounded base (fixed heights), the rest share the column,
 		-- so the bottom stays round at any level instead of stretching into a point
@@ -120,8 +121,8 @@ function JellyMeter.liquid(p: Params, level: number, slosh: number, ripple: numb
 				yy = math.clamp(yy, 0.02, p.Height)
 			end
 			table.insert(pos, Vector3.new(x, yy, z))
-			local side = 0.82 + 0.18 * math.cos(a - math.pi * 0.75) -- key light from front-left
-			local vert = 0.6 + 0.4 * e
+			local side = 0.9 + 0.1 * math.cos(a - math.pi * 0.75) -- key light from front-left
+			local vert = 0.86 + 0.14 * e
 			table.insert(col, shade(base, side * vert * (isTop and 1.12 or 1)))
 		end
 	end
