@@ -13,6 +13,7 @@ export type Params = {
 	Radius: number, -- inner capsule radius
 	Rings: number, -- rings up the body (>= 6)
 	Segments: number, -- around (>= 12)
+	Corner: number?, -- end rounding (studs); default Radius * 0.35, matches the HUD's soft corners
 }
 
 export type Geo = { Pos: { Vector3 }, Col: { Color3 }, Tri: { { number } } }
@@ -26,14 +27,14 @@ local RobloxTypes = if typeof(Vector3) == "nil" then (require :: any)("@lune/rob
 local Vector3 = if RobloxTypes then RobloxTypes.Vector3 else Vector3
 local Color3 = if RobloxTypes then RobloxTypes.Color3 else Color3
 
-JellyMeter.Default = { Height = 6, Radius = 0.7, Rings = 14, Segments = 24 } :: Params
+JellyMeter.Default = { Height = 6, Radius = 0.7, Rings = 14, Segments = 24, Corner = 0.25 } :: Params
 
 -- Colour ramp by level (sRGB stops; lerped in a perceptual-ish way via gamma 2.2).
 local STOPS = {
-	{ 0.00, Color3.fromRGB(88, 214, 74) },
-	{ 0.45, Color3.fromRGB(255, 232, 96) },
-	{ 0.75, Color3.fromRGB(255, 140, 34) },
-	{ 1.00, Color3.fromRGB(255, 64, 54) },
+	{ 0.00, Color3.fromRGB(255, 64, 54) },
+	{ 0.30, Color3.fromRGB(255, 140, 34) },
+	{ 0.60, Color3.fromRGB(255, 232, 96) },
+	{ 1.00, Color3.fromRGB(88, 214, 74) },
 }
 
 local function lin(c: number): number
@@ -61,16 +62,18 @@ function JellyMeter.ramp(t: number): Color3
 end
 
 -- Capsule radius at height y (hemispherical ends).
+local function corner(p: Params): number
+	return math.min(p.Corner or p.Radius * 0.35, p.Radius)
+end
+
+-- Body radius at height y: a rounded-rectangle profile (soft corners, flat ends).
 local function capR(p: Params, y: number): number
-	local R, H = p.Radius, p.Height
-	if y < R then
-		local d = R - y
-		return math.sqrt(math.max(0, R * R - d * d))
-	elseif y > H - R then
-		local d = y - (H - R)
-		return math.sqrt(math.max(0, R * R - d * d))
+	local R, H, C = p.Radius, p.Height, corner(p)
+	local d = if y < C then C - y elseif y > H - C then y - (H - C) else 0
+	if d <= 0 then
+		return R
 	end
-	return R
+	return R - C + math.sqrt(math.max(0, C * C - d * d))
 end
 
 -- Topology: ring 1 is the bottom pole (one vertex), rings 2..Rings are full rings, the last ring
@@ -98,10 +101,10 @@ function JellyMeter.liquid(p: Params, level: number, slosh: number, ripple: numb
 		-- the first B rings follow the rounded base (fixed heights), the rest share the column,
 		-- so the bottom stays round at any level instead of stretching into a point
 		local B = math.max(3, math.floor(p.Rings * 0.3))
-		local yb = math.min(top, p.Radius)
+		local yb = math.min(top, corner(p))
 		local y
 		if k - 1 <= B then
-			y = math.min(top, p.Radius * (1 - math.cos((k - 1) / B * math.pi / 2)))
+			y = math.min(top, corner(p) * (1 - math.cos((k - 1) / B * math.pi / 2)))
 		else
 			y = yb + (top - yb) * ((k - 1 - B) / (p.Rings - 1 - B))
 		end

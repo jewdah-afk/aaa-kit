@@ -32,10 +32,10 @@ for _, tri in b.Tri do
 end
 t.ok("indices valid", ok)
 
--- colour climbs: low is greener, high is redder
+-- colour climbs: low is red, high is green
 local lo, hi = JellyMeter.ramp(0.05), JellyMeter.ramp(0.98)
-t.ok("low green", lo.G > lo.R)
-t.ok("high red", hi.R > hi.G)
+t.ok("low red", lo.R > lo.G)
+t.ok("high green", hi.G > hi.R)
 -- slosh tilts the surface ring
 local flat = JellyMeter.liquid(p, 0.5, 0, 0, 0)
 local tilt = JellyMeter.liquid(p, 0.5, 0.2, 0, 0)
