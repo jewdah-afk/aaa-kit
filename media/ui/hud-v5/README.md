@@ -44,6 +44,8 @@ Bake the checker with [stud_checker.py](../../../tools/lookdev/stud_checker.py).
 
 ## QA pass (latest)
 
+- No baked drop shadows or glows behind any button, icon or label; the cap sinking into its socket is the only depth cue.
+
 - Labels on the face, clear of the 3D side; no backing shadows; icons bigger and fitted above the label.
 - Removed the bevel line on every face and the light outline on every socket; hotbar key numbers moved above the sockets.
 - Checker softened (dark blocks ~5%, light ~4%) so it mixes with the face colour.

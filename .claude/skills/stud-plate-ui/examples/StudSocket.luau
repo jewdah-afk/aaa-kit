@@ -61,7 +61,6 @@ export type Button = {
 	side: Frame,
 	face: Frame,
 	veil: Frame,
-	stroke: UIStroke,
 	scale: number,
 	studs: Vector2,
 	family: Family,
@@ -130,11 +129,6 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 	local rim = frame("Rim", cap, Spec.INK, 2)
 	rim.Size = UDim2.fromScale(1, 1)
 	corner(rim, px(Socket.RADIUS.rim))
-	local glow = Instance.new("UIStroke") -- a soft family-coloured edge stands in for the Figma glow
-	glow.Color = rgb(fam.glow)
-	glow.Thickness = math.max(1, s * 2)
-	glow.Transparency = 1 - Socket.GLOW.rest
-	glow.Parent = rim
 
 	local side = frame("Side", cap, fam.side, 3)
 	side.AnchorPoint = Vector2.new(0, 1)
@@ -202,7 +196,7 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 		st.Parent = t
 	end
 
-	return { root = well, cap = cap, rim = rim, side = side, face = face, veil = veil, stroke = glow, scale = s, studs = o.studs, family = fam }
+	return { root = well, cap = cap, rim = rim, side = side, face = face, veil = veil, scale = s, studs = o.studs, family = fam }
 end
 
 local function info(row: { time: number, style: string, dir: string }): TweenInfo
@@ -214,11 +208,10 @@ function StudSocket.wire(b: Button, onActivate: (() -> ())?): RBXScriptConnectio
 	local s = b.scale
 	local rest = Socket.geometry(b.studs.X, b.studs.Y, false)
 	local down = Socket.geometry(b.studs.X, b.studs.Y, true)
-	local function to(g: Socket.Geometry, row, glow: number, veil: number, lift: number)
+	local function to(g: Socket.Geometry, row, veil: number, lift: number)
 		local i = info(row)
 		TweenService:Create(b.cap, i, { Position = UDim2.fromOffset(math.floor(Socket.WELL * s + 0.5), math.floor((g.capY - lift) * s + 0.5)), Size = UDim2.fromOffset(math.floor(g.capW * s + 0.5), math.floor((g.capH + lift) * s + 0.5)) }):Play()
 		TweenService:Create(b.side, i, { Size = UDim2.fromOffset(math.floor(g.faceW * s + 0.5), math.floor((g.side + lift + 10) * s + 0.5)) }):Play()
-		TweenService:Create(b.stroke, i, { Transparency = 1 - glow }):Play()
 		TweenService:Create(b.veil, i, { BackgroundTransparency = 1 - veil }):Play()
 	end
 	local M = Socket.MOTION
@@ -232,17 +225,17 @@ function StudSocket.wire(b: Button, onActivate: (() -> ())?): RBXScriptConnectio
 	hit.Parent = b.root
 	hit.MouseEnter:Connect(function()
 		hovering = true
-		to(rest, M.hover, Socket.GLOW.hover, 0.06, Socket.HOVER_LIFT)
+		to(rest, M.hover, 0.06, Socket.HOVER_LIFT)
 	end)
 	hit.MouseLeave:Connect(function()
 		hovering = false
-		to(rest, M.hover, Socket.GLOW.rest, 0, 0)
+		to(rest, M.hover, 0, 0)
 	end)
 	hit.MouseButton1Down:Connect(function()
-		to(down, M.down, Socket.GLOW.pressed, 0, 0)
+		to(down, M.down, 0, 0)
 	end)
 	return hit.MouseButton1Up:Connect(function()
-		to(rest, M.up, if hovering then Socket.GLOW.hover else Socket.GLOW.rest, if hovering then 0.06 else 0, if hovering then Socket.HOVER_LIFT else 0)
+		to(rest, M.up, if hovering then 0.06 else 0, if hovering then Socket.HOVER_LIFT else 0)
 		if onActivate then
 			onActivate()
 		end

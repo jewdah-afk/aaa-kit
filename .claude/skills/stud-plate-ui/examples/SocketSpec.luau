@@ -16,7 +16,7 @@ Socket.PRESS = 8 -- how far the cap sinks on press (side 10 -> 2 px)
 Socket.HOVER_LIFT = 2
 Socket.RADIUS = { well = 16, rim = 12, face = 8 }
 Socket.CHECKER = { lightLift = 0.04, darkDrop = 0.055, overlay = 0.9 } -- soft block mask, then stud overlay
-Socket.GLOW = { rest = 0.35, hover = 0.45, pressed = 0.15 }
+-- No drop shadows or glows behind buttons: depth comes from the cap moving in its socket.
 -- Labels sit on the face, never on the side: bottom LABEL_GAP px above the face edge. No
 -- backing plate or shadow behind them. Square-tile icons fill the space from ICON_TOP
 -- (breaking the top edge) down to ICON_GAP above the label.
