@@ -31,7 +31,7 @@ JellyMeter.Default = { Height = 6, Radius = 0.7, Rings = 14, Segments = 24 } :: 
 -- Colour ramp by level (sRGB stops; lerped in a perceptual-ish way via gamma 2.2).
 local STOPS = {
 	{ 0.00, Color3.fromRGB(88, 214, 74) },
-	{ 0.45, Color3.fromRGB(255, 214, 58) },
+	{ 0.45, Color3.fromRGB(255, 232, 96) },
 	{ 0.75, Color3.fromRGB(255, 140, 34) },
 	{ 1.00, Color3.fromRGB(255, 64, 54) },
 }
