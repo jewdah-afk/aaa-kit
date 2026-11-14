@@ -15,13 +15,14 @@ Socket.WELL = 8 -- socket margin around the cap
 Socket.PRESS = 8 -- how far the cap sinks on press (side 10 -> 2 px)
 Socket.HOVER_LIFT = 2
 Socket.RADIUS = { well = 16, rim = 12, face = 8 }
-Socket.CHECKER = { lightLift = 0.09, darkDrop = 0.15, overlay = 0.9 } -- block mask, then stud overlay
+Socket.CHECKER = { lightLift = 0.04, darkDrop = 0.055, overlay = 0.9 } -- soft block mask, then stud overlay
 Socket.GLOW = { rest = 0.35, hover = 0.45, pressed = 0.15 }
--- Labels sit on the face, never on the side: bottom LABEL_GAP px above the face edge, on a
--- dark "seat" gradient (ink 0 -> 38%) over the bottom SEAT px of the face.
-Socket.LABEL_GAP = 12
-Socket.SEAT = { tile = 56, slot = 40, alpha = 0.38 }
-Socket.ICON_TOP = -30 -- square-tile icons break the top edge by 30 px
+-- Labels sit on the face, never on the side: bottom LABEL_GAP px above the face edge. No
+-- backing plate or shadow behind them. Square-tile icons fill the space from ICON_TOP
+-- (breaking the top edge) down to ICON_GAP above the label.
+Socket.LABEL_GAP = 10
+Socket.ICON_TOP = -26
+Socket.ICON_GAP = 4
 
 -- Timings (seconds). Keys press in and never bounce; outcomes carry the juice.
 Socket.MOTION = {

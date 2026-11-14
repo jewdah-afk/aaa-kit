@@ -2,7 +2,7 @@
 -- StudSocket: builds a HUD v5 socket button as plain Roblox GUI and wires the press into
 -- the socket. Layers match the Figma spec board ("HUD v5 · Socket"):
 --
---   Well     Frame: dark gradient, UIStroke 1.5 px light, inner shade (ImageLabel, optional)
+--   Well     Frame: dark gradient (no outline)
 --   Cap      Frame that moves; holds everything below
 --     Rim    Frame ink, UICorner 12
 --     Side   Frame, family side colour (the visible depth)
@@ -10,7 +10,7 @@
 --       Blocks  tiled ImageLabel: studs_checker_blocks.png (the 4x4 on/off pattern)
 --       Lights  tiled ImageLabel: studs_checker_light.png  } the map stud, split because
 --       Darks   tiled ImageLabel: studs_checker_dark.png   } Roblox has no overlay blend
---       Sheen, Bevel
+--       Sheen
 --     Icon, Label (Montserrat Black + UIStroke, mitred)
 --
 -- Tiles start at the face's top-left at 96 px (8 studs x 12 px) x UI scale, and faces are
@@ -122,12 +122,6 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 	wg.Rotation = 90
 	wg.Color = ColorSequence.new(rgb("#05060F"), rgb("#151937"))
 	wg.Parent = well
-	local ws = Instance.new("UIStroke")
-	ws.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	ws.Color = Color3.new(1, 1, 1)
-	ws.Transparency = 0.84
-	ws.Thickness = math.max(1, s * 1.5)
-	ws.Parent = well
 
 	local cap = frame("Cap", well, nil, 2)
 	cap.Position = UDim2.fromOffset(px(Socket.WELL), px(G.capY))
@@ -169,24 +163,6 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 	sg.Rotation = 90
 	sg.Transparency = NumberSequence.new(0.76, 1)
 	sg.Parent = sheen
-
-	local bevel = frame("Bevel", face, fam.bevel, 7)
-	bevel.AnchorPoint = Vector2.new(0, 1)
-	bevel.Position = UDim2.new(0, px(4), 1, -px(1))
-	bevel.Size = UDim2.new(1, -px(8), 0, math.max(1, px(3)))
-	bevel.BackgroundTransparency = 0.1
-
-	if o.label and sw == sh then -- label seat (square faces: tiles and hotbar slots): darkens the bottom of the face so white text reads on studs
-		local seat = frame("LabelSeat", face, Spec.INK, 6)
-		local seatH = if sh >= 12 then Socket.SEAT.tile else Socket.SEAT.slot
-		seat.AnchorPoint = Vector2.new(0, 1)
-		seat.Position = UDim2.fromScale(0, 1)
-		seat.Size = UDim2.new(1, 0, 0, px(seatH))
-		local sg2 = Instance.new("UIGradient")
-		sg2.Rotation = 90
-		sg2.Transparency = NumberSequence.new(1, 1 - Socket.SEAT.alpha)
-		sg2.Parent = seat
-	end
 
 	local veil = frame("HoverVeil", face, "#FFFFFF", 8)
 	veil.Size = UDim2.fromScale(1, 1)

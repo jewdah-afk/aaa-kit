@@ -23,12 +23,12 @@ STUD = 64          # px per stud in the source tile
 BLOCK = 4          # studs per checker block
 
 
-def bake(out_dir, offset=42.0, contrast=1.9):
+def bake(out_dir, offset=22.0, contrast=1.9, dark_alpha=14, light_alpha=10):
     a = np.asarray(Image.open(TILE).convert('L'), np.float32)
     a = 128 + (a - a.mean()) * contrast
     y, x = np.mgrid[0:a.shape[0], 0:a.shape[1]]
     parity = ((x // (STUD * BLOCK)) + (y // (STUD * BLOCK))) % 2      # 0 = light block, 1 = dark block
-    a = np.clip(a + np.where(parity == 0, offset, -offset), 0, 255)
+    a = np.clip(a + np.where(parity == 0, offset, -offset * 0.6), 0, 255)   # dark blocks pulled up: mixed, not stark
     Image.fromarray(a.astype(np.uint8)).convert('RGB').save(os.path.join(out_dir, 'studs_checker_overlay.png'))
     light = np.clip((a - 128) / 127, 0, 1)
     dark = np.clip((128 - a) / 128, 0, 1)
@@ -40,7 +40,7 @@ def bake(out_dir, offset=42.0, contrast=1.9):
     # block mask: the on/off pattern alone, so it reads even on white faces where overlay can't
     blk = np.zeros(a.shape + (4,), np.uint8)
     blk[..., :3] = np.where(parity[..., None] == 1, 0, 255)
-    blk[..., 3] = np.where(parity == 1, 38, 22).astype(np.uint8)        # dark blocks 15% black, light 9% white
+    blk[..., 3] = np.where(parity == 1, dark_alpha, light_alpha).astype(np.uint8)   # dark blocks ~5% black, light ~4% white
     Image.fromarray(blk, 'RGBA').save(os.path.join(out_dir, 'studs_checker_blocks.png'))
 
 

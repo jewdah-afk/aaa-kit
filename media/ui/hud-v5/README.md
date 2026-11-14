@@ -42,6 +42,14 @@ Built on the IMI 2 shop flow (a balance with + that jumps to the packs, sections
 
 Bake the checker with [stud_checker.py](../../../tools/lookdev/stud_checker.py). Icons from v4 live in [../hud-v4/icons](../hud-v4/icons).
 
+## QA pass (latest)
+
+- Labels on the face, clear of the 3D side; no backing shadows; icons bigger and fitted above the label.
+- Removed the bevel line on every face and the light outline on every socket; hotbar key numbers moved above the sockets.
+- Checker softened (dark blocks ~5%, light ~4%) so it mixes with the face colour.
+- Shop: header buttons centred in the header, CLAIM no longer overlaps its tier card, odds row clear of the buy buttons. Purchase header deepened so its close button fits. Index tab and filter rows aligned. Animals hero and Daily day-7 icons fit their cards.
+- Hierarchy audit on the HUD: the luck number is the first and second predicted fixation, lift 1.52 (target 1.5); the strongest competitor is the Roblox top bar baked into the capture (78%). Still a warning: the squint value gap is low (bright UI on bright snow) because there are no backing plates.
+
 ## Not done yet
 
 - Nothing is in Studio: the textures and icons need uploading, and `StudSocket` hasn't run in a live game.
