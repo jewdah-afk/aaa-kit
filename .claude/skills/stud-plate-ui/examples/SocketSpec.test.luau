@@ -30,4 +30,8 @@ t.ok("stud (4,0) dark", not Socket.lightBlock(4, 0))
 t.ok("stud (4,4) light", Socket.lightBlock(4, 4))
 t.ok("stud (3,7) dark", not Socket.lightBlock(3, 7))
 
+local tile = Socket.geometry(12, 12)
+t.ok("label clears the side (bottom above face edge)", Socket.LABEL_GAP > 0 and Socket.RIM + tile.faceH - Socket.LABEL_GAP < Socket.RIM + tile.faceH)
+t.ok("seat fits inside the face", Socket.SEAT.tile < tile.faceH and Socket.SEAT.slot < Socket.geometry(8, 8).faceH)
+
 t.done()

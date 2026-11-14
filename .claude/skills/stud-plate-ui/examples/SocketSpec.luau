@@ -17,6 +17,11 @@ Socket.HOVER_LIFT = 2
 Socket.RADIUS = { well = 16, rim = 12, face = 8 }
 Socket.CHECKER = { lightLift = 0.09, darkDrop = 0.15, overlay = 0.9 } -- block mask, then stud overlay
 Socket.GLOW = { rest = 0.35, hover = 0.45, pressed = 0.15 }
+-- Labels sit on the face, never on the side: bottom LABEL_GAP px above the face edge, on a
+-- dark "seat" gradient (ink 0 -> 38%) over the bottom SEAT px of the face.
+Socket.LABEL_GAP = 12
+Socket.SEAT = { tile = 56, slot = 40, alpha = 0.38 }
+Socket.ICON_TOP = -30 -- square-tile icons break the top edge by 30 px
 
 -- Timings (seconds). Keys press in and never bounce; outcomes carry the juice.
 Socket.MOTION = {

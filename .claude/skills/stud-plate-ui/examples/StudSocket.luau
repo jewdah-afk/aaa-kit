@@ -176,6 +176,18 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 	bevel.Size = UDim2.new(1, -px(8), 0, math.max(1, px(3)))
 	bevel.BackgroundTransparency = 0.1
 
+	if o.label and sw == sh then -- label seat (square faces: tiles and hotbar slots): darkens the bottom of the face so white text reads on studs
+		local seat = frame("LabelSeat", face, Spec.INK, 6)
+		local seatH = if sh >= 12 then Socket.SEAT.tile else Socket.SEAT.slot
+		seat.AnchorPoint = Vector2.new(0, 1)
+		seat.Position = UDim2.fromScale(0, 1)
+		seat.Size = UDim2.new(1, 0, 0, px(seatH))
+		local sg2 = Instance.new("UIGradient")
+		sg2.Rotation = 90
+		sg2.Transparency = NumberSequence.new(1, 1 - Socket.SEAT.alpha)
+		sg2.Parent = seat
+	end
+
 	local veil = frame("HoverVeil", face, "#FFFFFF", 8)
 	veil.Size = UDim2.fromScale(1, 1)
 	veil.BackgroundTransparency = 1
@@ -202,7 +214,8 @@ function StudSocket.build(parent: Instance, o: Options, assets: Assets): Button
 		t.TextSize = px(size)
 		t.TextColor3 = Color3.new(1, 1, 1)
 		t.AnchorPoint = Vector2.new(0.5, 1)
-		t.Position = UDim2.new(0.5, 0, 0, px(Socket.RIM + G.faceH - 6))
+		-- bottom edge LABEL_GAP above the face edge, so it never sits on the cap's side
+		t.Position = UDim2.new(0.5, 0, 0, px(Socket.RIM + G.faceH - Socket.LABEL_GAP))
 		t.Size = UDim2.new(1, 0, 0, px(size * 1.25))
 		t.ZIndex = 10
 		t.Parent = cap
