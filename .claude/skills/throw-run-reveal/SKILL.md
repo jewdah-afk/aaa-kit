@@ -18,12 +18,12 @@ One loop in three acts: **charge → run → reveal**. Each act has exactly one 
 ## Method
 
 1. **Roll first.** The server rolls the result and the final odds before the throw animates. Flight distance, zones crossed and the reveal all play back a decided result.
-2. **Charge (≈0.5 s).** Only the power meter moves: a vertical capsule beside the player, fill green → red, power number above, "HOLD TO THROW" below. The rest of the HUD stays at rest.
-3. **Throw camera.** Swing to a front 3/4 view for the wind-up (≈1 s, no UI), cut over the shoulder on release, then lock behind the projectile.
+2. **Charge (≈0.5 s).** The power meter leads: a vertical capsule beside the player, fill green → red, power number above, "HOLD TO THROW" below. The thrower supports it by coiling with the meter (weight back, arm drawn) and uncoiling as it drops. The rest of the HUD stays at rest.
+3. **Throw camera.** Hold a shoulder shot through the wind-up, stride and release (no UI), then hand off to the chase in one move: the chase starts with the speed the shoulder shot ended on, the look slides from the projectile to the lane ahead, and the view opens briefly. No cut, no restart from rest (see `animation`, step 9). The throw itself is a full-body clip scaled by power: knee lift, stride and plant, hips then torso then arm, back foot peeling off.
 4. **Run HUD: one centred block.** Big ×luck number, small LUCK label under it, a "+0.09×" delta chip off its top-right corner, and the zone name on a dark fading ribbon beneath. Nothing else is on screen during flight.
 5. **Zone ladder.** A new zone every ~0.3 s of flight (`ZoneLadder.paced`). Each zone has a name, a palette and one landmark silhouette. The ribbon name crossfades in 120 ms, and the luck number's colour follows the zone palette.
 6. **Landing.** The projectile slows, a ground ring expands over 200 ms, the HUD clears to the ribbon only, and the camera tilts up.
-7. **Silhouette.** The result enters as a black silhouette with a white rim. Odds start quiet: "1 in 2" in white, top centre.
+7. **Silhouette.** The result enters as a black silhouette with a white rim. Odds start quiet: "1 in 2" in white, top centre. If the prize arrives in a container, the container tells the truth early: it is as big as the prize inside (the server already rolled the size), and it rattles harder and hops on each tier step, then presses, pops and bursts when the climb is done.
 8. **Odds climb.** Count up with `OddsLadder.steps`: slow at first, fast at the end, landing exactly on the rolled odds. The number's colour steps the rarity ladder. On each `TierUp`, a tier word slams in at an angle (2 frames), shrinks to 40% (3 frames), and parks at the side; the screen edge flashes in the tier colour.
 9. **Peak (top tiers only).** White flash 100% → 0 over 0.5 s, a sunburst behind the odds, the tier word under them, and confetti.
 10. **Unveil and result card.** The rim fades and the real model appears. Bottom-centre stack: tier (small) / name (big) / income per second counting up (green) / one grey info line.
@@ -69,7 +69,8 @@ end
 ## Self-check
 
 - [ ] The result and odds are decided on the server before the throw plays.
-- [ ] Each act has one loud element; nothing else animates.
+- [ ] Each act has one loud element; anything else that moves only supports it.
+- [ ] The throw hands off to the flight in one camera move, and every tell on the container (size, colour) matches the rolled result.
 - [ ] Every zone has a name, a palette and a landmark, and the centre lane stays clear.
 - [ ] The odds climb lands exactly on the rolled number and only gets slam words at real tier steps.
 - [ ] Peak effects (flash, sunburst, confetti) appear only on the top tiers.

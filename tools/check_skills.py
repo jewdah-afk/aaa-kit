@@ -35,6 +35,7 @@ SAMPLES = {
     "kit-doctor": ["hi", "what do I need installed on my pc", "is my game good, audit it"],
     "lihfolk-stud-voxel": ["make a stud voxel duck pet", "build a LEGO-style boss like the rhino", "blocky voxel watchtower for my map"],
     "throw-run-reveal": ["make the throw animation and flight run feel good", "odds reveal that counts 1 in N with slam words", "design the zone ladder for the lane map"],
+    "animation": ["the camera transition between the two shots feels jerky", "write keyframes for an attack animation clip with anticipation and follow-through", "the walk feels stiff, fix the easing"],
     "hierarchy-audit": ["does the eye go to the buy button", "check contrast of this text", "is this flashing effect safe", "colour blind check on the rarity colours"],
 }
 STOP = set("a an the and or of to in for on with is it this that use when any make my me i how what which".split())
