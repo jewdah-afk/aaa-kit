@@ -66,6 +66,8 @@ python3 scripts/test_meshvfx.py
 
 ## Make it insane
 
+- **Eclipse Vortex ultimate** (`scripts/blender_vortex.py`, `examples/eclipse_vortex_cycles.gif`): twisted flame column + counter-spinning core + thin helix ribbons + black eclipse disc with burning corona, sparks that gather inward then ride the column, rising debris. Lesson from the first render: bright helix ribbons blow out to white and read as a spring. Keep accents thin and dimmer than the flame body.
+
 - **Dark-core tear:** a black ForceField crescent inside a Neon rim, for 2 frames only, reads as reality ripping.
 - **Echo slashes:** 2 delayed copies at 60% and 30% alpha, scaled 1.05 and 1.1 (cheap motion blur).
 - **Vortex column:** a twisted cylinder with a Beam spiral riding it, plus the TextureSpeed flame.
