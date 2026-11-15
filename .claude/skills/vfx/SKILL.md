@@ -1,6 +1,6 @@
 ---
 name: vfx
-description: Use when making or tuning combat and world visual effects - hits and impacts, hit-stop, screen shake, muzzle flashes, trails, lightning, beams, explosions, shockwaves, dissolves and death effects, auras, freezes, magnets/vortexes, telegraphs, screen-space effects and particle budgets. Triggers on "VFX", "effect", "impact", "juice", "hit feel", "screen shake", "explosion", "trail", "lightning", "aura", "dissolve", "make it punchier".
+description: Use when making or tuning combat and world visual effects - hits and impacts, hit-stop, screen shake, muzzle flashes, trails, lightning, beams, explosions, shockwaves, dissolves and death effects, auras (including hero-tier showpiece auras), freezes, magnets/vortexes, telegraphs, screen-space effects and particle budgets. Triggers on "VFX", "effect", "impact", "juice", "hit feel", "screen shake", "explosion", "trail", "lightning", "aura", "dissolve", "make it punchier".
 ---
 
 # vfx
@@ -26,6 +26,25 @@ Combat effects are tier 2 (HIERARCHY.md §2): they read instantly, then get out 
 7. **Colour.** Friendly effects use the hero's palette. Red is for threats only. Peak brightness is for the onset frame only.
 8. **Scale with intensity.** Read `Intensity.budget(level)`: particle multiplier, impact on/off, ambient on/off.
 9. Run the self-check.
+
+## Hero auras (layered ambient VFX that has to look top-tier)
+
+An aura is tier 4-5 decoration the player owns, but a top-tier one is judged as a showpiece. This is the method that got one to "best in the game", in order; each step has an exit you can check.
+
+1. **Start from a reference clip**, not an idea. One line per element (core size against the character, what erupts and how often, streak, smoke, floor). Keep a side-by-side as you go.
+2. **Build the core as an orb ladder** on one point, back to front by ZOffset: bright rims behind -> a near-black body disc (LightEmission 0, so the orb reads solid) -> interior flipbooks at low brightness -> wisps and slashes with dark twins -> a cross flare at high brightness but ~0.94 transparency -> a slow swirl on top. The core is about as wide as the character is tall. Every layer crossfades in and out at a random rotation.
+3. **Write a tier ladder and measure it:** 1 the core's edge (sharpest, most contrast) / 2 eruption / 3 smoke and floor (dim, desaturated) / 4 sparks and stars. Run `tools/hierarchy/hierarchy.py audit` on 3+ frames with the core as the focus box. **Exit: focus lift >= 1.5, squint gap >= 0.08, `hierarchy.py flash` passes on every burst.** A white blob means the core and interior are too bright: dim them and put a dark swirl in front of the interior.
+4. **Save that version untouched** before any bigger pass.
+5. **Check it in the engine, then copy the numbers back into data.** Browser previews over-bloom. Freeze each burst at ~0.1 s and ~0.4 s. Expect the engine to want lights at a third of the preview value and floor glow far dimmer, and the signature burst bigger and denser.
+6. **Scale it, then add what only exists at that size**, each piece borrowed from a real phenomenon so depth reads as physics: a thin ring painted by an orbiting emitter (the sharpest line on screen), writhing beams out of the poles, a shell of tangent particles (its rim stacks brighter, like a fresnel), short prominence flares that fall back in, 2-3 star shells at different radii spinning against each other, and on the signature a smeared shock sphere plus a dark ground shock that rolls far past the aura. **Parallax rule:** every depth band moves at its own speed.
+7. **Give the core an inside:** 2-3 mist slices between the dark body disc and the front detail, each with its own spin and colours, plus a small inward star shell.
+8. **Make the floor readable:** a near-black disc under every floor layer, then two counter-rotating radiant flipbooks so the light rakes across itself. Lay flat layers on the real ground every frame (one raycast down). A negative ZOffset pushes a flat particle into the floor.
+9. **No layer sits still.** Each one spins, travels, plays a flipbook or breathes in size, in character: the body turns slowly, the hot core flickers fast, a streak stays flat but stretches. Exit: diff two engine frames ~0.6 s apart; every band moves and the sky (the control) stays near 0.
+10. **The sound ladder mirrors the visual ladder.** Each beat is transient + body + tail; the loudest beat is the visual peak; time a riser by its real length so its hard end lands on the release; one quiet looped bed under everything; other players' auras quieter and far ones silent. A person judges the mix by ear.
+11. **Budget per rung** (own aura on desktop, own aura on phone, others nearby, far), and scale huge auras down for phones and crowds, because big particles cost screen fill.
+12. **Variants change the palette only**, and each gets its own one-line concept. Keep the body and shadow colours near black in every palette, or the core loses its depth.
+
+Tried and failed at large scale: dark smoke at LightEmission 0 (draws hard squares and half-domes), a halo ring around a very bright core (invisible), ring-swirl textures used as dust (they stack into noise), and floor rays sized for the small version (they read as a tiny star at the feet).
 
 ## Hierarchy rules it obeys
 
@@ -83,3 +102,4 @@ end
 - [ ] Red appears only on threats.
 - [ ] The effect still reads at phone size and at the busiest intensity rung.
 - [ ] Measured frame cost noted (ms) for the worst case.
+- [ ] Hero auras: every step's exit above is met (audit numbers, engine check, frame diff, rung budgets) and written down.
