@@ -18,6 +18,7 @@ Authored meshes give an effect a silhouette particles can't: a crisp crescent, a
 1. **Timeline first.** Write beats in seconds before modelling: anticipation (0–0.15), impact frame (0.15–0.22, hold 2–4 frames), expansion (0.22–0.85), dissipation (0.85–1.2). The impact frame gets the brightest value; everything else is dimmer.
 2. **Layer stack (outside in).** Shell (soft, wide, low alpha) → body (the crescent / ring) → core (thin, white-hot, or black for a dark tear) → secondary (sparks, debris) → light (one PointLight pulse). At most 3 mesh layers and 2 emitters per effect.
 3. **Generate the meshes.** `python3 scripts/meshgen.py crescent|shell|shockwave|vortex|debris out.obj`. Straight grid UVs (u along the length, v across), 3% inset, per-vertex mask colour. Budget: 80–800 tris per mesh. In Blender, `scripts/blender_gen.py` builds the crescent with modifiers and exports FBX. No Blender install needed: `python3.13 -m venv bpyenv && bpyenv/bin/pip install bpy`, then `bpyenv/bin/python scripts/blender_gen.py -- out.fbx` (Cycles CPU renders also work; needs libegl1).
+3b. **Whole pipeline in Blender:** `bpyenv/bin/python scripts/blender_pipeline.py -- OUT 45 480` builds every shape, exports an FBX per shape, bakes the flame with Blender nodes and renders the slash in Cycles (with Fog Glow bloom). About 1 minute for 45 frames on CPU. See `examples/slash_cycles.gif`.
 4. **Bake textures.** `python3 scripts/texbake.py flame|streaks|flipbook out.png` makes white RGB + alpha, tileable, so Color tints them in Studio. One 512² per family; flipbooks are 4×4 at 1024².
 5. **Animate in Roblox.** Use TweenService on Size, CFrame and Transparency (examples/slash_controller.luau). Scrolling is done with a Beam (`TextureSpeed`) laid along the mesh, or by swapping flipbook frames on a SurfaceAppearance-free Texture/Decal offset (`OffsetStudsU/V` on a `Texture`).
 6. **Glow.** Material Neon with Bloom does the work for bright layers. Dark layers are ForceField or SmoothPlastic, never black Neon.
@@ -33,6 +34,7 @@ Authored meshes give an effect a silhouette particles can't: a crisp crescent, a
 | "InvertColor screen effect" | Doesn't exist. ColorCorrectionEffect (Saturation -1, Contrast high, TintColor) or a full-screen Frame for 1–2 frames. |
 | "Export FBX at 0.01 scale" | Check it: the importer reads the file's units. Model at 1 unit = 1 stud and confirm the size after import. |
 | "Vertex colours drive the alpha" | Treat vertex-colour import as unverified. Bake the gradient into the texture alpha instead. |
+| "Noise scale 6.5, detail 8, Voronoi 8" on a 0–1 UV | Renders as TV static at game sizes. Start at noise 2.5 / detail 4 / Voronoi 3 and look at the result. |
 | "Transparent meshes sort fine" | They don't always. Use DoubleSided only where needed, and an inverted inner shell 0.005 inward. |
 
 ## Hierarchy rules
