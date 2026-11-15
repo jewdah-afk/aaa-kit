@@ -62,6 +62,14 @@ Why HIERARCHY.md works, with the perception, timing and audio research behind ea
 | 84 | [Grouping, density and choice](84-grouping-density-and-choice.md) | Common region, about four chunks, Hick and Fitts, touch targets, clutter |
 | 85 | [Measuring hierarchy](85-measuring-hierarchy.md) | The auditor's checks and thresholds, how the model fails, validating with people |
 
+## Part VI — Asset packs
+
+| # | Chapter | Answers |
+|---|---------|---------|
+| 90 | [Stud Voxel in Studio](90-stud-voxel-in-studio.md) | Three routes from a brick grid into Studio, the lune-tested Parts route, measured box counts, and the ranked upgrade plan |
+| 91 | [Readable voxel surfaces](91-readable-voxel-surfaces.md) | How overlap, lip shadow and value bands make armour, scales and fur read; headless surface measures; the surface types in the 17 models |
+| 92 | [Trace and match](92-trace-and-match.md) | Outlining a concept, fitting it to the model's flat view, chamfer line distances, and tracing the concept's plates into the war rhino |
+
 ## Method
 
 `create.roblox.com`, `devforum.roblox.com` and `luau.org` are unreachable from
