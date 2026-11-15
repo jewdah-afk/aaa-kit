@@ -1,4 +1,4 @@
-"""Blender (bpy) twin of meshgen.crescent: run inside Blender 4.x. UNTESTED here (no Blender in CI); meshgen.py is the tested path.
+"""Blender (bpy) twin of meshgen.crescent: run inside Blender 4.x. Tested headless with the pip `bpy` module (Blender 5.3, Cycles CPU).
 blender -b -P blender_gen.py -- out.fbx"""
 import bpy, sys, math
 out = sys.argv[sys.argv.index('--') + 1] if '--' in sys.argv else '/tmp/slash.fbx'
