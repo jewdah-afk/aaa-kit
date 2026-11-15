@@ -40,7 +40,26 @@ def voronoi_edge(x, y, cells, seed):
 def ramp_bspline(v, lo, hi):
     t = np.clip((v - lo) / (hi - lo), 0, 1); return t * t * (3 - 2 * t)
 
+def fbm2(x, y, bx, by, octaves, rough, seed):
+    """Anisotropic periodic fBm: bx lattice cells along x, by along y (long tongues when bx < by)."""
+    rng = np.random.default_rng(seed); total = np.zeros_like(x); amp = 1.0; norm = 0.0
+    for o in range(octaves):
+        px, py = bx * 2 ** o, by * 2 ** o; g = rng.random((px, py))
+        X = x * px; Y = y * py; xi = np.floor(X).astype(int); yi = np.floor(Y).astype(int); xf = X - xi; yf = Y - yi
+        u = xf * xf * (3 - 2 * xf); v = yf * yf * (3 - 2 * yf)
+        a = g[xi % px, yi % py]; b = g[(xi + 1) % px, yi % py]; c = g[xi % px, (yi + 1) % py]; d = g[(xi + 1) % px, (yi + 1) % py]
+        total += amp * (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v); norm += amp; amp *= rough
+    return total / norm
+
 def flame(size=512, w=0.0, seed=7):
+    """Long flame tongues along u (the slash length): anisotropic fBm, domain-warped, ridged, then a soft ramp."""
+    s = np.linspace(0, 1, size, endpoint=False); x, y = np.meshgrid(s, s)
+    wx = fbm2((x + w) % 1, y, 2, 4, 4, 0.55, seed + 3)
+    n = fbm2((x + (wx - 0.5) * 0.25 + w) % 1, (y + (wx - 0.5) * 0.15) % 1, 3, 12, 5, 0.6, seed)
+    ridge = 1 - np.abs(2 * n - 1)
+    return (ramp_bspline(ridge ** 5 * (0.5 + n), 0.25, 0.75) * 255).astype(np.uint8)
+
+def _old_flame(size=512, w=0.0, seed=7):
     s = np.linspace(0, 1, size, endpoint=False); x, y = np.meshgrid(s, s)
     # Mapping scale (1, 4.5): stretch along v so tongues are long; keep periodic by using integer lattice periods
     n = fbm(x + w * 0.37, y * 4.5 / 4.5 + w * 0.11, 6, 5, 0.65, seed)
