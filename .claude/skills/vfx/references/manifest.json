@@ -1,0 +1,326 @@
+[
+ {
+  "set": "space",
+  "file": "space/pillars.jpg",
+  "query": "Pillars of Creation Webb",
+  "nasa_id": "PIA25433",
+  "title": "The Eagle Nebula Observed by WISE",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "layered dust with lit rims: dark mass + bright edge is the depth cue"
+ },
+ {
+  "set": "space",
+  "file": "space/carina.jpg",
+  "query": "Cosmic Cliffs Carina Webb",
+  "nasa_id": "carina_nebula",
+  "title": "James Webb Space Telescope NIRCam Image of the \u201cCosmic Cliffs\u201d in Carina Nebula",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "gas wall with glowing ridge line; stars in front sell the scale"
+ },
+ {
+  "set": "space",
+  "file": "space/crab.jpg",
+  "query": "Crab Nebula Hubble",
+  "nasa_id": "PIA03606",
+  "title": "Most Detailed Image of the Crab Nebula",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "filament web over a soft glow: two frequencies of detail"
+ },
+ {
+  "set": "space",
+  "file": "space/helix.jpg",
+  "query": "Helix Nebula",
+  "nasa_id": "PIA15658",
+  "title": "NGC 7293, the Helix Nebula",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "eye shape: ring of knots pointing inward = radial streaks"
+ },
+ {
+  "set": "space",
+  "file": "space/eagle.jpg",
+  "query": "Eagle Nebula Hubble",
+  "nasa_id": "PIA09109",
+  "title": "Unwrapping the Pillars",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "backlit plume silhouettes"
+ },
+ {
+  "set": "space",
+  "file": "space/m87_jet.jpg",
+  "query": "M87 jet Hubble",
+  "nasa_id": "PIA23122",
+  "title": "Spitzer Captures Messier 87",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "one narrow jet beats a cone: thin and bright"
+ },
+ {
+  "set": "space",
+  "file": "space/whirlpool.jpg",
+  "query": "Whirlpool Galaxy M51 Hubble",
+  "nasa_id": "hubble-sees-a-galactic-sunflower_21136469209_o",
+  "title": "A galactic sunflower",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "spiral arms = dust lanes inside the glow, not on top"
+ },
+ {
+  "set": "space",
+  "file": "space/sombrero.jpg",
+  "query": "Sombrero Galaxy",
+  "nasa_id": "PIA15426",
+  "title": "The Sombrero Galaxy Split Personality",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "edge-on disc with dark lane across a bright bulge"
+ },
+ {
+  "set": "space",
+  "file": "space/supernova.jpg",
+  "query": "supernova remnant Cassiopeia A",
+  "nasa_id": "0203043",
+  "title": "Space Science",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "shredded shell, knots of hot colour"
+ },
+ {
+  "set": "sun",
+  "file": "sun/prominence.jpg",
+  "query": "solar prominence eruption SDO",
+  "nasa_id": "GSFC_20171208_Archive_e002168",
+  "title": "Erupting Prominence Observed by SDO on March 30, 2010",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "plasma loops: arcs anchored at both ends"
+ },
+ {
+  "set": "sun",
+  "file": "sun/coronal_loops.jpg",
+  "query": "coronal loops TRACE",
+  "nasa_id": "PIA22508",
+  "title": "Ballet of Loops",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "many thin glowing strands in one arch bundle"
+ },
+ {
+  "set": "sun",
+  "file": "sun/flare_x.jpg",
+  "query": "X-class solar flare SDO",
+  "nasa_id": "GSFC_20171208_Archive_e000934",
+  "title": "NASA's SDO Observes an X-class Solar Flare",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "a flare blooms white then cools to orange"
+ },
+ {
+  "set": "sun",
+  "file": "sun/cme.jpg",
+  "query": "coronal mass ejection SOHO",
+  "nasa_id": "cme-blow-out_18529951894_o",
+  "title": "CME Blow Out",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "expanding bubble with bright leading edge"
+ },
+ {
+  "set": "sun",
+  "file": "sun/eclipse_corona.jpg",
+  "query": "total solar eclipse corona",
+  "nasa_id": "AFRC2017-0233-009",
+  "title": "2017 Total Solar Eclipse",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "black disc with feathered rays: the perfect aura silhouette"
+ },
+ {
+  "set": "sun",
+  "file": "sun/filament.jpg",
+  "query": "solar filament SDO",
+  "nasa_id": "GSFC_20171208_Archive_e002069",
+  "title": "SDO:AIA Full-Disk View of Launching Filament",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "dark thread in front of bright plasma"
+ },
+ {
+  "set": "sun",
+  "file": "sun/sunspot.jpg",
+  "query": "sunspot close up",
+  "nasa_id": "GSFC_20171208_Archive_e001135",
+  "title": "NASA's Best-Observed X-Class Flare of All Time",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "radial penumbra filaments"
+ },
+ {
+  "set": "sun",
+  "file": "sun/sdo_304.jpg",
+  "query": "SDO 304 angstrom sun",
+  "nasa_id": "GSFC_20171208_Archive_e000009",
+  "title": "SDO Sees Solar Eclipse",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "fuzzy limb: soft halo past a hard edge"
+ },
+ {
+  "set": "sun",
+  "file": "sun/diamond_ring.jpg",
+  "query": "eclipse diamond ring",
+  "nasa_id": "NHQ201708210102",
+  "title": "2017 Total Solar Eclipse",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "one point of light breaking the rim = the impact frame"
+ },
+ {
+  "set": "sun",
+  "file": "sun/plasma_rain.jpg",
+  "query": "coronal rain sun",
+  "nasa_id": "GSFC_20171208_Archive_e002082",
+  "title": "Coronal Rain, Solar Storm",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "material falling back along the loop"
+ },
+ {
+  "set": "sun",
+  "file": "sun/helioseismic.jpg",
+  "query": "sun magnetic field lines",
+  "nasa_id": "GSFC_20171208_Archive_e000808",
+  "title": "Magnetic Field Lines on the Sun",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "field lines as ribbon paths"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/aurora_iss.jpg",
+  "query": "aurora from space station",
+  "nasa_id": "iss023e058455",
+  "title": "Earth Observations taken by the Expedition 23 Crew",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "curtains with sharp lower edge, faded top"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/red_sprite.jpg",
+  "query": "red sprite lightning",
+  "nasa_id": "iss071e170351",
+  "title": "Time-lapse Thunderstorm",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "jellyfish-like discharge: tendrils hanging down"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/lightning_iss.jpg",
+  "query": "lightning from the space station",
+  "nasa_id": "iss073e0080625",
+  "title": "Lightning illuminates the clouds during a storm off the coast of North Carolina",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "cloud lit from inside: glow beneath a surface"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/airglow.jpg",
+  "query": "airglow limb earth",
+  "nasa_id": "iss039e001010",
+  "title": "Lunar Observations taken by the Expedition 39 Crew",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "thin layered band on the curve: rim light"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/noctilucent.jpg",
+  "query": "noctilucent clouds",
+  "nasa_id": "iss071e364425",
+  "title": "Noctilucent clouds illuminated when the sun is below Earth's horizon",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "rippled glowing filaments in the dark"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/volcano_iss.jpg",
+  "query": "volcano eruption from space station",
+  "nasa_id": "iss013e24184",
+  "title": "Aleutian volcanic eruption taken by Expedition 13 crewmember",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "plume with rolling heads"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/hurricane_eye.jpg",
+  "query": "hurricane eye from space station",
+  "nasa_id": "iss005e15375",
+  "title": "Crew Earth Observations (CEO) by Expedition Five Crew",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "spiral bands around a clear eye: a vortex that reads"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/city_lights.jpg",
+  "query": "city lights at night from space",
+  "nasa_id": "iss067e302248",
+  "title": "iss067e302248",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "networks of points: sparse sparkle texture"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/sunrise_limb.jpg",
+  "query": "orbital sunrise atmosphere",
+  "nasa_id": "iss071e439624",
+  "title": "An orbital sunrise colorfully illuminates the Earth's atmosphere",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "thin bright arc, colour bands"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/rocket_plume.jpg",
+  "query": "rocket launch exhaust plume night",
+  "nasa_id": "KSC-2014-1214",
+  "title": "TDRS-L Liftoff",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "core white, shock diamonds, smoke catching light"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/star_trails.jpg",
+  "query": "star trails from space station",
+  "nasa_id": "iss073e0427643",
+  "title": "Circular arcs of star trails viewed from International Space Station",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "circular streaks = motion over time"
+ },
+ {
+  "set": "atmosphere",
+  "file": "atmosphere/glint.jpg",
+  "query": "sun glint ocean from space",
+  "nasa_id": "iss063e066312",
+  "title": "EHDC1",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "specular hot spot over a dark surface"
+ },
+ {
+  "set": "space",
+  "file": "space/butterfly.jpg",
+  "query": "Butterfly Nebula Hubble",
+  "nasa_id": "GSFC_20171208_Archive_e000637",
+  "title": "Hubble Sees the Wings of a Butterfly: The Twin Jet Nebula",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "twin lobes from a pinched waist: bipolar burst"
+ },
+ {
+  "set": "space",
+  "file": "space/lagoon.jpg",
+  "query": "Lagoon Nebula Hubble",
+  "nasa_id": "GSFC_20171208_Archive_e001955",
+  "title": "Hubble reveals heart of Lagoon Nebula",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "twisted dark ribbons through bright gas"
+ },
+ {
+  "set": "space",
+  "file": "space/veil.jpg",
+  "query": "Veil Nebula Hubble",
+  "nasa_id": "GSFC_20171208_Archive_e000607",
+  "title": "Hubble Zooms in on Shrapnel from an Exploded Star",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "thin filaments like hair: wisps for trails"
+ },
+ {
+  "set": "space",
+  "file": "space/southern_ring.jpg",
+  "query": "Southern Ring Nebula Webb",
+  "nasa_id": "southern_ring_nebula",
+  "title": "James Webb Space Telescope Southern Ring Nebula (NIRCam and MIRI Images Side by Side)",
+  "credit": "NASA (images.nasa.gov)",
+  "lesson": "concentric shells, orange outer vs blue inner: temperature as colour"
+ }
+]

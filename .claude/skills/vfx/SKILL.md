@@ -27,6 +27,17 @@ Combat effects are tier 2 (HIERARCHY.md §2): they read instantly, then get out 
 8. **Scale with intensity.** Read `Intensity.budget(level)`: particle multiplier, impact on/off, ambient on/off.
 9. Run the self-check.
 
+### Reference library
+
+`references/` holds 36 public-domain NASA photos in three sets (space, sun, atmosphere from orbit), each with the lesson it teaches in `references/README.md`. Before a big effect, pick 2–3 references and name what each gives: silhouette, layering, motion or colour temperature. Then build that structure from particles and beams. Lessons that made the violet-star aura work:
+
+- **Hot white core, colour at the falloff.** Keep the white small (about 20% of the orb). Push saturated colour into the halo.
+- **Dark structure in front of glow** gives depth without objects: a negative-LightEmission swirl between the halo and the orb.
+- **A horizontal lens streak through the core** reads as "too bright to look at" for almost no cost.
+- **Additive stacking is the enemy.** Ten big additive layers at Brightness 3+ turn white. Budget the brightness down the ladder, back to front.
+- **Bursts stack in their first frames.** Start a 30-particle burst at transparency 0.85, not 0, or it whites out the screen.
+- **Thin bright rings that sweep the screen fail the flash check.** Run `hierarchy.py flash` on every signature beat.
+
 ## Hierarchy rules it obeys
 
 - §2: tier 2 (combat), tier 4 (world ambient).
