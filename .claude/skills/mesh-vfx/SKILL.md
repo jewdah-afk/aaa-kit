@@ -66,6 +66,8 @@ python3 scripts/test_meshvfx.py
 
 ## Make it insane
 
+- **Void Singularity** (`scripts/blender_singularity.py`, `examples/void_singularity_cycles.gif`): real gravitational lensing in Cycles (Refraction BSDF IOR 0.72 sphere around a black horizon bends the starfield), an accretion disc tilted only ~14° so it reads edge-on (face-on reads as a target), polar jets, debris stretched along its fall. Roblox has no refraction: fake the lens with a dark ForceField shell.
+
 - **Eclipse Vortex ultimate** (`scripts/blender_vortex.py`, `examples/eclipse_vortex_cycles.gif`): twisted flame column + counter-spinning core + thin helix ribbons + black eclipse disc with burning corona, sparks that gather inward then ride the column, rising debris. Lesson from the first render: bright helix ribbons blow out to white and read as a spring. Keep accents thin and dimmer than the flame body.
 
 - **Dark-core tear:** a black ForceField crescent inside a Neon rim, for 2 frames only, reads as reality ripping.
