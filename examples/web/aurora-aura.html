@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurora Aura Lab</title>
+<style>
+  :root { --bg:#05060c; --panel:rgba(12,14,24,.82); --ink:#e8ecf5; --dim:#8a93a8; --line:rgba(255,255,255,.08); }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui,sans-serif; overflow:hidden; }
+  canvas#gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .panel { position:fixed; left:16px; right:16px; bottom:max(16px, env(safe-area-inset-bottom)); margin:0 auto; max-width:420px; background:var(--panel); border:1px solid var(--line);
+           border-radius:14px; padding:12px; backdrop-filter:blur(10px); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+  .row:last-child { margin-bottom:0; }
+  button, input { font:inherit; color:var(--ink); background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:10px; min-height:44px; padding:0 12px; }
+  button { cursor:pointer; }
+  button.on { background:rgba(120,255,190,.16); border-color:rgba(120,255,190,.4); }
+  input[type=number] { width:120px; }
+  input[type=range] { flex:1; min-width:120px; padding:0; }
+  label { color:var(--dim); font-size:12px; }
+  #strip { width:100%; height:56px; border-radius:8px; display:block; }
+  #abcd { font:11px/1.3 ui-monospace,monospace; color:var(--dim); white-space:pre; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="panel">
+  <div class="row">
+    <label for="seed">Seed</label><input id="seed" type="number" value="1337">
+    <button id="reroll">Reroll</button>
+    <button id="borealis">Borealis</button>
+  </div>
+  <div class="row"><label for="rung">Rung</label><input id="rung" type="range" min="0" max="5" step="1" value="0"><span id="rungName">0 calm</span></div>
+  <canvas id="strip" width="400" height="56"></canvas>
+  <div id="abcd"></div>
+</div>
+<script>
+"use strict";
+// ---- Seeded generator: line-for-line port of .claude/skills/vfx/examples/AuroraAura.luau
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+function sample(p, t) { return [0,1,2].map(i => clamp01(p.a[i] + p.b[i] * Math.cos(2 * Math.PI * (p.c[i] * t + p.d[i])))); }
+function score(p) {
+  let chroma = 0, lsum = 0, lmax = 0, lmin = 1, hx = 0, hy = 0;
+  for (let i = 0; i < 32; i++) {
+    const [r, g, b] = sample(p, i / 31), mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    chroma += mx - mn; const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    lsum += l; lmax = Math.max(lmax, l); lmin = Math.min(lmin, l);
+    const ox = r - 0.5 * (g + b), oy = 0.866 * (g - b), len = Math.hypot(ox, oy) + 1e-6; hx += ox / len; hy += oy / len;
+  }
+  chroma /= 32; const mean = lsum / 32, spread = 1 - Math.hypot(hx, hy) / 32;
+  let s = chroma * 2 + Math.min(spread, 0.55);
+  if (lmax > 0.82) s -= (lmax - 0.82) * 6;
+  if (mean < 0.22 || mean > 0.55) s -= 1;
+  if (lmax - lmin < 0.25) s -= 0.5;
+  return s;
+}
+function candidate(r) {
+  const a = [], b = [], c = [], d = [], base = 0.35 + r() * 0.2, harmonic = r() < 0.6 ? 1 : 0.5;
+  for (let i = 0; i < 3; i++) { a[i] = base + (r() - 0.5) * 0.15; b[i] = 0.3 + r() * 0.25; c[i] = harmonic * (r() < 0.7 ? 1 : 0.5 + Math.floor(r() * 3) * 0.5); d[i] = r(); }
+  return { a, b, c, d };
+}
+function makeAura(seed, candidates = 12) {
+  const r = rng(seed); let best = candidate(r), bestScore = score(best);
+  for (let k = 2; k <= candidates; k++) { const p = candidate(r), s = score(p); if (s > bestScore) { best = p; bestScore = s; } }
+  const ribbons = [], count = 3 + Math.floor(r() * 3), dir = r() < 0.5 ? -1 : 1;
+  for (let i = 1; i <= count; i++) {
+    const lead = i === 1;
+    ribbons.push({ radius: lead ? 2.2 : 2.6 + r() * 1.4, height: lead ? 7 : 4.5 + r() * 3, phase: (i - 1) / count + (r() - 0.5) * 0.15,
+      speed: dir * (0.05 + r() * 0.07), fold: 2 + Math.floor(r() * 4), width: lead ? 1.6 : 0.8 + r() * 0.8, hem: 0.25 + r() * 0.2, offset: r() });
+  }
+  return { seed, palette: best, ribbons, score: bestScore };
+}
+const RUNG = [[5,1,1,"calm"],[5,1,1,"build"],[2,.3,.6,"surge"],[1,0,.4,"swarm"],[1,0,.35,"boss"],[1,0,.3,"panic"]];
+const BOREALIS = { a:[.45,.45,.45], b:[.4,.45,.4], c:[1,1,1], d:[.5,0,.5] }; // green body, magenta hem (half-turn apart)
+
+// ---- WebGL
+const cv = document.getElementById("gl"), gl = cv.getContext("webgl", { antialias:false, premultipliedAlpha:false });
+const VS = "attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0,1);}";
+const NOISE = `
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+1.),f.x),f.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*vn(p);p=mat2(1.6,1.2,-1.2,1.6)*p;a*=.5;}return s;}`;
+// Pass 1: aurora curtains + long-exposure feedback (the "streak" in the reference clip).
+const AURA = `precision highp float;varying vec2 v;
+uniform sampler2D prev;uniform vec2 res;uniform float T,seed,count,alpha;
+uniform vec3 A,B,C,D;uniform vec4 R1[5],R2[5];` + NOISE + `
+vec3 pal(float t){return clamp(A+B*cos(6.2831853*(C*t+D)),0.,1.);}
+void main(){
+  vec2 p=(v*res-res*vec2(.5,.6))/min(res.x,res.y)*2.1;
+  vec3 col=vec3(0);
+  for(int i=0;i<5;i++){
+    if(float(i)>=count)break;
+    vec4 a=R1[i],b=R2[i]; float fi=float(i)+seed*.013;
+    float rad=a.x*.13, hgt=a.y*.16, fold=a.z, off=a.w, spd=b.x, ph=b.y, hem=b.z, wid=b.w;
+    // folded hem line hugging the feet, rising and falling slowly
+    float hemY=-.97+.18*fbm(vec2(p.x*1.3+T*spd*2.,fi*7.1))+.04*float(i);
+    float h=p.y-hemY;
+    // domain-warped x: folds of the curtain sheet
+    float q=p.x+.28*(fbm(vec2(p.y*1.1-T*.12,fi*3.3))-.5)+.1*sin(p.y*2.+T*spd*6.2831+ph*6.2831);
+    float fl=.5+.5*sin(q*fold*5.+T*spd*9.+ph*6.2831); fl=pow(fl,3.);
+    // vertical rays drifting upward
+    float ray=fbm(vec2(q*16.,h*.7-T*.35)); ray=pow(ray,2.2)*2.6;
+    // vertical profile: sharp bright hem, slow fade up; flares wider with height (flame silhouette)
+    float vp=smoothstep(-.05,.03,h)*exp(-max(h,0.)/max(hgt,.2)*1.6);
+    float env=exp(-pow(q/(rad*(1.+h*.45)+.04),2.)*1.8);
+    float dens=vp*env*(.25+ray)*(.35+fl*wid*.6)*(1.+1.6*exp(-max(h,0.)*7.));
+    float t=off+h*.35-hem*exp(-max(h,0.)*9.);
+    col+=pal(t)*dens*(i==0?1.:.65);
+  }
+  col*=alpha*1.5;
+  // feedback: previous frame pulled upward and fanned out = long-exposure streak
+  vec2 uv=v; uv.y-=.0035; uv.x=.5+(uv.x-.5)*.997;
+  vec3 pr=texture2D(prev,uv).rgb*.9;
+  gl_FragColor=vec4(max(col,pr),1);
+}`;
+// Pass 2: night sky, aura, hero silhouette (pixel owner) with aura-lit rim, motes, tone map.
+const PRESENT = `precision highp float;varying vec2 v;
+uniform sampler2D aura;uniform vec2 res;uniform float T,alpha,motes;uniform vec3 A,B,C,D;` + NOISE + `
+vec3 pal(float t){return clamp(A+B*cos(6.2831853*(C*t+D)),0.,1.);}
+float cap(vec2 p,vec2 a,vec2 b,float r){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);return length(pa-ba*h)-r;}
+void main(){
+  vec2 p=(v*res-res*vec2(.5,.6))/min(res.x,res.y)*2.1;
+  vec3 sky=mix(vec3(.012,.016,.035),vec3(.03,.035,.07),v.y);
+  float st=h21(floor(v*res/2.)); sky+=step(.999,st)*.35*(.6+.4*sin(T*1.3+st*90.));
+  vec3 au=texture2D(aura,v).rgb;
+  // hero: body + head SDF
+  float d=min(cap(p,vec2(0,-.7),vec2(0,.22),.2),length(p-vec2(0,.5))-.15);
+  float body=1.-smoothstep(0.,.008,d);
+  vec3 col=sky+au*1.35;
+  float glow=dot(au,vec3(.33));
+  vec3 rimC=pal(.15+p.y*.2);
+  vec3 hero=vec3(.03,.035,.05)+rimC*exp(-abs(d)*55.)*(.6+glow*1.5)*alpha;
+  col=mix(col,hero+au*.12,body);                  // hero owns its pixels: aura shows at 12% inside
+  col+=rimC*exp(-max(d,0.)*28.)*.12*alpha;         // soft contact light around the outline
+  // rising motes, seeded from the same palette (decoration slot, rung-gated)
+  vec2 g=p*vec2(7.,5.)+vec2(0.,-T*.6); vec2 id=floor(g); float hh=h21(id+3.7);
+  vec2 f=fract(g)-.5+vec2(sin(T+hh*40.)*.25,0.);
+  float m=step(.88,hh)*smoothstep(.06,0.,length(f))*exp(-abs(p.x)*1.8)*motes;
+  col+=pal(hh)*m*1.2;
+  col=1.-exp(-col*1.4);                             // filmic shoulder keeps peaks under hero white
+  col=pow(col,vec3(.92));
+  col+=(h21(v*res+T)-.5)/255.;                      // dither against banding in the dark gradient
+  gl_FragColor=vec4(col,1);
+}`;
+function prog(fs) {
+  const p = gl.createProgram();
+  for (const [t, s] of [[gl.VERTEX_SHADER, VS], [gl.FRAGMENT_SHADER, fs]]) {
+    const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
+    gl.attachShader(p, sh);
+  }
+  gl.bindAttribLocation(p, 0, "p"); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(p, i).name.replace("[0]", ""); u[name] = gl.getUniformLocation(p, name.endsWith("1") || name.endsWith("2") ? name + "[0]" : name) || gl.getUniformLocation(p, name); }
+  return { p, u };
+}
+const pAura = prog(AURA), pPresent = prog(PRESENT);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+let W = 0, H = 0, fbos = [];
+function target(w, h) {
+  const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.LINEAR);
+  for (const k of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE);
+  const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  return { tex, fb };
+}
+function resize() {
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
+  if (w === W && h === H) return; W = cv.width = w; H = cv.height = h;
+  const s = 0.5; // aura buffer at half res: it is soft by nature, and phones are 4-5x slower
+  fbos = [target(Math.max(1, w * s | 0), Math.max(1, h * s | 0)), target(Math.max(1, w * s | 0), Math.max(1, h * s | 0))];
+}
+
+// ---- State + UI
+const $ = id => document.getElementById(id);
+let aura, palette, rung = 0;
+function setSeed(seed, pal) {
+  aura = makeAura(seed); palette = pal || aura.palette;
+  $("borealis").classList.toggle("on", !!pal);
+  drawStrip();
+}
+function drawStrip() {
+  const c = $("strip"), x = c.getContext("2d"), w = c.width, h = c.height;
+  for (let i = 0; i < w; i++) { const [r, g, b] = sample(palette, i / w); x.fillStyle = `rgb(${r*255|0},${g*255|0},${b*255|0})`; x.fillRect(i, 0, 1, h); }
+  ["#ff5a5a", "#5aff8a", "#5a9aff"].forEach((s, k) => { x.strokeStyle = s; x.lineWidth = 1.5; x.beginPath();
+    for (let i = 0; i < w; i++) { const y = h - 4 - sample(palette, i / w)[k] * (h - 8); i ? x.lineTo(i, y) : x.moveTo(i, y); } x.stroke(); });
+  const f = v => v.map(n => n.toFixed(2)).join(" ");
+  $("abcd").textContent = `A ${f(palette.a)}   B ${f(palette.b)}\nC ${f(palette.c)}   D ${f(palette.d)}   score ${score(palette).toFixed(2)}`;
+}
+$("seed").addEventListener("change", e => setSeed(Math.abs(parseInt(e.target.value) || 0)));
+$("reroll").addEventListener("click", () => { const s = (Math.random() * 1e6) | 0; $("seed").value = s; setSeed(s); });
+$("borealis").addEventListener("click", () => setSeed(Math.abs(parseInt($("seed").value) || 0), BOREALIS));
+$("rung").addEventListener("input", e => { rung = +e.target.value; $("rungName").textContent = rung + " " + RUNG[rung][3]; });
+cv.addEventListener("pointerdown", () => $("reroll").click());
+setSeed(1337, BOREALIS);
+
+function setPal(u) { gl.uniform3fv(u.A, palette.a); gl.uniform3fv(u.B, palette.b); gl.uniform3fv(u.C, palette.c); gl.uniform3fv(u.D, palette.d); }
+const r1 = new Float32Array(20), r2 = new Float32Array(20);
+let cur = 0, t0 = performance.now();
+function frame(now) {
+  resize();
+  const T = (now - t0) / 1000, [maxRib, motes, alpha] = RUNG[rung], n = Math.min(aura.ribbons.length, maxRib);
+  aura.ribbons.forEach((rb, i) => { r1.set([rb.radius, rb.height, rb.fold, rb.offset], i * 4); r2.set([rb.speed, rb.phase, rb.hem, rb.width], i * 4); });
+  const src = fbos[cur], dst = fbos[1 - cur];
+  gl.useProgram(pAura.p); gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb);
+  const aw = Math.max(1, W * 0.5 | 0), ah = Math.max(1, H * 0.5 | 0); gl.viewport(0, 0, aw, ah);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src.tex);
+  const u = pAura.u; gl.uniform1i(u.prev, 0); gl.uniform2f(u.res, aw, ah); gl.uniform1f(u.T, T);
+  gl.uniform1f(u.seed, aura.seed % 997); gl.uniform1f(u.count, n); gl.uniform1f(u.alpha, alpha);
+  gl.uniform4fv(u.R1, r1); gl.uniform4fv(u.R2, r2); setPal(u);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.useProgram(pPresent.p); gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H);
+  gl.bindTexture(gl.TEXTURE_2D, dst.tex);
+  const v = pPresent.u; gl.uniform1i(v.aura, 0); gl.uniform2f(v.res, W, H); gl.uniform1f(v.T, T);
+  gl.uniform1f(v.alpha, alpha); gl.uniform1f(v.motes, motes); setPal(v);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  cur = 1 - cur; requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

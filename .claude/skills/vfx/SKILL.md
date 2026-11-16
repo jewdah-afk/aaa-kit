@@ -68,6 +68,8 @@ local function frame(dt: number, reducedMotion: boolean): (number, number, numbe
 end
 ```
 
+**Seeded aurora aura.** `examples/AuroraAura.luau` turns one seed into an optimised cosine palette (`A + B·cos(2π(C·t + D))`, best of 12 candidates scored on chroma, hue spread and a value cap that keeps the hero's highlight band free) and 3–5 folded curtain ribbons. Live lab: [aurora-aura.html](../../../examples/web/aurora-aura.html). Roblox recipe: one `Beam` per ribbon between two attachments circling the HRP at `radius`, `CurveSize` swung by `fold`, `Color = ColorSequence` from `AuroraAura.colorKeys` (hem at time 0), a vertical-streak texture with `TextureSpeed` for the rising rays, `LightEmission = 1`; rotate the attachments at `speed` turns/s. Gate everything through `AuroraAura.budget(rung)`. Tier 2 status, hero rank: the hero silhouette owns its pixels.
+
 ## Make it insane
 
 1. **Kill chains:** every kill spawns a short branching arc to the next kill within 80 px, so a crowd clear draws a lightning tree across the swarm (decoration slot; dropped near threats).
