@@ -13,6 +13,7 @@ An EditableImage renderer draws the whole frame into your own pixel buffers and 
 | How a whole-game renderer is laid out (layers, ownership, tiers, fallbacks) | [references/renderer-architecture.md](references/renderer-architecture.md) |
 | Measured ms: Studio vs desktop app vs phone, interpreter rules, what to cut | [references/performance.md](references/performance.md) |
 | Effect recipes with costs and phone paths | [references/recipes.md](references/recipes.md) |
+| Which algorithms suit pixels (families, top picks, Godrithm chains) | [references/algorithms.md](references/algorithms.md) |
 | Golden frames, paired A/B timing, bench places | [references/testing.md](references/testing.md) |
 | Symptoms → cause → fix | [references/gotchas.md](references/gotchas.md) |
 
