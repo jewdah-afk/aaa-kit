@@ -38,11 +38,15 @@ EditableMesh lets a game build and change triangles at runtime. Use it when Part
 
 **Roblox.**
 
-- Create with `AssetService:CreateEditableMesh()`, then use `AddVertex`, `AddNormal`, `AddUV`, `AddTriangle`, `SetFaceNormals` and `SetFaceUVs`.
-- Display with `AssetService:CreateMeshPartAsync(Content.fromObject(mesh))`, or apply it to an existing MeshPart's content.
-- EditableMeshes have engine limits on vertex and triangle counts and a per-device memory budget. Creation can fail, so handle `nil` and keep chunks modest.
-- Mesh edits replicate only if you build on the server and the API allows it; usually generate deterministically on each client from a shared seed.
-- Use `SurfaceAppearance` or a texture for the look (see `materials`).
+- Create with `AssetService:CreateEditableMesh()`, then `AddVertex`, `AddNormal`, `AddUV`, `AddTriangle`, `SetFaceNormals`, `SetFaceUVs` (or the faster `Batch*` calls). Display with `AssetService:CreateMeshPartAsync(Content.fromObject(mesh))` (~22 ms, throws on failure; never per frame).
+- **Hard caps: 60,000 vertices and 20,000 triangles per mesh** (exceeding throws). The client memory budget is unpublished and **shared with EditableImage**; creation returns `nil` when it's spent.
+- **Gates:** published games need the creator 13+ age + ID verified and **Enable Mesh / Image APIs** on. `CreateEditableMeshAsync` throws on assets you can't access and defaults to `FixedSize = true` (no topology edits; pass `{ FixedSize = false }`).
+- **IDs are stable handles, not indices**; normals, UVs and colours are per face corner. New vertices have UV (0,0), so set UVs explicitly.
+- **Visual edits are live; collision is not.** Rebuild collision with `CreateMeshPartAsync` + `ApplyMesh`, rarely and per tile.
+- `Content.fromObject` doesn't replicate (cyan/magenta checkerboard). Replicate the seed or edit list and build on each client.
+- Mutators are parallel-unsafe; queries are safe. Compute in Actors, write after `task.synchronize()`.
+- For many repeated objects (20+ per player), use uploaded meshes with tints; EditableMesh is for few, unique, changing shapes.
+- Use `SurfaceAppearance` or a texture for the look (see `materials`). Full limits, timings and a gotcha table: [references/limits-and-gotchas.md](references/limits-and-gotchas.md).
 
 **Web.** Use three.js `BufferGeometry` with the same arrays: `position`, `normal`, `uv`, `index`.
 
@@ -81,5 +85,8 @@ local cells = GridMesh.cellsForDistance(32, 120, 50)  -- 16 at 120 studs
 - [ ] Faces render from the intended side (no inverted triangles).
 - [ ] Chunks rebuild only when dirty; nothing rebuilds per frame unless it's a deliberate deformation.
 - [ ] LOD borders hide cracks (skirts or stitching).
-- [ ] Creation failure is handled (fallback mesh or Part).
+- [ ] Creation failure is handled (`nil` budget and `pcall`ed async load → fallback mesh or Part); tested in a published place.
+- [ ] Under 60k vertices / 20k triangles per mesh; `RemoveUnused()` runs if faces are removed over time.
+- [ ] Collision rebuilds are rare and per tile; moving visuals use Part hitboxes.
+- [ ] Nothing builds a mesh on the server for display (doesn't replicate).
 - [ ] Vertex and triangle counts per chunk are written down with the measured build time.
