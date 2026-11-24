@@ -21,6 +21,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 INDEX = json.loads((HERE / "roblox_api" / "api-index.json").read_text(encoding="utf-8"))
 CLASSES, ENUMS, RETURNS = INDEX["classes"], INDEX["enums"], INDEX.get("returns", {})
+PROPS = INDEX.get("props", {})
+# Children that exist on every instance of the class but are not in the property dump (read by name, like a service's children).
+KNOWN_CHILDREN = {"Player": ("PlayerGui", "PlayerScripts", "Backpack", "StarterGear")}
+# Roblox's task library is not in the class dump; this list is maintained by hand from the Roblox docs (create.roblox.com task library).
+TASK_LIB = {"cancel", "defer", "delay", "desynchronize", "spawn", "synchronize", "wait"}
 SKIP_DIRS = {".git", "node_modules", "__pycache__", "media", "Packages", "ServerPackages"}
 
 LONG_COMMENT = re.compile(r"--\[(=*)\[.*?\]\1\]", re.S)
@@ -182,6 +187,8 @@ def user_types(lines):
 
 GLOBAL_CLASS = {"workspace": "Workspace", "game": "DataModel"}
 CALL_INIT = re.compile(r"^\s*local\s+([A-Za-z_]\w*)\s*(?::[^=]+)?=\s*(.+?)\s*$")
+SERVICE_PROP = re.compile(r"^[A-Za-z_][\w.]*\s*:\s*GetService\(\s*\"([^\"]+)\"\s*\)\.([A-Za-z_]\w*)$")
+PROP_READ = re.compile(r"^([A-Za-z_]\w*)\.([A-Za-z_]\w*)$")
 RECV_CALL = re.compile(r"^([A-Za-z_]\w*)\s*:\s*([A-Za-z_]\w*)\s*\(")
 SERVICE_CALL = re.compile(r"^[A-Za-z_][\w.]*\s*:\s*GetService\(\s*\"([^\"]+)\"\s*\)\s*:\s*([A-Za-z_]\w*)\s*\(")
 
@@ -189,6 +196,15 @@ SERVICE_CALL = re.compile(r"^[A-Za-z_][\w.]*\s*:\s*GetService\(\s*\"([^\"]+)\"\s
 def returns_of(cls, method):
     while cls:
         r = RETURNS.get(cls, {}).get(method)
+        if r:
+            return r
+        cls = CLASSES[cls]["super"] if cls in CLASSES else None
+    return None
+
+
+def prop_class(cls, prop):
+    while cls:
+        r = PROPS.get(cls, {}).get(prop)
         if r:
             return r
         cls = CLASSES[cls]["super"] if cls in CLASSES else None
@@ -257,6 +273,16 @@ def typed_scopes(lines, own_types=frozenset()):
                 continue
             name, rhs = m.group(1), m.group(2)
             recv_cls, method, end = None, None, None
+            pm = PROP_READ.match(rhs)
+            sp = SERVICE_PROP.match(rhs)
+            if pm or sp:
+                pc = sp.group(1) if sp else class_at(pm.group(1), i + 1)
+                prop = sp.group(2) if sp else pm.group(2)
+                pt = prop_class(pc, prop) if pc in CLASSES else None
+                if pt and pt not in own_types:
+                    add(i, name, pt, True)
+                    grew = True
+                continue
             sm = SERVICE_CALL.match(rhs)
             if sm and sm.group(1) in CLASSES:
                 recv_cls, method, end = sm.group(1), sm.group(2), sm.end() - 1
@@ -282,7 +308,7 @@ def member_issue(var_label, cls, sep, name, mem, strict, after, n):
     is_call = after.lstrip().startswith("(") or after.lstrip().startswith("{") or after.lstrip().startswith('"')
     is_event_use = bool(re.match(r"\s*:\s*(?:Connect|Once|Wait|ConnectParallel)\b", after))  # X.Name:Connect(...) can only be an event
     if flags is None:
-        if CLASSES[cls]["service"] and sep == "." and not (is_assign or is_call or is_event_use):
+        if sep == "." and not (is_assign or is_call or is_event_use) and (CLASSES[cls]["service"] or name in KNOWN_CHILDREN.get(cls, ())):
             return None  # services are indexed for children (ReplicatedStorage.Packages)
         sev = "error" if (sep == ":" or is_assign or is_call or is_event_use or strict) else "warn"
         what = "method" if sep == ":" else "member"
@@ -339,6 +365,16 @@ def check_lines(lines):
     for g, gcls in GLOBAL_CLASS.items():
         if g in declared or gcls in own_types:
             continue
+        gchain = re.compile(r"(?<![\w.:\"'])" + g + r"\.([A-Za-z_]\w*):([A-Za-z_]\w*)")
+        for n, ln in enumerate(lines, 1):
+            if ok(n):
+                continue
+            for m in gchain.finditer(ln):
+                pt = prop_class(gcls, m.group(1))
+                if pt and pt in CLASSES and pt not in own_types:
+                    r = member_issue(f"{g}.{m.group(1)}", pt, ":", m.group(2), members_loose(pt), strict, ln[m.end() :], n)
+                    if r:
+                        issues.append(r)
         gpat = re.compile(r"(?<![\w.:\"'])" + g + r"(:)([A-Za-z_]\w*)")
         for n, ln in enumerate(lines, 1):
             if ok(n):
@@ -358,6 +394,19 @@ def check_lines(lines):
                 r = member_issue(var, cls, m.group(1), m.group(2), mem, strict, ln[m.end() :], n)
                 if r:
                     issues.append(r)
+                    continue
+                pt = prop_class(cls, m.group(2)) if m.group(1) == "." else None
+                cm = re.match(r":\s*([A-Za-z_]\w*)", ln[m.end() :]) if pt else None
+                if cm and pt in CLASSES and pt not in own_types:
+                    r = member_issue(f"{var}.{m.group(2)}", pt, ":", cm.group(1), members_loose(pt), strict, ln[m.end() + cm.end() :], n)
+                    if r:
+                        issues.append(r)
+    for n, ln in enumerate(lines, 1):
+        if ok(n) or "task" in declared:
+            continue
+        for fn in re.findall(r"(?<![\w.:])task\.([A-Za-z_]\w*)", ln):
+            if fn not in TASK_LIB:
+                issues.append((n, "error", f"task.{fn}: no such function in the task library{near(fn, TASK_LIB)}"))
     return sorted(set(issues))
 
 

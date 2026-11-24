@@ -157,6 +157,25 @@ class Inference(unittest.TestCase):
         self.assertTrue([m for _, s, m in issues('local s = Instance.new("Sound")\ns.Pitch = 2') if s == "warn"])
 
 
+class Properties(unittest.TestCase):
+    def test_property_of_class_type_types_the_variable(self):
+        self.assertTrue(errs("local cam = workspace.CurrentCamera\ncam:ScreenToWorld(1, 2)"))
+        self.assertEqual(errs("local cam = workspace.CurrentCamera\ncam:ViewportPointToRay(1, 2)"), [])
+
+    def test_chain_through_a_class_valued_property(self):
+        self.assertTrue(errs("workspace.Terrain:FillBox(a, b, c)"))
+        self.assertEqual(errs("workspace.Terrain:FillBlock(a, b, c)"), [])
+
+    def test_player_children_are_children(self):
+        self.assertEqual(errs("local p = game:GetService(\"Players\").LocalPlayer\nlocal gui = p.PlayerGui"), [])
+        self.assertTrue(errs("local p = game:GetService(\"Players\").LocalPlayer\np:Frobnicate()"))
+
+    def test_task_library(self):
+        self.assertTrue(errs("task.parallel(f)"))
+        self.assertEqual(errs("task.spawn(f)\ntask.defer(f)\ntask.desynchronize()"), [])
+        self.assertEqual(errs("local task = fake\ntask.parallel(f)"), [])  # a local named task is not the library
+
+
 class Edges(unittest.TestCase):
     def test_comments_and_api_ok_are_ignored(self):
         self.assertEqual(errs('-- Instance.new("Nope")\nlocal x = Instance.new("Nope") -- api-ok: mock'), [])

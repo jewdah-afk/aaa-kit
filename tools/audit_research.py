@@ -29,7 +29,7 @@ EXCUSE = re.compile(r"not a real|does not exist|doesn.t exist|no such|invented|h
                     r"gone|renamed|replaced|old name|old signature|used to|instead of|not available|unavailable|no documented|there is no|"
                     r"\*\*then:?\*\*|\[UNVERIFIED\]|api-ok", re.I)
 FENCE = re.compile(r"^```")
-KNOWN_CHILDREN = {"Player": ("PlayerGui", "PlayerScripts", "Backpack", "StarterGear"), "Workspace": ("Terrain", "CurrentCamera")}
+KNOWN_CHILDREN = api.KNOWN_CHILDREN
 
 
 def audit_text(text):

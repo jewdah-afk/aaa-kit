@@ -56,7 +56,15 @@ def build(dump):
                 r = rt.get("Name", "").rstrip("?") if isinstance(rt, dict) else ""  # a list means several return values
                 if r in classes and r not in ("Object",):
                     returns.setdefault(c["Name"], {})[m["Name"]] = r
-    return {"version": dump.get("Version"), "classes": classes, "enums": enums, "returns": returns}
+    # properties whose value is a class instance (Workspace.CurrentCamera -> Camera): lets the checker type `local cam = workspace.CurrentCamera`
+    props = {}
+    for c in dump["Classes"]:
+        for m in c["Members"]:
+            if m["MemberType"] == "Property":
+                r = m["ValueType"].get("Name", "").rstrip("?") if isinstance(m["ValueType"], dict) else ""
+                if r in classes and r != "Instance":
+                    props.setdefault(c["Name"], {})[m["Name"]] = r
+    return {"version": dump.get("Version"), "classes": classes, "enums": enums, "returns": returns, "props": props}
 
 
 def tname(t):

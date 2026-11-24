@@ -7,7 +7,8 @@
 A case passes when: no code block uses an API that is not in Roblox's real dump (tools/check_roblox_api.py), every `must_use`
 pattern appears in the code, no `must_not` pattern does, and (for cases with no_deprecated) nothing deprecated is used.
 Generate answers with tools/evals/run_claude.sh; run it once with the kit's harness on and once without to compare.
-Exit 0 only when every case that has an answer passes.
+Comments in the answer are ignored by the must_use / must_not rules. Exit 0 only when every case that has an answer passes.
+Results are also summed per tier (basic, rare, false-premise).
 """
 import json
 import re
@@ -32,6 +33,7 @@ def grade(case, answer):
     """Return (passed, [reasons])."""
     code = code_of(answer)
     reasons = []
+    prose_free = "\n".join(api.blank_comments(code))  # a good answer may say "-- there is no BurstCount"
     if not code.strip():
         return False, ["no Luau code block"]
     with tempfile.TemporaryDirectory() as d:
@@ -42,10 +44,10 @@ def grade(case, answer):
         if sev == "error" or case.get("no_deprecated"):
             reasons.append(f"api: {msg}")
     for pat in case.get("must_use", []):
-        if not re.search(pat, code):
+        if not re.search(pat, prose_free):
             reasons.append(f"missing {pat}")
     for pat in case.get("must_not", []):
-        if re.search(pat, code):
+        if re.search(pat, prose_free):
             reasons.append(f"forbidden {pat}")
     return not reasons, reasons
 
@@ -89,7 +91,12 @@ def main(argv):
     else:
         for r in rows:
             print(f"{r['status']:7} {r['id']}" + ("".join(f"\n          {x}" for x in r["reasons"])))
-        print(f"{passed}/{len(graded)} passed ({len(CASES) - len(graded)} not answered)")
+        tiers = {}
+        for r in graded:
+            t = next(c.get("tier", "basic") for c in CASES if c["id"] == r["id"])
+            ok, n = tiers.get(t, (0, 0))
+            tiers[t] = (ok + (r["status"] == "pass"), n + 1)
+        print(f"{passed}/{len(graded)} passed ({len(CASES) - len(graded)} not answered); " + ", ".join(f"{t} {ok}/{n}" for t, (ok, n) in sorted(tiers.items())))
     return 1 if failed else 0
 
 

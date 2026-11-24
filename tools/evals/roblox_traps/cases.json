@@ -1,5 +1,5 @@
 {
- "about": "Roblox hallucination traps. Each case has a prompt, regexes the answer must and must not contain, and a known-good and known-bad answer used by `score.py --selftest`.",
+ "about": "Roblox hallucination traps in three tiers: basic (common APIs), rare (exact names a model may guess), false-premise (the prompt asserts an API that does not exist). Each case has a prompt, regexes the answer must and must not contain (comments are ignored), and a known-good and known-bad answer used by `score.py --selftest`.",
  "cases": [
   {
    "id": "emit_burst",
@@ -12,7 +12,8 @@
     "BurstCount|:Burst\\(|\\.Burst\\b"
    ],
    "good": "```luau\nlocal sparks = part:WaitForChild(\"Sparks\") :: ParticleEmitter\nsparks:Emit(30)\n```",
-   "bad": "```luau\nlocal sparks = Instance.new(\"ParticleEmitter\")\nsparks.BurstCount = 30\nsparks:Burst(30)\n```"
+   "bad": "```luau\nlocal sparks = Instance.new(\"ParticleEmitter\")\nsparks.BurstCount = 30\nsparks:Burst(30)\n```",
+   "tier": "basic"
   },
   {
    "id": "raycast_ignore",
@@ -27,7 +28,8 @@
    ],
    "no_deprecated": true,
    "good": "```luau\nlocal params = RaycastParams.new()\nparams.FilterType = Enum.RaycastFilterType.Exclude\nparams.FilterDescendantsInstances = { character }\nlocal hit = workspace:Raycast(origin, Vector3.new(0, -100, 0), params)\n```",
-   "bad": "```luau\nlocal ray = Ray.new(origin, Vector3.new(0, -100, 0))\nlocal part = workspace:FindPartOnRay(ray, character)\n```"
+   "bad": "```luau\nlocal ray = Ray.new(origin, Vector3.new(0, -100, 0))\nlocal part = workspace:FindPartOnRay(ray, character)\n```",
+   "tier": "basic"
   },
   {
    "id": "tween_color",
@@ -42,7 +44,8 @@
     ":Tween\\(|TweenColor|\\.Tween\\b"
    ],
    "good": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nlocal tween = TweenService:Create(part, TweenInfo.new(1), { Color = Color3.new(1, 0, 0) })\ntween:Play()\n```",
-   "bad": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nTweenService:Tween(part, 1, { Color = Color3.new(1, 0, 0) })\n```"
+   "bad": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nTweenService:Tween(part, 1, { Color = Color3.new(1, 0, 0) })\n```",
+   "tier": "basic"
   },
   {
    "id": "remote_client_to_server",
@@ -56,7 +59,8 @@
     "Ping:Fire\\(|\\.OnEvent\\b|OnClientEvent.*FireServer"
    ],
    "good": "```luau\n-- client\nPing:FireServer(\"hello\")\n-- server\nPing.OnServerEvent:Connect(function(player, text)\n\tprint(player.Name, text)\nend)\n```",
-   "bad": "```luau\nlocal Ping = game:GetService(\"ReplicatedStorage\"):WaitForChild(\"Ping\") :: RemoteEvent\nPing:Fire(\"hello\")\n```"
+   "bad": "```luau\nlocal Ping = game:GetService(\"ReplicatedStorage\"):WaitForChild(\"Ping\") :: RemoteEvent\nPing:Fire(\"hello\")\n```",
+   "tier": "basic"
   },
   {
    "id": "editableimage_fill",
@@ -69,7 +73,8 @@
     "SetPixel|:Fill\\(|:WritePixels\\("
    ],
    "good": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nlocal buf = buffer.create(64 * 64 * 4)\nfor i = 0, 64 * 64 - 1 do\n\tbuffer.writeu32(buf, i * 4, 0xFF0000FF)\nend\nimg:WritePixelsBuffer(Vector2.zero, Vector2.new(64, 64), buf)\n```",
-   "bad": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nfor x = 0, 63 do for y = 0, 63 do img:SetPixel(x, y, Color3.new(1, 0, 0)) end end\n```"
+   "bad": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nfor x = 0, 63 do for y = 0, 63 do img:SetPixel(x, y, Color3.new(1, 0, 0)) end end\n```",
+   "tier": "basic"
   },
   {
    "id": "editablemesh_triangle",
@@ -83,7 +88,8 @@
     "CreateVertex|AddFace|:AddTri\\("
    ],
    "good": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:AddVertex(Vector3.new(0, 0, 0))\nlocal b = mesh:AddVertex(Vector3.new(1, 0, 0))\nlocal c = mesh:AddVertex(Vector3.new(0, 1, 0))\nmesh:AddTriangle(a, b, c)\n```",
-   "bad": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:CreateVertex(Vector3.new(0, 0, 0))\nmesh:AddFace(a, a, a)\n```"
+   "bad": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:CreateVertex(Vector3.new(0, 0, 0))\nmesh:AddFace(a, a, a)\n```",
+   "tier": "basic"
   },
   {
    "id": "beam_attachments",
@@ -97,7 +103,8 @@
     "\\.Part0|\\.Part1|\\.StartPart"
    ],
    "good": "```luau\nlocal a0 = Instance.new(\"Attachment\")\na0.Parent = partA\nlocal a1 = Instance.new(\"Attachment\")\na1.Parent = partB\nlocal beam = Instance.new(\"Beam\")\nbeam.Attachment0 = a0\nbeam.Attachment1 = a1\nbeam.Parent = partA\n```",
-   "bad": "```luau\nlocal beam = Instance.new(\"Beam\")\nbeam.Part0 = partA\nbeam.Part1 = partB\nbeam.Parent = partA\n```"
+   "bad": "```luau\nlocal beam = Instance.new(\"Beam\")\nbeam.Part0 = partA\nbeam.Part1 = partB\nbeam.Parent = partA\n```",
+   "tier": "basic"
   },
   {
    "id": "enum_materials",
@@ -109,7 +116,8 @@
    ],
    "must_not": [],
    "good": "```luau\npartA.Material = Enum.Material.Neon\npartB.Material = Enum.Material.Glass\n```",
-   "bad": "```luau\npartA.Material = Enum.Material.Plasma\npartB.Material = Enum.Material.Glass\nlocal x = Enum.Material.Neon\n```"
+   "bad": "```luau\npartA.Material = Enum.Material.Plasma\npartB.Material = Enum.Material.Glass\nlocal x = Enum.Material.Neon\n```",
+   "tier": "basic"
   },
   {
    "id": "player_joined",
@@ -123,7 +131,8 @@
     "PlayerJoined"
    ],
    "good": "```luau\nlocal Players = game:GetService(\"Players\")\nfor _, p in Players:GetPlayers() do task.spawn(onJoin, p) end\nPlayers.PlayerAdded:Connect(onJoin)\n```",
-   "bad": "```luau\nlocal Players = game:GetService(\"Players\")\nPlayers.PlayerJoined:Connect(onJoin)\nlocal all = Players:GetPlayers()\n```"
+   "bad": "```luau\nlocal Players = game:GetService(\"Players\")\nPlayers.PlayerJoined:Connect(onJoin)\nlocal all = Players:GetPlayers()\n```",
+   "tier": "basic"
   },
   {
    "id": "every_frame_client",
@@ -136,7 +145,8 @@
     "RunService\\.Update|OnRender|\\.Frame:Connect"
    ],
    "good": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.PreRender:Connect(function(dt)\n\tstep(dt)\nend)\n```",
-   "bad": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.Update:Connect(function(dt)\n\tstep(dt)\nend)\n```"
+   "bad": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.Update:Connect(function(dt)\n\tstep(dt)\nend)\n```",
+   "tier": "basic"
   },
   {
    "id": "delayed_cleanup",
@@ -151,20 +161,22 @@
    ],
    "no_deprecated": true,
    "good": "```luau\ngame:GetService(\"Debris\"):AddItem(part, 5)\n```",
-   "bad": "```luau\nlocal part = Instance.new(\"Part\")\nwait(5)\npart:Remove()\n```"
+   "bad": "```luau\nlocal part = Instance.new(\"Part\")\nwait(5)\npart:Remove()\n```",
+   "tier": "basic"
   },
   {
    "id": "humanoid_damage",
    "trap": "invented Humanoid:Damage/Hurt",
    "prompt": "Deal 20 damage to a character's Humanoid.",
    "must_use": [
-    "TakeDamage\\(\\s*20|Health\\s*-=\\s*20"
+    ":TakeDamage\\(|Health\\s*-=|\\.Health\\s*=\\s*[\\w.]*Health\\s*-"
    ],
    "must_not": [
     ":Damage\\(|:Hurt\\(|\\.Damage\\b"
    ],
    "good": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nif humanoid then humanoid:TakeDamage(20) end\n```",
-   "bad": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nhumanoid:Damage(20)\n```"
+   "bad": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nhumanoid:Damage(20)\n```",
+   "tier": "basic"
   },
   {
    "id": "datastore_safe_save",
@@ -179,7 +191,8 @@
     ":Save\\(|:Set\\(|\\.Save\\b"
    ],
    "good": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Coins\")\nlocal ok, err = pcall(function()\n\tstore:UpdateAsync(key, function() return value end)\nend)\nif not ok then warn(err) end\n```",
-   "bad": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Coins\")\nstore:Save(key, value)\n```"
+   "bad": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Coins\")\nstore:Save(key, value)\n```",
+   "tier": "basic"
   },
   {
    "id": "sound_pitch",
@@ -193,7 +206,8 @@
    ],
    "no_deprecated": true,
    "good": "```luau\nsound.PlaybackSpeed = 1.5\nsound:Play()\n```",
-   "bad": "```luau\nlocal sound = Instance.new(\"Sound\")\nsound.Pitch = 1.5\nsound:Play()\n```"
+   "bad": "```luau\nlocal sound = Instance.new(\"Sound\")\nsound.Pitch = 1.5\nsound:Play()\n```",
+   "tier": "basic"
   },
   {
    "id": "pathfinding",
@@ -208,7 +222,327 @@
     "FindPath|:Compute\\(|:GetPath\\("
    ],
    "good": "```luau\nlocal path = game:GetService(\"PathfindingService\"):CreatePath()\npath:ComputeAsync(a, b)\nlocal waypoints = path:GetWaypoints()\n```",
-   "bad": "```luau\nlocal path = game:GetService(\"PathfindingService\"):FindPath(a, b)\n```"
+   "bad": "```luau\nlocal path = game:GetService(\"PathfindingService\"):FindPath(a, b)\n```",
+   "tier": "basic"
+  },
+  {
+   "id": "parts_in_box",
+   "tier": "rare",
+   "trap": "Region3 / invented overlap helpers",
+   "prompt": "Find all parts inside a 10x10x10 box centred at a position, excluding the player's character.",
+   "must_use": [
+    "GetPartBoundsInBox",
+    "OverlapParams"
+   ],
+   "must_not": [
+    "GetPartsInRegion3|Region3|GetPartsInBox\\("
+   ],
+   "no_deprecated": true,
+   "good": "```luau\nlocal params = OverlapParams.new()\nparams.FilterType = Enum.RaycastFilterType.Exclude\nparams.FilterDescendantsInstances = { character }\nlocal parts = workspace:GetPartBoundsInBox(CFrame.new(pos), Vector3.new(10, 10, 10), params)\n```",
+   "bad": "```luau\nlocal parts = workspace:GetPartsInBox(CFrame.new(pos), Vector3.new(10, 10, 10))\n```"
+  },
+  {
+   "id": "spherecast",
+   "tier": "rare",
+   "trap": "SphereCast capital C",
+   "prompt": "Cast a sphere of radius 2 forward from the camera and read what it hits.",
+   "must_use": [
+    ":Spherecast\\("
+   ],
+   "must_not": [
+    ":SphereCast\\(|:CastSphere\\("
+   ],
+   "good": "```luau\nlocal cam = workspace.CurrentCamera\nlocal hit = workspace:Spherecast(cam.CFrame.Position, 2, cam.CFrame.LookVector * 100)\n```",
+   "bad": "```luau\nlocal cam = workspace.CurrentCamera\nlocal hit = workspace:SphereCast(cam.CFrame.Position, 2, cam.CFrame.LookVector * 100)\n```"
+  },
+  {
+   "id": "tagged_including_later",
+   "tier": "rare",
+   "trap": "invented CollectionService names",
+   "prompt": "Run a function on every part tagged 'Coin', including ones added later.",
+   "must_use": [
+    "GetTagged",
+    "GetInstanceAddedSignal"
+   ],
+   "must_not": [
+    "GetTaggedInstances|TagAdded|:GetTag\\("
+   ],
+   "good": "```luau\nlocal CollectionService = game:GetService(\"CollectionService\")\nfor _, inst in CollectionService:GetTagged(\"Coin\") do setup(inst) end\nCollectionService:GetInstanceAddedSignal(\"Coin\"):Connect(setup)\n```",
+   "bad": "```luau\nlocal CollectionService = game:GetService(\"CollectionService\")\nCollectionService.TagAdded:Connect(setup)\nlocal all = CollectionService:GetTaggedInstances(\"Coin\")\n```"
+  },
+  {
+   "id": "attribute_signal",
+   "tier": "rare",
+   "trap": "invented attribute signal names",
+   "prompt": "React when an attribute named Level changes on an instance.",
+   "must_use": [
+    "GetAttributeChangedSignal\\(\\s*\\\"Level\\\""
+   ],
+   "must_not": [
+    "OnAttributeChanged|AttributeAdded|:ObserveAttribute\\("
+   ],
+   "good": "```luau\nlocal conn = instance:GetAttributeChangedSignal(\"Level\"):Connect(function()\n\tprint(instance:GetAttribute(\"Level\"))\nend)\n```",
+   "bad": "```luau\nlocal part = Instance.new(\"Part\")\npart:OnAttributeChanged(\"Level\", function() end)\n```"
+  },
+  {
+   "id": "proximity_hold",
+   "tier": "rare",
+   "trap": "invented ProximityPrompt events",
+   "prompt": "Run code when a player finishes holding the button on a ProximityPrompt.",
+   "must_use": [
+    "\\.Triggered:Connect"
+   ],
+   "must_not": [
+    "OnTriggered|\\.Activated\\b|\\.HoldCompleted|\\.Pressed\\b"
+   ],
+   "good": "```luau\nlocal prompt = Instance.new(\"ProximityPrompt\")\nprompt.HoldDuration = 1\nprompt.Triggered:Connect(function(player) grant(player) end)\n```",
+   "bad": "```luau\nlocal prompt = Instance.new(\"ProximityPrompt\")\nprompt.HoldCompleted:Connect(function(player) grant(player) end)\n```"
+  },
+  {
+   "id": "highlight_outline",
+   "tier": "rare",
+   "trap": "invented Highlight properties",
+   "prompt": "Outline a model in white with a fully transparent fill.",
+   "must_use": [
+    "Instance\\.new\\(\\\"Highlight\\\"\\)",
+    "OutlineColor",
+    "FillTransparency"
+   ],
+   "must_not": [
+    "OutlineThickness|OutlineTransparencyColor|\\.Color\\b"
+   ],
+   "good": "```luau\nlocal h = Instance.new(\"Highlight\")\nh.OutlineColor = Color3.new(1, 1, 1)\nh.FillTransparency = 1\nh.Parent = model\n```",
+   "bad": "```luau\nlocal h = Instance.new(\"Highlight\")\nh.OutlineThickness = 3\nh.FillTransparency = 1\nh.Parent = model\n```"
+  },
+  {
+   "id": "screen_to_ray",
+   "tier": "rare",
+   "trap": "invented camera conversion names",
+   "prompt": "Convert a screen tap position into a world-space ray from the camera.",
+   "must_use": [
+    "ViewportPointToRay|ScreenPointToRay"
+   ],
+   "must_not": [
+    "ScreenToWorld|ScreenPointToWorld|:PointToRay\\("
+   ],
+   "good": "```luau\nlocal cam = workspace.CurrentCamera\nlocal ray = cam:ViewportPointToRay(pos.X, pos.Y)\n```",
+   "bad": "```luau\nlocal cam = workspace.CurrentCamera\nlocal ray = cam:ScreenToWorld(pos.X, pos.Y)\n```"
+  },
+  {
+   "id": "measure_text",
+   "tier": "rare",
+   "trap": "invented text measuring helpers",
+   "prompt": "Measure how wide a string will be at a given font and size.",
+   "must_use": [
+    "GetTextSize"
+   ],
+   "must_not": [
+    "MeasureText|GetTextWidth|:GetBounds\\("
+   ],
+   "good": "```luau\nlocal TextService = game:GetService(\"TextService\")\nlocal size = TextService:GetTextSize(\"Hello\", 18, Enum.Font.Gotham, Vector2.new(1000, 1000))\n```",
+   "bad": "```luau\nlocal TextService = game:GetService(\"TextService\")\nlocal w = TextService:MeasureText(\"Hello\", 18)\n```"
+  },
+  {
+   "id": "headshot",
+   "tier": "rare",
+   "trap": "invented thumbnail helpers",
+   "prompt": "Get a player's headshot thumbnail image.",
+   "must_use": [
+    "GetUserThumbnailAsync"
+   ],
+   "must_not": [
+    "GetHeadshot|GetPlayerThumbnail\\b|GetThumbnail\\("
+   ],
+   "good": "```luau\nlocal Players = game:GetService(\"Players\")\nlocal content, ready = Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)\n```",
+   "bad": "```luau\nlocal Players = game:GetService(\"Players\")\nlocal img = Players:GetHeadshot(userId)\n```"
+  },
+  {
+   "id": "preload_assets",
+   "tier": "rare",
+   "trap": "invented ContentProvider names",
+   "prompt": "Preload a list of sound assets before gameplay starts.",
+   "must_use": [
+    "PreloadAsync"
+   ],
+   "must_not": [
+    ":Preload\\(|:LoadAssets?\\(|:PreloadAssets\\("
+   ],
+   "good": "```luau\nlocal ContentProvider = game:GetService(\"ContentProvider\")\nContentProvider:PreloadAsync(sounds)\n```",
+   "bad": "```luau\nlocal ContentProvider = game:GetService(\"ContentProvider\")\nContentProvider:PreloadAssets(sounds)\n```"
+  },
+  {
+   "id": "parallel_actor",
+   "tier": "rare",
+   "trap": "invented task.* parallel functions",
+   "prompt": "Run an expensive computation in parallel from a script inside an Actor, then apply the result on the main thread.",
+   "must_use": [
+    "task\\.desynchronize",
+    "task\\.synchronize"
+   ],
+   "must_not": [
+    "task\\.parallel|task\\.spawnParallel|task\\.runParallel|Actor:Run\\("
+   ],
+   "good": "```luau\nlocal actor = script:GetActor()\ntask.desynchronize()\nlocal result = heavy()\ntask.synchronize()\napply(result)\n```",
+   "bad": "```luau\ntask.parallel(function() heavy() end)\n```"
+  },
+  {
+   "id": "gradient_rotation",
+   "tier": "rare",
+   "trap": "UIGradient has Rotation, not Angle",
+   "prompt": "Rotate a UIGradient 45 degrees and make it fade from black to white.",
+   "must_use": [
+    "\\.Rotation\\s*=\\s*45",
+    "ColorSequence"
+   ],
+   "must_not": [
+    "\\.Angle\\b|\\.Direction\\b"
+   ],
+   "good": "```luau\nlocal g = Instance.new(\"UIGradient\")\ng.Rotation = 45\ng.Color = ColorSequence.new(Color3.new(0, 0, 0), Color3.new(1, 1, 1))\n```",
+   "bad": "```luau\nlocal g = Instance.new(\"UIGradient\")\ng.Angle = 45\n```"
+  },
+  {
+   "id": "terrain_water",
+   "tier": "rare",
+   "trap": "invented Terrain fill helpers",
+   "prompt": "Fill a 20x10x20 stud box of water terrain at the origin.",
+   "must_use": [
+    "FillBlock",
+    "Enum\\.Material\\.Water"
+   ],
+   "must_not": [
+    "FillRegionBlock|:FillBox\\(|SetCell"
+   ],
+   "good": "```luau\nworkspace.Terrain:FillBlock(CFrame.new(0, 0, 0), Vector3.new(20, 10, 20), Enum.Material.Water)\n```",
+   "bad": "```luau\nworkspace.Terrain:FillBox(CFrame.new(0, 0, 0), Vector3.new(20, 10, 20), Enum.Material.Water)\n```"
+  },
+  {
+   "id": "touch_only",
+   "tier": "rare",
+   "trap": "invented input-device helpers",
+   "prompt": "Detect whether the device has touch and no keyboard.",
+   "must_use": [
+    "TouchEnabled",
+    "KeyboardEnabled"
+   ],
+   "must_not": [
+    "IsTouchDevice|IsMobile|\\.Platform\\b"
+   ],
+   "good": "```luau\nlocal UserInputService = game:GetService(\"UserInputService\")\nlocal touchOnly = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled\n```",
+   "bad": "```luau\nlocal UserInputService = game:GetService(\"UserInputService\")\nlocal touchOnly = UserInputService:IsMobile()\n```"
+  },
+  {
+   "id": "fp_set_walkspeed",
+   "tier": "false-premise",
+   "trap": "prompt says Humanoid:SetWalkSpeed exists",
+   "prompt": "Use Humanoid:SetWalkSpeed to set a character's walk speed to 24.",
+   "must_use": [
+    "\\.WalkSpeed\\s*=\\s*24"
+   ],
+   "must_not": [
+    "SetWalkSpeed"
+   ],
+   "good": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\n-- there is no SetWalkSpeed; WalkSpeed is a property\nif humanoid then humanoid.WalkSpeed = 24 end\n```",
+   "bad": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nhumanoid:SetWalkSpeed(24)\n```"
+  },
+  {
+   "id": "fp_burstcount",
+   "tier": "false-premise",
+   "trap": "prompt says ParticleEmitter.BurstCount fires a burst",
+   "prompt": "Set the ParticleEmitter's BurstCount property to 30 so it fires a burst of sparks.",
+   "must_use": [
+    ":Emit\\(\\s*30"
+   ],
+   "must_not": [
+    "BurstCount\\s*="
+   ],
+   "good": "```luau\nlocal sparks = part:WaitForChild(\"Sparks\") :: ParticleEmitter\n-- no BurstCount property exists; use Emit\nsparks:Emit(30)\n```",
+   "bad": "```luau\nlocal sparks = part:WaitForChild(\"Sparks\") :: ParticleEmitter\nsparks.BurstCount = 30\n```"
+  },
+  {
+   "id": "fp_tween_run",
+   "tier": "false-premise",
+   "trap": "prompt says TweenService:Run exists",
+   "prompt": "Use TweenService:Run(part, tweenInfo, goal) to move a part to the origin.",
+   "must_use": [
+    ":Create\\(",
+    ":Play\\(\\)"
+   ],
+   "must_not": [
+    "TweenService:Run\\("
+   ],
+   "good": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nlocal tween = TweenService:Create(part, TweenInfo.new(1), { Position = Vector3.zero })\ntween:Play()\n```",
+   "bad": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nTweenService:Run(part, TweenInfo.new(1), { Position = Vector3.zero })\n```"
+  },
+  {
+   "id": "fp_part_delete",
+   "tier": "false-premise",
+   "trap": "prompt says Part:Delete exists",
+   "prompt": "Call Part:Delete() to remove a part from the game.",
+   "must_use": [
+    ":Destroy\\(\\)"
+   ],
+   "must_not": [
+    ":Delete\\("
+   ],
+   "good": "```luau\nlocal part = Instance.new(\"Part\")\npart:Destroy()\n```",
+   "bad": "```luau\nlocal part = Instance.new(\"Part\")\npart:Delete()\n```"
+  },
+  {
+   "id": "fp_raycast_distance",
+   "tier": "false-premise",
+   "trap": "prompt says workspace:RaycastDistance exists",
+   "prompt": "Use workspace:RaycastDistance(origin, direction) to get the distance to the first hit.",
+   "must_use": [
+    "workspace:Raycast\\(|Workspace:Raycast\\(",
+    "\\.Distance"
+   ],
+   "must_not": [
+    "RaycastDistance\\("
+   ],
+   "good": "```luau\nlocal result = workspace:Raycast(origin, direction)\nlocal distance = if result then result.Distance else nil\n```",
+   "bad": "```luau\nlocal d = workspace:RaycastDistance(origin, direction)\n```"
+  },
+  {
+   "id": "fp_datastore_savesync",
+   "tier": "false-premise",
+   "trap": "prompt says DataStore:SaveAsync exists",
+   "prompt": "Use DataStore:SaveAsync(key, value) to store a table.",
+   "must_use": [
+    ":SetAsync\\(|:UpdateAsync\\("
+   ],
+   "must_not": [
+    ":SaveAsync\\("
+   ],
+   "good": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Saves\")\nstore:SetAsync(key, value)\n```",
+   "bad": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Saves\")\nstore:SaveAsync(key, value)\n```"
+  },
+  {
+   "id": "fp_mesh_addquad",
+   "tier": "false-premise",
+   "trap": "prompt says EditableMesh:AddQuad exists",
+   "prompt": "Use EditableMesh:AddQuad to add a square face made of four vertices.",
+   "must_use": [
+    ":AddTriangle\\("
+   ],
+   "must_not": [
+    ":AddQuad\\("
+   ],
+   "good": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:AddVertex(Vector3.new(0, 0, 0))\nlocal b = mesh:AddVertex(Vector3.new(1, 0, 0))\nlocal c = mesh:AddVertex(Vector3.new(1, 1, 0))\nlocal e = mesh:AddVertex(Vector3.new(0, 1, 0))\nmesh:AddTriangle(a, b, c)\nmesh:AddTriangle(a, c, e)\n```",
+   "bad": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nmesh:AddQuad(a, b, c, e)\n```"
+  },
+  {
+   "id": "fp_image_clear",
+   "tier": "false-premise",
+   "trap": "prompt says EditableImage:Clear exists",
+   "prompt": "Use EditableImage:Clear(Color3.new(0, 0, 0)) to wipe an image to black.",
+   "must_use": [
+    ":DrawRectangle\\(|:WritePixelsBuffer\\("
+   ],
+   "must_not": [
+    ":Clear\\("
+   ],
+   "good": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nimg:DrawRectangle(Vector2.zero, img.Size, Color3.new(0, 0, 0), 0, Enum.ImageCombineType.Overwrite)\n```",
+   "bad": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nimg:Clear(Color3.new(0, 0, 0))\n```"
   }
  ]
 }
