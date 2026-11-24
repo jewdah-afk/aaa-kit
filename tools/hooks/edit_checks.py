@@ -89,13 +89,13 @@ def check_api(path, proj):
 
 def check_luau(path, proj):
     fails, notes = [], []
+    fails += check_api(path, proj)  # pure Python: runs even where lune is missing
     if not shutil.which("lune"):
-        return fails, ["lune is not installed, so .luau checks were skipped (python3 tools/hooks/session_setup.py --force)"]
+        return fails, notes + ["lune is not installed, so compile and test checks were skipped (python3 tools/hooks/session_setup.py --force)"]
     rc, out = run(["lune", "run", str(KIT / "tools" / "check_luau.luau"), str(path)], proj)
     if rc != 0:
         fails.append("compile:\n" + tail(out))
         return fails, notes  # a file that doesn't compile can't be tested or linted
-    fails += check_api(path, proj)
     test = find_luau_test(path)
     if test:
         tfile, cwd, done_line = test

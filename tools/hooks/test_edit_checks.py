@@ -178,6 +178,19 @@ with tempfile.TemporaryDirectory() as base:
     r = sb4.stop(sid="g")
     check("...and passes once fixed", r.returncode == 0, r.stderr)
 
+    # an invented Roblox API is sent back to the model, with or without lune on the machine
+    BAD_API = "--!strict\nlocal p = Instance.new(\"ParticleEmitter\")\np.BurstCount = 5\nreturn p\n"
+    sb5 = Sandbox(tempfile.mkdtemp(dir=base))
+    api_file = sb5.proj / "Fx.luau"
+    api_file.write_text(BAD_API)
+    r = sb5.post(api_file, sid="api")
+    check("post hook rejects an invented Roblox member", r.returncode == 2 and "BurstCount" in r.stderr, r.stderr)
+    r = sb5.post(api_file, sid="api2", env={"PATH": f"{sb5.bin}:/usr/bin:/bin"})
+    check("...even when lune is not installed", r.returncode == 2 and "BurstCount" in r.stderr, r.stderr)
+    api_file.write_text(BAD_API.replace("p.BurstCount = 5", "p:Emit(5)"))
+    r = sb5.post(api_file, sid="api3")
+    check("...and passes once the real API is used", r.returncode == 0, r.stderr)
+
     # ---- manual mode and state hygiene
     r = sb.run("check", None, args=[str(good), str(bad)])
     check("manual check exits 1 on a failure and lists both", r.returncode == 1 and "ok  " in r.stdout and "FAIL" in r.stdout, r.stdout)

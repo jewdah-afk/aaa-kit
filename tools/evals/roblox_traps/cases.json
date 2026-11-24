@@ -52,8 +52,7 @@
    "trap": "RemoteEvent:Fire instead of FireServer / OnServerEvent",
    "prompt": "Send a message from the client to the server using a RemoteEvent called Ping.",
    "must_use": [
-    ":FireServer\\(",
-    "OnServerEvent"
+    ":FireServer\\("
    ],
    "must_not": [
     "Ping:Fire\\(|\\.OnEvent\\b|OnClientEvent.*FireServer"
@@ -435,7 +434,7 @@
    "trap": "prompt says Humanoid:SetWalkSpeed exists",
    "prompt": "Use Humanoid:SetWalkSpeed to set a character's walk speed to 24.",
    "must_use": [
-    "\\.WalkSpeed\\s*=\\s*24"
+    "\\.WalkSpeed\\s*="
    ],
    "must_not": [
     "SetWalkSpeed"

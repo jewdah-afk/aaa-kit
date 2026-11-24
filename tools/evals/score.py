@@ -2,7 +2,7 @@
 """Score model answers against the Roblox hallucination traps.
 
   python3 tools/evals/score.py --selftest              known-good answers must pass and known-bad ones must fail for the right reason
-  python3 tools/evals/score.py ANSWERS_DIR [--json]    ANSWERS_DIR holds <case id>.md: the model's answer, Luau in fenced blocks
+  python3 tools/evals/score.py ANSWERS_DIR [--json]    ANSWERS_DIR holds <case id>.md (the model's answer, Luau in fenced blocks) or <case id>.luau (a file the model wrote)
 
 A case passes when: no code block uses an API that is not in Roblox's real dump (tools/check_roblox_api.py), every `must_use`
 pattern appears in the code, no `must_not` pattern does, and (for cases with no_deprecated) nothing deprecated is used.
@@ -78,10 +78,15 @@ def main(argv):
     rows, failed = [], 0
     for c in CASES:
         f = answers / f"{c['id']}.md"
-        if not f.exists():
+        raw = answers / f"{c['id']}.luau"  # agentic runs write the solution to a file
+        if f.exists():
+            text = f.read_text(encoding="utf-8", errors="replace")
+        elif raw.exists():
+            text = "```luau\n" + raw.read_text(encoding="utf-8", errors="replace") + "\n```"
+        else:
             rows.append({"id": c["id"], "status": "missing", "reasons": []})
             continue
-        ok, why = grade(c, f.read_text(encoding="utf-8", errors="replace"))
+        ok, why = grade(c, text)
         failed += not ok
         rows.append({"id": c["id"], "status": "pass" if ok else "FAIL", "reasons": why})
     graded = [r for r in rows if r["status"] != "missing"]
