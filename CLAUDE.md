@@ -74,6 +74,7 @@ bash tools/check_all.sh                                 # everything below, in o
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
 python3 tools/check_roblox_api.py                  # no invented Roblox class, enum or member (real API dump); `-- api-ok` for mocks
 python3 tools/test_rbx.py                              # the API lookup tool
+python3 tools/audit_research.py                       # inline API names in the research and skills match the real dump
 python3 tools/evals/score.py --selftest               # the Roblox hallucination traps (score a model with tools/evals/run_claude.sh)
 python3 tools/check_links.py                          # every relative link resolves
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
