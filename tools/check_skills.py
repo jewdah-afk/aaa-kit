@@ -21,7 +21,8 @@ REQUIRED = ["When to use", "Method", "Hierarchy rules", "Engine notes", "Example
 SAMPLES = {
     "ui-hud": ["the coin counter jitters, fix the HUD", "add a cooldown icon to the ability bar", "damage numbers are unreadable"],
     "reward-moments": ["make the egg hatch feel exciting", "add a gacha summon beam", "level up screen is boring"],
-    "vfx": ["hits have no impact, add screen shake", "make a lightning chain effect", "enemy death dissolve"],
+    "vfx": ["hits have no impact, add screen shake", "make a lightning chain effect", "enemy death dissolve",
+            "write a void ring impact blueprint with a telegraph", "vortex singularity boss attack", "crystal slash burst with trails"],
     "editable-image": ["write a pixel renderer with EditableImage", "WritePixelsBuffer is slow"],
     "editable-mesh": ["generate a procedural mesh with EditableMesh", "deform mesh vertices at runtime"],
     "materials": ["make the legendary item look chrome and shiny", "holographic foil on mythic cards"],

@@ -57,6 +57,7 @@ A phone is roughly 4–5× slower and hasn't been measured. Plan the first cuts 
 - Create with `AssetService:CreateEditableImage({ Size = Vector2.new(W, H) })` and show it with `imageLabel.ImageContent = Content.fromObject(img)`.
 - EditableImage counts against a per-device memory budget. Creation can fail on low memory, so check for `nil` and fall back.
 - Read back only when you must (`ReadPixelsBuffer` is slow). Keep your own buffers as the truth.
+- **Not for particles.** `ParticleEmitter`, `Beam` and `Trail` texture slots are not documented to accept an EditableImage. A procedural flipbook goes on an `ImageLabel` or `Decal` and is stepped with `ImageRectOffset`; for an emitter, bake the sheet offline. Generator, tests and the ❌/✅ code are in the [vfx skill](../vfx/patterns.md) (`vfx/examples/Flipbook.luau`).
 - Live clients usually run without native codegen, so optimise for the interpreter: hoist locals, avoid closures in inner loops, use `buffer.writeu32` for whole pixels, and copy whole same-colour runs.
 
 **Web equivalent.** `ImageData` plus `Uint32Array` views, `putImageData` once per frame, and `imageSmoothingEnabled = false`.
