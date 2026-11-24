@@ -83,6 +83,11 @@ class Typed(unittest.TestCase):
         self.assertTrue(errs('local R = game:GetService("RunService")\nR:Frobnicate()'))
         self.assertEqual(errs('local RS = game:GetService("ReplicatedStorage")\nlocal f = RS.Packages'), [])
 
+    def test_invented_event_on_a_service_is_an_error(self):
+        self.assertTrue(errs('local Players = game:GetService("Players")\nPlayers.PlayerJoined:Connect(f)'))
+        self.assertEqual(errs('local Players = game:GetService("Players")\nPlayers.PlayerAdded:Connect(f)'), [])
+        self.assertTrue(errs('local RunService = game:GetService("RunService")\nRunService.Update:Connect(f)'))
+
     def test_service_method_chain(self):
         self.assertTrue(errs('game:GetService("Debris"):Throw(x, 1)'))
         self.assertEqual(errs('game:GetService("Debris"):AddItem(x, 1)'), [])
@@ -118,6 +123,38 @@ class Typed(unittest.TestCase):
 
     def test_property_used_as_method(self):
         self.assertTrue(errs('local p = Instance.new("Part")\np:Anchored()'))
+
+
+class Inference(unittest.TestCase):
+    def test_cast_on_the_initializer(self):
+        self.assertTrue(errs('local Ping = rs:WaitForChild("Ping") :: RemoteEvent\nPing:Fire(1)'))
+        self.assertEqual(errs('local Ping = rs:WaitForChild("Ping") :: RemoteEvent\nPing:FireServer(1)'), [])
+
+    def test_return_type_of_a_service_call(self):
+        src = 'local img = game:GetService("AssetService"):CreateEditableImage({})\nimg:SetPixel(1, 2)'
+        self.assertTrue(errs(src))
+        self.assertEqual(errs(src.replace("SetPixel(1, 2)", "WritePixelsBuffer(a, b, c)")), [])
+
+    def test_return_type_chain_through_a_typed_variable(self):
+        src = 'local TS = game:GetService("TweenService")\nlocal t = TS:Create(p, i, g)\nt:Pplay()'
+        self.assertTrue(errs(src))
+        self.assertEqual(errs(src.replace("Pplay", "Play")), [])
+
+    def test_whole_expression_must_be_one_call(self):
+        # TS:Create(...):Foo() is not a Tween variable: nothing is inferred from a longer chain
+        self.assertEqual(errs('local TS = game:GetService("TweenService")\nlocal t = TS:Create(p, i, g):Nope()\nt:Anything()'), [])
+
+    def test_bare_instance_returns_say_nothing(self):
+        self.assertEqual(errs('local RS = game:GetService("ReplicatedStorage")\nlocal Shared = RS:WaitForChild("Shared")\nlocal k = Shared.Kit\nShared.Kit.Run()'), [])
+
+    def test_workspace_and_game_methods(self):
+        self.assertTrue([m for _, s, m in issues("workspace:FindPartOnRay(r)") if s == "warn"])
+        self.assertTrue(errs("workspace:Frobnicate(1)"))
+        self.assertEqual(errs("workspace:Raycast(a, b)"), [])
+        self.assertEqual(errs("local workspace = fake\nworkspace:Frobnicate(1)"), [])  # a local of that name is not the global
+
+    def test_deprecation_via_inferred_type(self):
+        self.assertTrue([m for _, s, m in issues('local s = Instance.new("Sound")\ns.Pitch = 2') if s == "warn"])
 
 
 class Edges(unittest.TestCase):

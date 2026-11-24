@@ -20,7 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 INDEX = json.loads((HERE / "roblox_api" / "api-index.json").read_text(encoding="utf-8"))
-CLASSES, ENUMS = INDEX["classes"], INDEX["enums"]
+CLASSES, ENUMS, RETURNS = INDEX["classes"], INDEX["enums"], INDEX.get("returns", {})
 SKIP_DIRS = {".git", "node_modules", "__pycache__", "media", "Packages", "ServerPackages"}
 
 LONG_COMMENT = re.compile(r"--\[(=*)\[.*?\]\1\]", re.S)
@@ -93,6 +93,7 @@ ANNOT = re.compile(r"^([A-Za-z_]\w*)\s*:\s*([A-Za-z_][\w.]*)(\?)?\s*$")
 INIT_NEW = re.compile(r'=\s*Instance\.new\(\s*"([^"]+)"\s*\)')
 INIT_SERVICE = re.compile(r'=\s*[\w.]+:GetService\(\s*"([^"]+)"\s*\)\s*$')
 INIT_FIND = re.compile(r':(?:FindFirstChildOfClass|FindFirstChildWhichIsA|FindFirstAncestorOfClass|FindFirstAncestorWhichIsA)\(\s*"([^"]+)"\s*\)\s*$')
+INIT_CAST = re.compile(r"=[^=].*::\s*([A-Za-z_][\w.]*)\??\s*$")  # local x = expr :: Class
 CAST = re.compile(r"\(\s*[^()]*?::\s*([A-Za-z_]\w*)\??\s*\)\s*([.:])([A-Za-z_]\w*)")
 SERVICE_MEMBER = re.compile(r':GetService\(\s*"([^"]+)"\s*\)\s*([.:])([A-Za-z_]\w*)')
 
@@ -149,10 +150,10 @@ def declarations(ln):
             if cls is not None:
                 cls = (cls, True)  # annotated: may be narrowed to a subclass
             elif single:
-                for rx in (INIT_NEW, INIT_SERVICE, INIT_FIND):
+                for rx in (INIT_NEW, INIT_SERVICE, INIT_FIND, INIT_CAST):
                     r = rx.search(ln)
                     if r:
-                        cls = (r.group(1), "WhichIsA" in ln and rx is INIT_FIND)
+                        cls = (r.group(1), rx is INIT_CAST or ("WhichIsA" in ln and rx is INIT_FIND))
                         break
             out.append((name, cls))
     m = FOR_DECL.match(ln)
@@ -179,33 +180,98 @@ def user_types(lines):
     return {m.group(1) for ln in lines for m in [USER_TYPE.match(ln)] if m}
 
 
+GLOBAL_CLASS = {"workspace": "Workspace", "game": "DataModel"}
+CALL_INIT = re.compile(r"^\s*local\s+([A-Za-z_]\w*)\s*(?::[^=]+)?=\s*(.+?)\s*$")
+RECV_CALL = re.compile(r"^([A-Za-z_]\w*)\s*:\s*([A-Za-z_]\w*)\s*\(")
+SERVICE_CALL = re.compile(r"^[A-Za-z_][\w.]*\s*:\s*GetService\(\s*\"([^\"]+)\"\s*\)\s*:\s*([A-Za-z_]\w*)\s*\(")
+
+
+def returns_of(cls, method):
+    while cls:
+        r = RETURNS.get(cls, {}).get(method)
+        if r:
+            return r
+        cls = CLASSES[cls]["super"] if cls in CLASSES else None
+    return None
+
+
+def whole_call(rhs, open_idx):
+    """True when the parenthesis opened at rhs[open_idx] closes at the very end of rhs (the expression is exactly one call)."""
+    depth = 0
+    for i in range(open_idx, len(rhs)):
+        depth += rhs[i] == "("
+        depth -= rhs[i] == ")"
+        if depth == 0:
+            return i == len(rhs) - 1
+    return False
+
+
+def scope_end(lines, decls, i, name, is_func):
+    """Index (0-based, exclusive) where a variable declared on line i stops being trustworthy."""
+    base = indent_of(lines[i])
+    reassign = re.compile(r"^\s*" + re.escape(name) + r"\s*=(?!=)")
+    for j in range(i + 1, len(lines)):
+        ln = lines[j]
+        if not ln.strip():
+            continue
+        ind = indent_of(ln)
+        if (ind <= base) if is_func else (ind < base):
+            return j  # the block that declared it has closed
+        if any(n == name for n, _ in decls[j]) or reassign.match(ln):
+            return j  # shadowed or reassigned: stop trusting the type
+    return len(lines)
+
+
 def typed_scopes(lines, own_types=frozenset()):
-    """[(var, class, first_line, last_line)] 1-based inclusive: where a variable's class is known and not shadowed or reassigned."""
+    """[(var, class, first_line, last_line, loose)] 1-based inclusive: where a variable's class is known and not shadowed or reassigned.
+    Classes come from annotations, `:: Class` casts, Instance.new, GetService, FindFirstChildOfClass, and the declared return
+    type of a method called on an already typed value (`local img = AssetService:CreateEditableImage()`)."""
     decls = [declarations(ln) for ln in lines]
     scopes = []
+    seen = set()
+
+    def add(i, name, cls, loose):
+        is_func = bool(FUNC_PARAMS.search(lines[i])) and not LOCAL_DECL.match(lines[i])
+        scopes.append((name, cls, i + 2, scope_end(lines, decls, i, name, is_func), loose))
+        seen.add((i, name))
+
     for i, ds in enumerate(decls):
         for name, tagged in ds:
             if tagged is None:
                 continue
             cls, loose = tagged
-            if cls not in CLASSES or cls in own_types:
+            if cls in CLASSES and cls not in own_types:
+                add(i, name, cls, loose)
+
+    def class_at(var, n):
+        for v, c, first, last, loose in scopes:
+            if v == var and first <= n <= last:
+                return c
+        return GLOBAL_CLASS.get(var) if not any(var == nm for ds in decls for nm, _ in ds) else None
+
+    for _ in range(3):  # chains: a = svc:Make(); b = a:Child()
+        grew = False
+        for i, ln in enumerate(lines):
+            m = CALL_INIT.match(ln)
+            if not m or (i, m.group(1)) in seen or len(declarations(ln)) != 1:
                 continue
-            is_func = bool(FUNC_PARAMS.search(lines[i])) and not LOCAL_DECL.match(lines[i])
-            base = indent_of(lines[i])
-            end = len(lines)
-            reassign = re.compile(r"^\s*" + re.escape(name) + r"\s*=(?!=)")
-            for j in range(i + 1, len(lines)):
-                ln = lines[j]
-                if not ln.strip():
-                    continue
-                ind = indent_of(ln)
-                if (ind <= base) if is_func else (ind < base):
-                    end = j  # the block that declared it has closed
-                    break
-                if any(n == name for n, _ in decls[j]) or reassign.match(ln):
-                    end = j  # shadowed or reassigned: stop trusting the type
-                    break
-            scopes.append((name, cls, i + 2, end, loose))  # first_line is the line after the declaration
+            name, rhs = m.group(1), m.group(2)
+            recv_cls, method, end = None, None, None
+            sm = SERVICE_CALL.match(rhs)
+            if sm and sm.group(1) in CLASSES:
+                recv_cls, method, end = sm.group(1), sm.group(2), sm.end() - 1
+            else:
+                rm = RECV_CALL.match(rhs)
+                if rm:
+                    recv_cls, method, end = class_at(rm.group(1), i + 1), rm.group(2), rm.end() - 1
+            if not recv_cls or recv_cls not in CLASSES or not whole_call(rhs, end):
+                continue
+            ret = returns_of(recv_cls, method)
+            if ret and ret in CLASSES and ret not in own_types and ret != "Instance":  # a bare Instance (WaitForChild, Clone) says nothing: its children are read by name
+                add(i, name, ret, True)  # the declared return may be narrowed (BasePart -> Part): accept subclass members
+                grew = True
+        if not grew:
+            break
     return scopes
 
 
@@ -214,10 +280,11 @@ def member_issue(var_label, cls, sep, name, mem, strict, after, n):
     flags = mem.get(name)
     is_assign = bool(re.match(r"\s*=(?!=)", after))
     is_call = after.lstrip().startswith("(") or after.lstrip().startswith("{") or after.lstrip().startswith('"')
+    is_event_use = bool(re.match(r"\s*:\s*(?:Connect|Once|Wait|ConnectParallel)\b", after))  # X.Name:Connect(...) can only be an event
     if flags is None:
-        if CLASSES[cls]["service"] and sep == "." and not is_assign:
+        if CLASSES[cls]["service"] and sep == "." and not (is_assign or is_call or is_event_use):
             return None  # services are indexed for children (ReplicatedStorage.Packages)
-        sev = "error" if (sep == ":" or is_assign or is_call or strict) else "warn"
+        sev = "error" if (sep == ":" or is_assign or is_call or is_event_use or strict) else "warn"
         what = "method" if sep == ":" else "member"
         return (n, sev, f"{var_label} is a {cls}; it has no {what} {name}{near(name, mem)}")
     if flags[0] == "p" and sep == ":":
@@ -266,6 +333,18 @@ def check_lines(lines):
             cls, sep, name = m.groups()
             if cls in CLASSES and cls not in own_types:
                 r = member_issue("value", cls, sep, name, members_of(cls), strict, ln[m.end() :], n)
+                if r:
+                    issues.append(r)
+    declared = {n for ln in lines for n, _ in declarations(ln)}
+    for g, gcls in GLOBAL_CLASS.items():
+        if g in declared or gcls in own_types:
+            continue
+        gpat = re.compile(r"(?<![\w.:\"'])" + g + r"(:)([A-Za-z_]\w*)")
+        for n, ln in enumerate(lines, 1):
+            if ok(n):
+                continue
+            for m in gpat.finditer(ln):
+                r = member_issue(g, gcls, m.group(1), m.group(2), members_of(gcls), strict, ln[m.end() :], n)
                 if r:
                     issues.append(r)
     for var, cls, first, last, loose in typed_scopes(lines, own_types):

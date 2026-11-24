@@ -4,7 +4,7 @@
   python3 tools/roblox_api/build_index.py [path-to-Full-API-Dump.json]
 
 With no argument it downloads the dump from MaximumADHD/Roblox-Client-Tracker (the current client's API).
-The index keeps only what the checker needs: per class its superclass, tags and members (kind, deprecated,
+The index keeps only what the checker needs: per class its superclass, tags and members (plus which methods return a class), (kind, deprecated,
 not-scriptable, creatable, service), plus every enum with its items. Commit the result; re-run it when Roblox ships new API.
 """
 import json
@@ -47,7 +47,16 @@ def build(dump):
             "members": members,
         }
     enums = {e["Name"]: [i["Name"] for i in e["Items"]] for e in dump["Enums"]}
-    return {"version": dump.get("Version"), "classes": classes, "enums": enums}
+    # methods that return a class instance (nullable ok): lets the checker follow `local x = Service:Make()` to x's class
+    returns = {}
+    for c in dump["Classes"]:
+        for m in c["Members"]:
+            if m["MemberType"] == "Function":
+                rt = m.get("ReturnType", {})
+                r = rt.get("Name", "").rstrip("?") if isinstance(rt, dict) else ""  # a list means several return values
+                if r in classes and r not in ("Object",):
+                    returns.setdefault(c["Name"], {})[m["Name"]] = r
+    return {"version": dump.get("Version"), "classes": classes, "enums": enums, "returns": returns}
 
 
 def tname(t):

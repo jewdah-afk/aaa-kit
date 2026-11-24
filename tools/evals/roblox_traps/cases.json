@@ -1,0 +1,214 @@
+{
+ "about": "Roblox hallucination traps. Each case has a prompt, regexes the answer must and must not contain, and a known-good and known-bad answer used by `score.py --selftest`.",
+ "cases": [
+  {
+   "id": "emit_burst",
+   "trap": "invented BurstCount/Burst on ParticleEmitter",
+   "prompt": "Write Luau that fires a one-shot burst of 30 sparks from a ParticleEmitter named Sparks inside a part.",
+   "must_use": [
+    ":Emit\\(\\s*30"
+   ],
+   "must_not": [
+    "BurstCount|:Burst\\(|\\.Burst\\b"
+   ],
+   "good": "```luau\nlocal sparks = part:WaitForChild(\"Sparks\") :: ParticleEmitter\nsparks:Emit(30)\n```",
+   "bad": "```luau\nlocal sparks = Instance.new(\"ParticleEmitter\")\nsparks.BurstCount = 30\nsparks:Burst(30)\n```"
+  },
+  {
+   "id": "raycast_ignore",
+   "trap": "deprecated FindPartOnRay / Ray.new instead of Workspace:Raycast",
+   "prompt": "Raycast straight down from a position and ignore the player's character.",
+   "must_use": [
+    "workspace:Raycast\\(|Workspace:Raycast\\(",
+    "RaycastParams"
+   ],
+   "must_not": [
+    "FindPartOnRay|Ray\\.new|Blacklist|Whitelist"
+   ],
+   "no_deprecated": true,
+   "good": "```luau\nlocal params = RaycastParams.new()\nparams.FilterType = Enum.RaycastFilterType.Exclude\nparams.FilterDescendantsInstances = { character }\nlocal hit = workspace:Raycast(origin, Vector3.new(0, -100, 0), params)\n```",
+   "bad": "```luau\nlocal ray = Ray.new(origin, Vector3.new(0, -100, 0))\nlocal part = workspace:FindPartOnRay(ray, character)\n```"
+  },
+  {
+   "id": "tween_color",
+   "trap": "invented Tween helper methods instead of TweenService:Create",
+   "prompt": "Smoothly change a part's Color to red over 1 second.",
+   "must_use": [
+    "TweenService",
+    ":Create\\(",
+    ":Play\\(\\)"
+   ],
+   "must_not": [
+    ":Tween\\(|TweenColor|\\.Tween\\b"
+   ],
+   "good": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nlocal tween = TweenService:Create(part, TweenInfo.new(1), { Color = Color3.new(1, 0, 0) })\ntween:Play()\n```",
+   "bad": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nTweenService:Tween(part, 1, { Color = Color3.new(1, 0, 0) })\n```"
+  },
+  {
+   "id": "remote_client_to_server",
+   "trap": "RemoteEvent:Fire instead of FireServer / OnServerEvent",
+   "prompt": "Send a message from the client to the server using a RemoteEvent called Ping.",
+   "must_use": [
+    ":FireServer\\(",
+    "OnServerEvent"
+   ],
+   "must_not": [
+    "Ping:Fire\\(|\\.OnEvent\\b|OnClientEvent.*FireServer"
+   ],
+   "good": "```luau\n-- client\nPing:FireServer(\"hello\")\n-- server\nPing.OnServerEvent:Connect(function(player, text)\n\tprint(player.Name, text)\nend)\n```",
+   "bad": "```luau\nlocal Ping = game:GetService(\"ReplicatedStorage\"):WaitForChild(\"Ping\") :: RemoteEvent\nPing:Fire(\"hello\")\n```"
+  },
+  {
+   "id": "editableimage_fill",
+   "trap": "invented per-pixel API instead of WritePixelsBuffer",
+   "prompt": "Fill a 64x64 EditableImage with solid red using the fastest API.",
+   "must_use": [
+    "WritePixelsBuffer"
+   ],
+   "must_not": [
+    "SetPixel|:Fill\\(|:WritePixels\\("
+   ],
+   "good": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nlocal buf = buffer.create(64 * 64 * 4)\nfor i = 0, 64 * 64 - 1 do\n\tbuffer.writeu32(buf, i * 4, 0xFF0000FF)\nend\nimg:WritePixelsBuffer(Vector2.zero, Vector2.new(64, 64), buf)\n```",
+   "bad": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nfor x = 0, 63 do for y = 0, 63 do img:SetPixel(x, y, Color3.new(1, 0, 0)) end end\n```"
+  },
+  {
+   "id": "editablemesh_triangle",
+   "trap": "invented vertex/face creation names on EditableMesh",
+   "prompt": "Build a single triangle with an EditableMesh.",
+   "must_use": [
+    "AddVertex",
+    "AddTriangle"
+   ],
+   "must_not": [
+    "CreateVertex|AddFace|:AddTri\\("
+   ],
+   "good": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:AddVertex(Vector3.new(0, 0, 0))\nlocal b = mesh:AddVertex(Vector3.new(1, 0, 0))\nlocal c = mesh:AddVertex(Vector3.new(0, 1, 0))\nmesh:AddTriangle(a, b, c)\n```",
+   "bad": "```luau\nlocal mesh = game:GetService(\"AssetService\"):CreateEditableMesh()\nlocal a = mesh:CreateVertex(Vector3.new(0, 0, 0))\nmesh:AddFace(a, a, a)\n```"
+  },
+  {
+   "id": "beam_attachments",
+   "trap": "Beam has Attachment0/1, not Part0/Part1",
+   "prompt": "Create a Beam between two parts.",
+   "must_use": [
+    "Attachment0",
+    "Attachment1"
+   ],
+   "must_not": [
+    "\\.Part0|\\.Part1|\\.StartPart"
+   ],
+   "good": "```luau\nlocal a0 = Instance.new(\"Attachment\")\na0.Parent = partA\nlocal a1 = Instance.new(\"Attachment\")\na1.Parent = partB\nlocal beam = Instance.new(\"Beam\")\nbeam.Attachment0 = a0\nbeam.Attachment1 = a1\nbeam.Parent = partA\n```",
+   "bad": "```luau\nlocal beam = Instance.new(\"Beam\")\nbeam.Part0 = partA\nbeam.Part1 = partB\nbeam.Parent = partA\n```"
+  },
+  {
+   "id": "enum_materials",
+   "trap": "invented Enum.Material items",
+   "prompt": "Make one part Neon and another Glass.",
+   "must_use": [
+    "Enum\\.Material\\.Neon",
+    "Enum\\.Material\\.Glass"
+   ],
+   "must_not": [],
+   "good": "```luau\npartA.Material = Enum.Material.Neon\npartB.Material = Enum.Material.Glass\n```",
+   "bad": "```luau\npartA.Material = Enum.Material.Plasma\npartB.Material = Enum.Material.Glass\nlocal x = Enum.Material.Neon\n```"
+  },
+  {
+   "id": "player_joined",
+   "trap": "Players.PlayerJoined does not exist; also handle players already present",
+   "prompt": "Run a function when a player joins, and also for players already in the game.",
+   "must_use": [
+    "PlayerAdded",
+    "GetPlayers\\(\\)"
+   ],
+   "must_not": [
+    "PlayerJoined"
+   ],
+   "good": "```luau\nlocal Players = game:GetService(\"Players\")\nfor _, p in Players:GetPlayers() do task.spawn(onJoin, p) end\nPlayers.PlayerAdded:Connect(onJoin)\n```",
+   "bad": "```luau\nlocal Players = game:GetService(\"Players\")\nPlayers.PlayerJoined:Connect(onJoin)\nlocal all = Players:GetPlayers()\n```"
+  },
+  {
+   "id": "every_frame_client",
+   "trap": "invented RunService events",
+   "prompt": "Run a function every frame on the client, right before the frame is drawn.",
+   "must_use": [
+    "PreRender|RenderStepped|BindToRenderStep"
+   ],
+   "must_not": [
+    "RunService\\.Update|OnRender|\\.Frame:Connect"
+   ],
+   "good": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.PreRender:Connect(function(dt)\n\tstep(dt)\nend)\n```",
+   "bad": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.Update:Connect(function(dt)\n\tstep(dt)\nend)\n```"
+  },
+  {
+   "id": "delayed_cleanup",
+   "trap": "deprecated global wait and Instance:Remove",
+   "prompt": "Remove a part after 5 seconds without yielding the current thread.",
+   "must_use": [
+    "Debris|task\\.delay"
+   ],
+   "must_not": [
+    "(?<![\\w.])wait\\(",
+    ":Remove\\(\\)"
+   ],
+   "no_deprecated": true,
+   "good": "```luau\ngame:GetService(\"Debris\"):AddItem(part, 5)\n```",
+   "bad": "```luau\nlocal part = Instance.new(\"Part\")\nwait(5)\npart:Remove()\n```"
+  },
+  {
+   "id": "humanoid_damage",
+   "trap": "invented Humanoid:Damage/Hurt",
+   "prompt": "Deal 20 damage to a character's Humanoid.",
+   "must_use": [
+    "TakeDamage\\(\\s*20|Health\\s*-=\\s*20"
+   ],
+   "must_not": [
+    ":Damage\\(|:Hurt\\(|\\.Damage\\b"
+   ],
+   "good": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nif humanoid then humanoid:TakeDamage(20) end\n```",
+   "bad": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nhumanoid:Damage(20)\n```"
+  },
+  {
+   "id": "datastore_safe_save",
+   "trap": "invented DataStore methods; missing pcall",
+   "prompt": "Save a number to a DataStore safely.",
+   "must_use": [
+    "pcall",
+    "GetDataStore",
+    "UpdateAsync|SetAsync"
+   ],
+   "must_not": [
+    ":Save\\(|:Set\\(|\\.Save\\b"
+   ],
+   "good": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Coins\")\nlocal ok, err = pcall(function()\n\tstore:UpdateAsync(key, function() return value end)\nend)\nif not ok then warn(err) end\n```",
+   "bad": "```luau\nlocal store = game:GetService(\"DataStoreService\"):GetDataStore(\"Coins\")\nstore:Save(key, value)\n```"
+  },
+  {
+   "id": "sound_pitch",
+   "trap": "Sound.Pitch is deprecated; PlaybackSpeed is current",
+   "prompt": "Play a sound at 1.5x speed.",
+   "must_use": [
+    "PlaybackSpeed"
+   ],
+   "must_not": [
+    "\\.Pitch\\b"
+   ],
+   "no_deprecated": true,
+   "good": "```luau\nsound.PlaybackSpeed = 1.5\nsound:Play()\n```",
+   "bad": "```luau\nlocal sound = Instance.new(\"Sound\")\nsound.Pitch = 1.5\nsound:Play()\n```"
+  },
+  {
+   "id": "pathfinding",
+   "trap": "invented path-finding method names",
+   "prompt": "Compute a path from A to B and read its waypoints.",
+   "must_use": [
+    "CreatePath",
+    "ComputeAsync",
+    "GetWaypoints"
+   ],
+   "must_not": [
+    "FindPath|:Compute\\(|:GetPath\\("
+   ],
+   "good": "```luau\nlocal path = game:GetService(\"PathfindingService\"):CreatePath()\npath:ComputeAsync(a, b)\nlocal waypoints = path:GetWaypoints()\n```",
+   "bad": "```luau\nlocal path = game:GetService(\"PathfindingService\"):FindPath(a, b)\n```"
+  }
+ ]
+}
