@@ -80,6 +80,7 @@ python3 tools/check_links.py                          # every relative link reso
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
 python3 tools/check_lexicon.py                        # schema, duplicates, pairs-with resolve
 python3 tools/hooks/test_amplify.py                   # the prompt-amplifier hook
+python3 tools/hooks/test_premise_check.py             # the prompt hook that flags Roblox API names that do not exist
 python3 tools/hooks/test_edit_checks.py               # the edit-time check hooks
 python3 tools/check_ticket.py                         # the task-ticket template and example
 python3 tools/check_context.py                        # CLAUDE.md and skill size budgets

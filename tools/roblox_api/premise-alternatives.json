@@ -1,0 +1,31 @@
+{
+  "about": "Real alternatives for Roblox API names that people often assume exist. Read by tools/hooks/premise_check.py. Keys are Class.Member on the class (or an ancestor) the fake is usually written against. `use` lists real Class.Member names (tools/hooks/test_premise_check.py checks each against api-index.json, and checks every fake key still does NOT exist). `note` is one line on how to do it with the real API. Names not listed here still get flagged; this table only makes the suggested alternative better.",
+  "fakes": {
+    "EditableImage.Clear": {"use": ["EditableImage.DrawRectangle", "EditableImage.WritePixelsBuffer"], "note": "fill the whole image with DrawRectangle(Vector2.zero, img.Size, color, 0, Enum.ImageCombineType.Overwrite), or write one pre-filled buffer with WritePixelsBuffer"},
+    "EditableImage.Fill": {"use": ["EditableImage.DrawRectangle", "EditableImage.WritePixelsBuffer"], "note": "fill with DrawRectangle over img.Size (Overwrite), or one WritePixelsBuffer of a filled buffer"},
+    "EditableImage.SetPixel": {"use": ["EditableImage.WritePixelsBuffer"], "note": "there is no per-pixel setter; write RGBA bytes into a buffer and call WritePixelsBuffer once per frame"},
+    "EditableImage.GetPixel": {"use": ["EditableImage.ReadPixelsBuffer"], "note": "read a region into a buffer with ReadPixelsBuffer and index it (4 bytes per pixel, RGBA)"},
+    "EditableMesh.AddQuad": {"use": ["EditableMesh.AddVertex", "EditableMesh.AddTriangle"], "note": "a quad is two triangles: AddVertex four times, then AddTriangle(a, b, c) and AddTriangle(a, c, d)"},
+    "GlobalDataStore.SaveAsync": {"use": ["GlobalDataStore.SetAsync", "GlobalDataStore.UpdateAsync"], "note": "SetAsync(key, value) overwrites; UpdateAsync(key, fn) is the safe read-modify-write for player saves"},
+    "GlobalDataStore.LoadAsync": {"use": ["GlobalDataStore.GetAsync"], "note": "GetAsync(key) returns the stored value (or nil) plus a DataStoreKeyInfo"},
+    "Humanoid.SetWalkSpeed": {"use": ["Humanoid.WalkSpeed"], "note": "WalkSpeed is a property: humanoid.WalkSpeed = 24"},
+    "Humanoid.SetHealth": {"use": ["Humanoid.Health", "Humanoid.TakeDamage"], "note": "assign humanoid.Health, or call humanoid:TakeDamage(n) to respect ForceFields"},
+    "ParticleEmitter.BurstCount": {"use": ["ParticleEmitter.Emit"], "note": "a burst is emitter:Emit(count); Rate controls continuous emission"},
+    "ParticleEmitter.Burst": {"use": ["ParticleEmitter.Emit"], "note": "a burst is emitter:Emit(count)"},
+    "TweenService.Run": {"use": ["TweenService.Create", "Tween.Play"], "note": "local tween = TweenService:Create(instance, tweenInfo, goals); tween:Play()"},
+    "TweenService.Tween": {"use": ["TweenService.Create", "Tween.Play"], "note": "local tween = TweenService:Create(instance, tweenInfo, goals); tween:Play()"},
+    "Instance.Delete": {"use": ["Instance.Destroy"], "note": "instance:Destroy() removes it, disconnects its connections and locks Parent"},
+    "Instance.GetChildrenOfClass": {"use": ["Instance.GetChildren", "Instance.IsA", "Instance.FindFirstChildOfClass"], "note": "loop GetChildren() and keep child:IsA(className); FindFirstChildOfClass returns only the first"},
+    "WorldRoot.RaycastDistance": {"use": ["WorldRoot.Raycast"], "note": "local result = workspace:Raycast(origin, direction, params); the distance is result.Distance (result is nil on a miss)"},
+    "Model.SetCFrame": {"use": ["PVInstance.PivotTo"], "note": "model:PivotTo(cframe) moves the whole model by its pivot"},
+    "Model.SetPosition": {"use": ["PVInstance.PivotTo", "Model.MoveTo"], "note": "model:PivotTo(CFrame.new(pos)) keeps rotation semantics explicit; MoveTo avoids overlaps"}
+  },
+  "deprecated": {
+    "WorldRoot.FindPartOnRay": {"use": ["WorldRoot.Raycast"], "note": "workspace:Raycast(origin, direction, RaycastParams) replaces the FindPartOnRay family"},
+    "WorldRoot.FindPartOnRayWithIgnoreList": {"use": ["WorldRoot.Raycast"], "note": "set RaycastParams.FilterDescendantsInstances and call workspace:Raycast"},
+    "WorldRoot.FindPartOnRayWithWhitelist": {"use": ["WorldRoot.Raycast"], "note": "set RaycastParams.FilterType = Enum.RaycastFilterType.Include and call workspace:Raycast"},
+    "Instance.Remove": {"use": ["Instance.Destroy"], "note": "Destroy() instead; Remove only sets Parent to nil and leaks connections"},
+    "Model.SetPrimaryPartCFrame": {"use": ["PVInstance.PivotTo"], "note": "model:PivotTo(cframe)"},
+    "Model.GetPrimaryPartCFrame": {"use": ["PVInstance.GetPivot"], "note": "model:GetPivot()"}
+  }
+}
