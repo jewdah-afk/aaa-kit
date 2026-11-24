@@ -33,7 +33,7 @@ Combat effects are tier 2 (HIERARCHY.md §2): they read instantly, then get out 
 5. **Build with the patterns** in [patterns.md](patterns.md) (❌ DO NOT / ✅ DO for Beam and Trail attachments, emitter dials, EditableImage flipbooks, frame scheduling). `examples/Rig.luau` implements them.
 6. **Schedule on frames.** One `Timeline` per effect on one `PreRender` connection. Never `task.wait` chains or `Completed` hops.
 7. **Add feel** from `examples/Impact.luau`: 2-frame hit-stop on a normal hit, up to 6 on a kill; trauma shake (offset = 6 px × trauma², trauma decays in 450 ms); a 1–2 frame flash. Hit-stop only when the rung allows impact.
-8. **Respect ownership.** Friendly FX stamp at hero rank and never cover threats, UI or ceremonies (§3, §8). Inside a hostile shot's lane, drop branches and sparks. Decoration slots: 6 in the world; skip extras, never delay them. Friendly coverage ≤ 40 % of the play area, ≤ 20 % near the hero.
+8. **Respect ownership.** Friendly FX stamp at hero rank and never cover threats, UI or ceremonies (§3, §8). Inside a hostile shot's lane, drop branches and sparks. Decoration slots: 6 in the world and 400 live particles across all effects (`examples/EffectBudget.luau`, applied by `Rig.play`); skip extras, never delay them, and let a hostile effect evict the oldest friendly ones. Friendly coverage ≤ 40 % of the play area, ≤ 20 % near the hero.
 9. **Colour.** Friendly effects use the hero's palette. Red is for threats only (⚙ checked). Peak brightness is for the onset frame only.
 10. Run the self-check.
 
@@ -75,7 +75,7 @@ The craft behind these rules (one hero + two supports, ZOffset order, toon flipb
 
 ## Example
 
-`examples/Blueprint.luau` (the standard and its validator), `Timeline.luau` (frame cues), `Flipbook.luau` (procedural sheets), `Impact.luau` (hit-stop, trauma shake, flash) and the three blueprints are pure and tested (`examples/Blueprint.test.luau`, `Timeline.test.luau`, `Flipbook.test.luau`, `Impact.test.luau`). `examples/Rig.luau` is the Roblox adapter: compile-checked, not yet play-tested. [effects-gallery.html](../../../examples/web/effects-gallery.html) runs shockwave, branching lightning and ember dissolve live.
+`examples/Blueprint.luau` (the standard and its validator), `Timeline.luau` (frame cues), `Flipbook.luau` (procedural sheets), `EffectBudget.luau` (slots and particle cap), `Impact.luau` (hit-stop, trauma shake, flash) and the three blueprints are pure and tested (`examples/Blueprint.test.luau`, `Timeline.test.luau`, `Flipbook.test.luau`, `EffectBudget.test.luau`, `Impact.test.luau`). `examples/Rig.luau` is the Roblox adapter: compile-checked, not yet play-tested. [effects-gallery.html](../../../examples/web/effects-gallery.html) runs shockwave, branching lightning and ember dissolve live.
 
 ```lua
 local Blueprint = require("./examples/Blueprint")
@@ -114,4 +114,5 @@ end
 - [ ] Beam and Trail attachments exist before the Beam or Trail; `MinLength` and `MaxLength` are set; nothing is parented until it is configured.
 - [ ] Bursts are `Rate = 0` + `Emit`; cleanup waits for the longest particle life; no `task.wait` sequencing.
 - [ ] Hit-stop and shake are off at the calm rung and reduced with reduced motion.
+- [ ] Effects start through Rig.play, so the slot and particle budget applies; a skipped effect is not queued.
 - [ ] Studio play test at rungs 0, 2 and 3 (not possible from the cloud: say so), with measured frame cost (ms) for the worst case, and the effect still reads at phone size.

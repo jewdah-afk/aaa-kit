@@ -8,6 +8,7 @@
 -- attachments exist before the Beam or Trail is created; bursts are Rate 0 + Emit; a Trail is enabled only after its part is
 -- placed; tweens start from Timeline cues with explicit lengths in frames / 60; one PreRender connection drives the effect;
 -- Debris destroys it after the longest particle life.
+-- Concurrency: EffectBudget caps friendly effects at 6 and live particles at 400; a hostile effect always plays.
 --
 -- Setup once on the client:
 --   Rig.setTextures({ ring_thin = "rbxassetid://...", ... })           roles listed in Blueprint.TEXTURE_ROLES
@@ -16,6 +17,7 @@
 
 local Blueprint = require("./Blueprint")
 local Timeline = require("./Timeline")
+local EffectBudget = require("./EffectBudget")
 
 local Rig = {}
 
@@ -29,10 +31,11 @@ export type Options = { parent: Instance?, onHit: (() -> ())? }
 export type Handle = { stop: () -> (), timeline: Timeline.Timeline }
 type Runner = { start: (now: number) -> (), stop: () -> (), update: ((now: number) -> ())? }
 
-Rig.MAX_ACTIVE = 8 -- start value, tune in play: past this a friendly effect is skipped, never queued (HIERARCHY.md §9)
 local FADE_FRAMES = 4
 
-local active = 0
+local budgetState = EffectBudget.new() -- 6 friendly slots, 400 live particles: start values, tune in play
+local nextId = 0
+local stoppers: { [number]: () -> () } = {}
 local textures: { [string]: string } = {}
 local warned: { [string]: boolean } = {}
 
@@ -356,10 +359,19 @@ end
 
 -- Play `bp` at `origin` with the Intensity.BUDGET row for the current rung. Returns nil when a friendly effect is skipped.
 function Rig.play(bp: Blueprint.Blueprint, origin: CFrame, budget: Blueprint.Budget, options: Options?): Handle?
-	if active >= Rig.MAX_ACTIVE and not bp.hostile then
-		return nil -- skipped, never queued (HIERARCHY.md §9); a hostile effect is a critical cue and always plays
-	end
 	local plan = Blueprint.plan(bp, budget)
+	nextId += 1
+	local id = nextId
+	local admitted, evicted = EffectBudget.request(budgetState, id, plan.particles, bp.hostile, os.clock())
+	if not admitted then
+		return nil -- skipped, never queued (HIERARCHY.md section 9)
+	end
+	for _, other in evicted do
+		local stop = stoppers[other]
+		if stop then
+			stop() -- a hostile cue needs the room: the oldest friendly effects end first
+		end
+	end
 	local root: any = Instance.new("Folder") -- built offscreen, parented last
 	root.Name = bp.name
 	local runners: { [string]: Runner } = {}
@@ -387,7 +399,6 @@ function Rig.play(bp: Blueprint.Blueprint, origin: CFrame, budget: Blueprint.Bud
 		end
 	end
 	root.Parent = (options and options.parent) or Workspace
-	active += 1
 
 	local tl = Timeline.new(plan.layers, bp.hitFrame, bp.duration)
 	local conn: any = nil
@@ -400,12 +411,14 @@ function Rig.play(bp: Blueprint.Blueprint, origin: CFrame, budget: Blueprint.Bud
 		if conn then
 			conn:Disconnect()
 		end
-		active -= 1
+		EffectBudget.release(budgetState, id)
+		stoppers[id] = nil
 		for _, r in runners do
 			r.stop()
 		end
 		Debris:AddItem(root, Blueprint.endSeconds(plan) + 0.5)
 	end
+	stoppers[id] = finish
 	conn = RunService.PreRender:Connect(function(dt: number)
 		for _, cue in tl:step(dt) do
 			local r = if cue.layer then runners[cue.layer] else nil
@@ -425,6 +438,11 @@ function Rig.play(bp: Blueprint.Blueprint, origin: CFrame, budget: Blueprint.Bud
 		end
 	end)
 	return { stop = finish, timeline = tl }
+end
+
+-- Live effects and particles, for a debug overlay and the budget measurements in the vfx self-check.
+function Rig.stats(): EffectBudget.Stats
+	return EffectBudget.stats(budgetState)
 end
 
 return Rig
