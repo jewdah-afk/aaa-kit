@@ -36,8 +36,9 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 1. **This file plus one skill.** Skill descriptions are already loaded; a skill's `SKILL.md` loads when it matches. Don't open other skills "for background".
 2. **A skill is a front door.** Open its `examples/`, `patterns.md` or playbook only for the step you're on (the vfx skill's `patterns.md` only while writing Instance code).
 3. **Never browse `docs/research/`, `docs/playbooks/`, `media/` or `lexicon.json`.** Open a file there only when a skill, a ticket or the user names it. To look something up, grep the index (`docs/research/README.md`) or the term in `lexicon.json`.
-4. **Read by range** past 200 lines, and grep before you read.
-5. **Big or vague work becomes a ticket first** (below), so the executing session reads the ticket's Load list and nothing more.
+4. **Roblox API: look it up, don't recall it.** `python3 tools/rbx.py class|member|enum|find <name>` answers from the real API dump; `rbx.py research <words>` ranks the kit's docs. Unsure of a property, method or Enum item? Look first.
+5. **Read by range** past 200 lines, and grep before you read.
+6. **Big or vague work becomes a ticket first** (below), so the executing session reads the ticket's Load list and nothing more.
 
 ## Autonomous loop (phone or PC)
 
@@ -72,6 +73,7 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 bash tools/check_all.sh                                 # everything below, in order
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
 python3 tools/check_roblox_api.py                  # no invented Roblox class, enum or member (real API dump); `-- api-ok` for mocks
+python3 tools/test_rbx.py                              # the API lookup tool
 python3 tools/check_links.py                          # every relative link resolves
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
 python3 tools/check_lexicon.py                        # schema, duplicates, pairs-with resolve

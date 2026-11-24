@@ -37,7 +37,7 @@ echo "== skills";        python3 tools/check_skills.py | tail -1
 echo "== lexicon";       python3 tools/check_lexicon.py | tail -1
 echo "== hook";          python3 tools/hooks/test_amplify.py | tail -1
 echo "== edit hooks";    python3 tools/hooks/test_edit_checks.py | tail -1
-echo "== roblox api"; python3 tools/test_check_roblox_api.py 2>&1 | tail -1; python3 tools/check_roblox_api.py | tail -1
+echo "== roblox api"; python3 tools/test_check_roblox_api.py 2>&1 | tail -1; python3 tools/check_roblox_api.py | tail -1; python3 tools/test_rbx.py 2>&1 | tail -1
 echo "== tickets";       python3 tools/test_check_ticket.py | tail -1; python3 tools/check_ticket.py | tail -1
 echo "== context";       python3 tools/test_check_context.py | tail -1; python3 tools/check_context.py | tail -1
 echo "== hierarchy";     python3 tools/hierarchy/test_hierarchy.py 2>&1 | tail -1
