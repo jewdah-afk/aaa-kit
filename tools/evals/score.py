@@ -7,7 +7,7 @@
 A case passes when: no code block uses an API that is not in Roblox's real dump (tools/check_roblox_api.py), every `must_use`
 pattern appears in the code, no `must_not` pattern does, and (for cases with no_deprecated) nothing deprecated is used.
 Generate answers with tools/evals/run_claude.sh; run it once with the kit's harness on and once without to compare.
-Comments in the answer are ignored by the must_use / must_not rules. Exit 0 only when every case that has an answer passes.
+`must_not` ignores comments (a good answer may say "there is no BurstCount"); `must_use` reads the raw code. Exit 0 only when every case that has an answer passes.
 Results are also summed per tier (basic, rare, false-premise).
 """
 import json
@@ -44,7 +44,7 @@ def grade(case, answer):
         if sev == "error" or case.get("no_deprecated"):
             reasons.append(f"api: {msg}")
     for pat in case.get("must_use", []):
-        if not re.search(pat, prose_free):
+        if not re.search(pat, code):  # raw code: a model may leave the server half commented out
             reasons.append(f"missing {pat}")
     for pat in case.get("must_not", []):
         if re.search(pat, prose_free):

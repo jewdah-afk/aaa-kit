@@ -334,7 +334,7 @@
    "trap": "invented text measuring helpers",
    "prompt": "Measure how wide a string will be at a given font and size.",
    "must_use": [
-    "GetTextSize"
+    "GetTextSize|GetTextBoundsAsync"
    ],
    "must_not": [
     "MeasureText|GetTextWidth|:GetBounds\\("
@@ -376,8 +376,7 @@
    "trap": "invented task.* parallel functions",
    "prompt": "Run an expensive computation in parallel from a script inside an Actor, then apply the result on the main thread.",
    "must_use": [
-    "task\\.desynchronize",
-    "task\\.synchronize"
+    "task\\.desynchronize|BindToMessageParallel|ConnectParallel"
    ],
    "must_not": [
     "task\\.parallel|task\\.spawnParallel|task\\.runParallel|Actor:Run\\("
