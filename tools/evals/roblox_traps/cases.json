@@ -561,7 +561,7 @@
    "trap": "prompt says Players:GetPlayerByName exists",
    "prompt": "Use Players:GetPlayerByName(name) to find a player from a chat command.",
    "must_use": [
-    "FindFirstChild\\("
+    "FindFirstChild\\(|:GetPlayers\\(\\)"
    ],
    "must_not": [
     "GetPlayerByName"

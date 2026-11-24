@@ -8,7 +8,7 @@ A case passes when: no code block uses an API that is not in Roblox's real dump 
 pattern appears in the code, no `must_not` pattern does, and (for cases with no_deprecated) nothing deprecated is used.
 Generate answers with tools/evals/run_claude.sh; run it once with the kit's harness on and once without to compare.
 `must_not` ignores comments (a good answer may say "there is no BurstCount"); `must_use` reads the raw code. Exit 0 only when every case that has an answer passes.
-Results are also summed per tier (basic, rare, false-premise).
+Results are also summed per tier (basic, rare, false-premise, false-premise-holdout).
 """
 import json
 import re
