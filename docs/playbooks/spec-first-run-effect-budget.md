@@ -1,6 +1,6 @@
 # First run of a /spec ticket: EffectBudget
 
-The first time a fresh session executed a `/spec` ticket ([effect-budget](2026-11-24-effect-budget.md)) start to finish. It worked: no questions asked, every edit anchor matched once, `bash tools/check_all.sh` ended with `all checks passed`. These are the gaps it showed in the harness.
+The first time a fresh session executed a `/spec` ticket ([effect-budget](../specs/2026-11-24-effect-budget.md)) start to finish. It worked: no questions asked, every edit anchor matched once, `bash tools/check_all.sh` ended with `all checks passed`. These are the gaps it showed in the harness.
 
 ## What worked
 
