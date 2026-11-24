@@ -22,6 +22,7 @@ valid solution (hand-rolled math, another real event) is not counted as invented
 | chat, harness (clean clone) | 0/15 | 0/14 | 2/8 |
 | agentic, baseline | not run | 0/14 | 3/8 |
 | agentic, harness | not run | 0/14 | 1/8 |
+| chat, harness + premise hook (clean clone, 1 run) | not run | not run | 0/8 |
 
 ## What it says
 1. **The model did not invent an API on its own in any arm** (0 of 29 basic and rare answers in each chat run, 0 of 14 rare answers in each agentic run).
@@ -35,6 +36,11 @@ valid solution (hand-rolled math, another real event) is not counted as invented
 5. In a rerun of that case the model wrote correct code at the first attempt and the hook passed it, so the rerun does **not**
    show the hook rescuing an answer. One probe on `EditableImage:Clear` did: the first write used `:Clear`, the PostToolUse hook
    rejected it, and the rewrite used `DrawRectangle`.
+
+6. **The prompt-time premise hook** (`tools/hooks/premise_check.py`, added after the runs above) tells the model, before it
+   answers, that a Roblox name in the prompt does not exist and what the real one is. One chat run of the eight false-premise
+   cases with it: 0 of 8 invented, and each answer said the named API does not exist. One sample, so as weak as the rows above;
+   rerun with more samples before calling it fixed.
 
 ## Limits
 - One or two samples per case and eight false-premise cases per arm: the difference between arms is suggestive, not statistically
