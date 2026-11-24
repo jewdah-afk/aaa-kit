@@ -71,6 +71,7 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 ```sh
 bash tools/check_all.sh                                 # everything below, in order
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
+python3 tools/check_roblox_api.py                  # no invented Roblox class, enum or member (real API dump); `-- api-ok` for mocks
 python3 tools/check_links.py                          # every relative link resolves
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
 python3 tools/check_lexicon.py                        # schema, duplicates, pairs-with resolve

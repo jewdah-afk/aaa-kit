@@ -7,7 +7,7 @@
   edit_checks.py check F  Manual: check the given files and print the result (exit 1 on a failure).
 
 What runs per file (each takes 30 to 150 ms):
-  .luau / .lua   lune compile check (tools/check_luau.luau); the sibling Name.test.luau (or the file itself when it is a test,
+  .luau / .lua   lune compile check (tools/check_luau.luau); invented Roblox API names (tools/check_roblox_api.py); the sibling Name.test.luau (or the file itself when it is a test,
                  or lib/*/qa/test_*.luau expecting "@@DONE 0"); selene on the file.
   .md            the Luau blocks in it compile (the same checker); skills also run check_skills.py; links run check_links.py.
   .py            it parses; its test (test_<name>.py next to it, or itself when it is a test or a tools/check_*.py).
@@ -75,6 +75,18 @@ def find_luau_test(path):
     return None
 
 
+def check_api(path, proj):
+    """Invented Roblox classes, enums and members (tools/check_roblox_api.py). Warnings are not failures."""
+    script = KIT / "tools" / "check_roblox_api.py"
+    if not script.exists():
+        return []
+    rc, out = run([sys.executable, str(script), str(path)], proj)
+    errs = [ln for ln in out.splitlines() if ": error: " in ln]
+    if rc != 0 and errs:
+        return ["roblox api (not in the real API dump; fix the name, or add `-- api-ok` if it is a mock):\n" + "\n".join(errs[:TAIL_LINES])]
+    return []
+
+
 def check_luau(path, proj):
     fails, notes = [], []
     if not shutil.which("lune"):
@@ -83,6 +95,7 @@ def check_luau(path, proj):
     if rc != 0:
         fails.append("compile:\n" + tail(out))
         return fails, notes  # a file that doesn't compile can't be tested or linted
+    fails += check_api(path, proj)
     test = find_luau_test(path)
     if test:
         tfile, cwd, done_line = test
@@ -109,6 +122,7 @@ def check_md(path, proj):
             fails.append("Luau blocks:\n" + tail(out))
     else:
         notes.append("lune is not installed, so Markdown Luau blocks were not compiled")
+    fails += check_api(path, proj)
     try:
         rel = path.resolve().relative_to(KIT).as_posix()
     except ValueError:
