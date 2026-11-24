@@ -189,6 +189,15 @@ Mythic uses the rarity pink, so it never borrows danger red. Gold-orange for Leg
 
 Every event has the same timeline: baseline → anticipation (only if the mechanic really has one) → onset → active → resolution → recovery.
 
+A multi-layer effect puts that timeline into five phases, and the `vfx` skill's blueprint standard checks them in code:
+
+| Phase | Tier | Loudness | Gate (the intensity ladder, §4) |
+|---|---|---|---|
+| Telegraph / Anticipation | 2 | Hostile: a critical cue, drawn in full at every rung. Friendly: a 3-frame tick | Hostile: none. Friendly: counts scale with the rung |
+| Core Focal Point | 2 | The one brightest layer, on the hit frame. Anything above 0.7 lasts ≤ 24 frames | The flash and hit-stop need the rung's `impact` |
+| Ground Projection, Secondary Motion | 2 | At most 0.7, and anything above 0.35 lasts ≤ 60 frames | Counts scale with the rung |
+| Dissipation / Lingering Smoke | 4 | At most 0.35, soft, never brighter than the HUD | `ambient`: gone at surge, boss and finale |
+
 **Why.** Late feedback lies about when something happened.
 
 **Do.** Skip the seventh spark.

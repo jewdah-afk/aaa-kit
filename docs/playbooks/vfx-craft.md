@@ -1,6 +1,6 @@
 # VFX craft
 
-How we built effects that read as AAA in Roblox, and the engine limits we hit along the way. The rules sit in the [vfx skill](../../.claude/skills/vfx/SKILL.md); this page is the craft and the history behind them.
+How we built effects that read as AAA in Roblox, and the engine limits we hit along the way. The rules sit in the [vfx skill](../../.claude/skills/vfx/SKILL.md), which holds the five-phase blueprint standard (Telegraph, Core, Ground, Secondary, Dissipation), its validator and three reference templates; its [patterns](../../.claude/skills/vfx/patterns.md) give the ❌/✅ Roblox code. This page is the craft and the history behind them.
 
 ## The hierarchy inside one effect
 

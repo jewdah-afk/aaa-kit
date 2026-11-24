@@ -57,7 +57,7 @@ Each is a `SKILL.md` Claude loads by itself, with a tested example in `.claude/s
 - `prompt-amplifier`: turns "make it better" into a full brief · hook tests ✅12
 - `kit-doctor`: say hi, it checks your PC and repo · `tools/doctor.py`
 - `lihfolk-stud-voxel`: stud/LEGO voxel models, rigged GLB out · Oak build `RIG_OK`
--# Routing: 40/40 sample prompts pick the right skill (`tools/check_skills.py`)
+-# Routing: 43/43 sample prompts pick the right skill (`tools/check_skills.py`)
 
 ---
 

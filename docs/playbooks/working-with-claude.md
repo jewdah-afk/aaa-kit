@@ -45,6 +45,25 @@ Short, sharp subagents in `.claude/agents/` that review instead of build:
 | [`visual-hierarchy`](../../.claude/agents/visual-hierarchy.md) | Checks emphasis levels, one CTA, colour semantics, numbers-before-labels. |
 | [`roblox-feasibility`](../../.claude/agents/roblox-feasibility.md) | Flags designs Roblox can't render (radial gradients, letter spacing, tall images, vector swooshes) before they're built. |
 
+## Autonomous loop (phone or PC)
+
+A session you can't watch has to catch its own mistakes and never stop to ask. Four pieces, all in the repo, so a cloud session from a phone gets them too:
+
+| Piece | File | What it does |
+|---|---|---|
+| Setup | [`session_setup.py`](../../tools/hooks/session_setup.py), a `SessionStart` hook | In a cloud session, installs the lune and selene versions pinned in `rokit.toml` when they're missing |
+| Check every edit | [`edit_checks.py post`](../../tools/hooks/edit_checks.py), a `PostToolUse` hook | After each `.luau`, `.py` or `.md` write: lune compile, the sibling test, selene, the Markdown Luau blocks. A failure goes straight back to the model |
+| Check before finishing | `edit_checks.py stop`, a `Stop` hook | Re-checks every changed file, including edits made through Bash (it reads `git status`), and keeps the turn going until they pass. It blocks once, never in a loop |
+| Plan in one shot | [`/spec`](../../.claude/commands/spec.md) and the [task ticket](templates/TASK-TICKET.md) | Turns a vague idea into a file-by-file ticket with every question already answered; `python3 tools/check_ticket.py` rejects a ticket that would stall |
+
+The routine: `/spec <idea>` → read the ticket's `(default)` decisions and veto any → in a fresh session, `Execute docs/specs/<file>` → the report names what ran and what wasn't verified. The ticket's own Load list keeps the executing session from reading the research shelf; `tools/check_context.py` holds `CLAUDE.md` and the skills inside a size budget.
+
+Limits, stated plainly:
+- **selene needs its Roblox std.** It downloads it with its own TLS roots, which fail behind a proxy that re-signs HTTPS (the cloud container). Run `selene generate-roblox-std` once on a PC with a direct connection and commit `roblox.yml`; until then the hooks say "selene skipped" instead of failing. Not verified from the cloud, where the download is blocked.
+- **Nothing here runs Studio.** Rig code and every Roblox-side pattern are compile-checked only; a session reports "play test pending".
+- **Hooks check what changed, not what it affects.** `bash tools/check_all.sh` is still the last step.
+- `EDIT_CHECKS=0` turns the hooks off for a session; `EDIT_CHECKS_SELENE=0` skips lint.
+
 ## Parallel sessions
 
 - **One branch and worktree per job** (`claude/<game>-ui`, `-vfx`, `-mech`) so sessions don't collide. Merge into an integration branch when each lands.

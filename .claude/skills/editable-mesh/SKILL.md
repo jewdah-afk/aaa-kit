@@ -43,6 +43,7 @@ EditableMesh lets a game build and change triangles at runtime. Use it when Part
 - EditableMeshes have engine limits on vertex and triangle counts and a per-device memory budget. Creation can fail, so handle `nil` and keep chunks modest.
 - Mesh edits replicate only if you build on the server and the API allows it; usually generate deterministically on each client from a shared seed.
 - Use `SurfaceAppearance` or a texture for the look (see `materials`).
+- **Not for effect meshes.** Live EditableMeshes are capped at roughly 7 per client (measured in our map; [VFX craft playbook](../../../docs/playbooks/vfx-craft.md)). Rings, domes, crescents and orbs for effects are pooled clones of pre-made MeshPart templates in `ReplicatedStorage.VfxMeshes`, as in the [vfx skill](../vfx/SKILL.md) blueprints.
 
 **Web.** Use three.js `BufferGeometry` with the same arrays: `position`, `normal`, `uv`, `index`.
 

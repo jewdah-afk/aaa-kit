@@ -25,11 +25,26 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 | [LEXICON.md](LEXICON.md) / [lexicon.json](lexicon.json) | 400+ design terms, each with a ready-to-paste prompt phrase |
 | [.claude/skills/](.claude/skills/) | Procedures for HUD, rewards, VFX, EditableImage/Mesh, materials, shaders, algorithms, worlds, economy, Luau standards, art direction, hierarchy audit, prompt amplification and the kit doctor |
 | [lib/](lib/README.md) | Tested Luau libraries: frontier (EditableImage/EditableMesh at the limits), pixelfx (15 pixel effects) and surfacebake (algorithm textures baked onto model assets) |
-| [docs/playbooks/](docs/playbooks/README.md) | How we did everything: Figma UI pipeline, motion + sound, icons, world hierarchy, VFX, procedural textures on models, look-dev loop, Studio, handouts. Follow these before inventing a process |
-| [docs/research/](docs/research/README.md) | 31 research chapters: EditableImage/Mesh APIs and cookbooks, Luau performance, VFX, architecture, security, procgen, AI, live ops, QA, and hierarchy science |
+| [docs/playbooks/](docs/playbooks/README.md) | How we did everything: Figma UI pipeline, motion + sound, icons, world hierarchy, VFX, procedural textures on models, look-dev loop, Studio, handouts. Follow the one a skill links before inventing a process |
+| [docs/research/](docs/research/README.md) | 31 reference chapters. A lookup shelf: open one only when a skill, a ticket or the user names it |
 | `tools/doctor.py` | Checks this PC's toolchain and a game repo against the kit's standards |
 | [docs/STYLE.md](docs/STYLE.md) | Writing, naming and code style |
 | [docs/REPO-MAP.md](docs/REPO-MAP.md) | Which repo does what |
+
+## Context rules (load only what the task needs)
+
+1. **This file plus one skill.** Skill descriptions are already loaded; a skill's `SKILL.md` loads when it matches. Don't open other skills "for background".
+2. **A skill is a front door.** Open its `examples/`, `patterns.md` or playbook only for the step you're on (the vfx skill's `patterns.md` only while writing Instance code).
+3. **Never browse `docs/research/`, `docs/playbooks/`, `media/` or `lexicon.json`.** Open a file there only when a skill, a ticket or the user names it. To look something up, grep the index (`docs/research/README.md`) or the term in `lexicon.json`.
+4. **Roblox API: look it up, don't recall it.** `python3 tools/rbx.py class|member|enum|find <name>` answers from the real API dump; `rbx.py research <words>` ranks the kit's docs. Unsure of a property, method or Enum item? Look first.
+5. **Read by range** past 200 lines, and grep before you read.
+6. **Big or vague work becomes a ticket first** (below), so the executing session reads the ticket's Load list and nothing more.
+
+## Autonomous loop (phone or PC)
+
+- **Every edit is checked.** `.claude/settings.json` hooks run lune compile + tests, selene and the Markdown Luau checks on each `.luau`, `.py` or `.md` you write, and again when you try to finish. A failure comes back to you: fix it, never bypass it. Details in `tools/hooks/edit_checks.py`.
+- **`/spec <idea>`** writes a strict ticket to `docs/specs/` ([template](docs/playbooks/templates/TASK-TICKET.md), `python3 tools/check_ticket.py` validates it). The next message `Execute docs/specs/<file>` runs it in one shot, no questions.
+- **Finish with `bash tools/check_all.sh`.**
 
 ## Defaults when the user doesn't say
 
@@ -57,9 +72,16 @@ How Claude works in any repo of this kit. A repo's own `CLAUDE.md` adds rules on
 ```sh
 bash tools/check_all.sh                                 # everything below, in order
 lune run tools/check_luau.luau .                      # every .luau file + Luau blocks in Markdown
+python3 tools/check_roblox_api.py                  # no invented Roblox class, enum or member (real API dump); `-- api-ok` for mocks
+python3 tools/test_rbx.py                              # the API lookup tool
+python3 tools/audit_research.py                       # inline API names in the research and skills match the real dump
+python3 tools/evals/score.py --selftest               # the Roblox hallucination traps (score a model with tools/evals/run_claude.sh)
 python3 tools/check_links.py                          # every relative link resolves
 python3 tools/check_skills.py                         # skill frontmatter, sections, trigger routing
 python3 tools/check_lexicon.py                        # schema, duplicates, pairs-with resolve
 python3 tools/hooks/test_amplify.py                   # the prompt-amplifier hook
+python3 tools/hooks/test_edit_checks.py               # the edit-time check hooks
+python3 tools/check_ticket.py                         # the task-ticket template and example
+python3 tools/check_context.py                        # CLAUDE.md and skill size budgets
 node tools/check_examples.mjs                         # web examples: zero errors at phone + desktop
 ```

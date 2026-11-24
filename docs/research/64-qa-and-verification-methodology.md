@@ -553,7 +553,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local runCLI = require("@DevPackages/Jest").runCLI
 
 local processServiceExists, ProcessService = pcall(function()
-	return game:GetService("ProcessService")
+	return game:GetService("ProcessService") -- api-ok: ProcessService exists only in the Jest runner, guarded by pcall
 end)
 
 local status, result = runCLI(ReplicatedStorage.Packages.Project, {

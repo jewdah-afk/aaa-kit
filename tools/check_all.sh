@@ -28,7 +28,7 @@ if ! command -v selene >/dev/null; then
 elif out=$(selene examples .claude/skills tools lib 2>&1); then
   echo "$out" | tail -3
 elif echo "$out" | grep -q "Could not collect standard library"; then
-  echo "skipped: selene needs network once to download the Roblox std (std = \"roblox\")"
+  echo "skipped: selene could not build its Roblox std (its own TLS roots can't trust a re-signing proxy); run \`selene generate-roblox-std\` once on a PC with a direct connection and commit roblox.yml"
 else
   echo "$out" | tail -20; exit 1
 fi
@@ -36,6 +36,10 @@ echo "== links";         python3 tools/check_links.py | tail -1
 echo "== skills";        python3 tools/check_skills.py | tail -1
 echo "== lexicon";       python3 tools/check_lexicon.py | tail -1
 echo "== hook";          python3 tools/hooks/test_amplify.py | tail -1
+echo "== edit hooks";    python3 tools/hooks/test_edit_checks.py | tail -1
+echo "== roblox api"; python3 tools/test_check_roblox_api.py 2>&1 | tail -1; python3 tools/check_roblox_api.py | tail -1; python3 tools/test_rbx.py 2>&1 | tail -1; python3 tools/test_evals.py 2>&1 | tail -1; python3 tools/test_audit_research.py 2>&1 | tail -1; python3 tools/audit_research.py | tail -1
+echo "== tickets";       python3 tools/test_check_ticket.py | tail -1; python3 tools/check_ticket.py | tail -1
+echo "== context";       python3 tools/test_check_context.py | tail -1; python3 tools/check_context.py | tail -1
 echo "== hierarchy";     python3 tools/hierarchy/test_hierarchy.py 2>&1 | tail -1
 for g in media/gifs/*.gif media/gifs/*/*.gif; do python3 tools/hierarchy/hierarchy.py flash "$g" > /dev/null || { echo "flash check failed: $g"; exit 1; }; done
 echo "flash: $(ls media/gifs/*.gif media/gifs/*/*.gif | wc -l) GIFs pass WCAG 2.3.1"
