@@ -66,13 +66,69 @@ class Hallucinations(unittest.TestCase):
         self.assertIn("ParticleEmitter", e[0])
 
 
+class Typed(unittest.TestCase):
+    def test_param_annotation(self):
+        e = errs("local function f(e: ParticleEmitter)\n\te.BurstCount = 1\n\te.Rate = 5\nend")
+        self.assertEqual(len(e), 1)
+        self.assertIn("BurstCount", e[0])
+
+    def test_local_annotation_and_optional(self):
+        self.assertEqual(len(errs("local b: Beam? = nil\nb:Fire()")), 1)
+
+    def test_cast(self):
+        self.assertTrue(errs("local n = (x :: Part).Fnord = 3"))
+        self.assertEqual(errs("local n = (x :: Part).Anchored"), [])
+
+    def test_service_binding_checks_methods_not_children(self):
+        self.assertTrue(errs('local R = game:GetService("RunService")\nR:Frobnicate()'))
+        self.assertEqual(errs('local RS = game:GetService("ReplicatedStorage")\nlocal f = RS.Packages'), [])
+
+    def test_service_method_chain(self):
+        self.assertTrue(errs('game:GetService("Debris"):Throw(x, 1)'))
+        self.assertEqual(errs('game:GetService("Debris"):AddItem(x, 1)'), [])
+
+    def test_find_first_child_of_class_result(self):
+        self.assertTrue(errs('local h = m:FindFirstChildOfClass("Humanoid")\nh:Fly()'))
+        self.assertEqual(errs('local h = m:FindFirstChildOfClass("Humanoid")\nh.Health = 0'), [])
+
+    def test_scope_ends_with_the_block(self):
+        src = "local function a()\n\tlocal p: Part = nil\n\tp.Anchored = true\nend\nlocal function b(p)\n\tp.Whatever = 1\nend"
+        self.assertEqual(errs(src), [])
+
+    def test_shadowing_by_untyped_param_or_loop(self):
+        self.assertEqual(errs("local p: Part = nil\nfor _, p in list do\n\tp.Nope = 1\nend"), [])
+        self.assertEqual(errs("local p: Part = nil\np = other\np.Nope = 1"), [])
+
+    def test_base_class_annotation_allows_subclass_members(self):
+        self.assertEqual(errs("local function f(o: Instance)\n\tif o:IsA('Model') then o:PivotTo(cf) end\nend"), [])
+        self.assertTrue(errs("local function f(o: Instance)\n\to:Frobnicate(1)\nend"))
+
+    def test_exact_class_does_not_get_subclass_members(self):
+        self.assertTrue(errs('local f = Instance.new("Frame")\nf:PivotTo(cf)'))
+
+    def test_user_type_shadows_class_name(self):
+        src = "export type Frame = { w: number }\nlocal function f(x: Frame)\n\tx.w = 1\nend"
+        self.assertEqual(errs(src), [])
+
+    def test_unknown_child_read_is_a_warning_unless_strict(self):
+        loose = issues("local function f(m: Model)\n\tlocal x = m.Handle\nend")
+        self.assertEqual([s for _, s, _ in loose], ["warn"])
+        strict = issues("--!strict\nlocal function f(m: Model)\n\tlocal x = m.Handle\nend")
+        self.assertEqual([s for _, s, _ in strict], ["error"])
+
+    def test_property_used_as_method(self):
+        self.assertTrue(errs('local p = Instance.new("Part")\np:Anchored()'))
+
+
 class Edges(unittest.TestCase):
     def test_comments_and_api_ok_are_ignored(self):
         self.assertEqual(errs('-- Instance.new("Nope")\nlocal x = Instance.new("Nope") -- api-ok: mock'), [])
         self.assertEqual(errs('--[[ Instance.new("Nope") ]]'), [])
 
-    def test_rebound_variable_with_two_classes_is_skipped(self):
-        self.assertEqual(errs('local p = Instance.new("Part")\nlocal p = Instance.new("Frame")\np.Foo = 1'), [])
+    def test_rebound_variable_uses_the_class_in_force(self):
+        src = 'local p = Instance.new("Part")\np.Anchored = true\nlocal p = Instance.new("Frame")\np.Anchored = true'
+        r = [(n, m) for n, s, m in issues(src) if s == "error"]
+        self.assertEqual([n for n, _ in r], [4])  # fine on the Part, wrong on the Frame
 
     def test_deprecated_is_a_warning_not_error(self):
         w = issues('local s = Instance.new("Sound")\ns.EmitterSize = 3')

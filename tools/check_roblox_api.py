@@ -40,6 +40,25 @@ def members_of(cls):
     return out
 
 
+_DESC = {}
+
+
+def members_loose(cls):
+    """Members of cls, its ancestors and every subclass: a value declared as `Instance` may be narrowed by IsA before use."""
+    if cls not in _DESC:
+        kids = {}
+        for k, v in CLASSES.items():
+            kids.setdefault(v["super"], []).append(k)
+        out, stack = dict(members_of(cls)), list(kids.get(cls, []))
+        while stack:
+            k = stack.pop()
+            for name, fl in CLASSES[k]["members"].items():
+                out.setdefault(name, fl)
+            stack.extend(kids.get(k, []))
+        _DESC[cls] = out
+    return _DESC[cls]
+
+
 def near(name, pool):
     m = difflib.get_close_matches(name, list(pool), n=1, cutoff=0.7)
     return f" (did you mean {m[0]}?)" if m else ""
@@ -51,7 +70,8 @@ def blank_comments(src):
     out = []
     for ln in src.split("\n"):
         keep_flag = "api-ok" in ln
-        ln2 = LINE_COMMENT.sub("", ln) if "--" in ln and not _in_string_dashes(ln) else ln
+        directive = ln.lstrip().startswith("--!")  # --!strict and friends are not comments
+        ln2 = LINE_COMMENT.sub("", ln) if "--" in ln and not directive and not _in_string_dashes(ln) else ln
         out.append(ln2 + ("  --api-ok" if keep_flag else ""))
     return out
 
@@ -65,23 +85,160 @@ NEW = re.compile(r'\bInstance\.new\(\s*"([^"]+)"')
 SERVICE = re.compile(r':GetService\(\s*"([^"]+)"')
 ENUM = re.compile(r"\bEnum\.([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?")
 CLASSARG = re.compile(r'[:.](?:IsA|FindFirstChildOfClass|FindFirstChildWhichIsA|FindFirstAncestorOfClass|FindFirstAncestorWhichIsA)\(\s*"([^"]+)"')
-BIND = re.compile(r'^\s*(?:local\s+)?([A-Za-z_]\w*)\s*(?::\s*[^=]+?)?=\s*Instance\.new\(\s*"([^"]+)"')
+FUNC_PARAMS = re.compile(r"\bfunction\b\s*[\w.:]*\s*(?:<[^>]*>)?\(([^)]*)\)")
+LOCAL_DECL = re.compile(r"^\s*local\s+(?!function\b)([^=]+?)\s*(?:=(?!=)|$)")
+LOCAL_FUNC = re.compile(r"^\s*local\s+function\s+([A-Za-z_]\w*)")
+FOR_DECL = re.compile(r"^\s*for\s+([\w\s,]+?)\s+(?:in\b|=)")
+ANNOT = re.compile(r"^([A-Za-z_]\w*)\s*:\s*([A-Za-z_][\w.]*)(\?)?\s*$")
+INIT_NEW = re.compile(r'=\s*Instance\.new\(\s*"([^"]+)"\s*\)')
+INIT_SERVICE = re.compile(r'=\s*[\w.]+:GetService\(\s*"([^"]+)"\s*\)\s*$')
+INIT_FIND = re.compile(r':(?:FindFirstChildOfClass|FindFirstChildWhichIsA|FindFirstAncestorOfClass|FindFirstAncestorWhichIsA)\(\s*"([^"]+)"\s*\)\s*$')
+CAST = re.compile(r"\(\s*[^()]*?::\s*([A-Za-z_]\w*)\??\s*\)\s*([.:])([A-Za-z_]\w*)")
+SERVICE_MEMBER = re.compile(r':GetService\(\s*"([^"]+)"\s*\)\s*([.:])([A-Za-z_]\w*)')
+
+
+def indent_of(ln):
+    n = 0
+    for ch in ln:
+        if ch == "\t":
+            n += 4
+        elif ch == " ":
+            n += 1
+        else:
+            break
+    return n
+
+
+def split_top(text):
+    """Split on commas that are not inside (), {} or <>."""
+    parts, depth, cur = [], 0, ""
+    for ch in text:
+        if ch in "({<":
+            depth += 1
+        elif ch in ")}>":
+            depth -= 1
+        if ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    parts.append(cur)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def declarations(ln):
+    """[(name, class_or_None)] declared on this line: locals, loop variables, function parameters."""
+    out = []
+    m = LOCAL_FUNC.match(ln)
+    if m:
+        out.append((m.group(1), None))
+    m = LOCAL_DECL.match(ln)
+    if m:
+        names = split_top(m.group(1))
+        rhs = ln[m.end(0) - 1 :] if "=" in ln[m.start(1) :] else ""
+        single = len(names) == 1
+        for piece in names:
+            am = ANNOT.match(piece)
+            if am:
+                name, cls = am.group(1), am.group(2)
+            else:
+                nm = re.match(r"[A-Za-z_]\w*", piece)
+                name, cls = (nm.group(0) if nm else None), None
+            if name is None:
+                continue
+            if cls is not None:
+                cls = (cls, True)  # annotated: may be narrowed to a subclass
+            elif single:
+                for rx in (INIT_NEW, INIT_SERVICE, INIT_FIND):
+                    r = rx.search(ln)
+                    if r:
+                        cls = (r.group(1), "WhichIsA" in ln and rx is INIT_FIND)
+                        break
+            out.append((name, cls))
+    m = FOR_DECL.match(ln)
+    if m:
+        for name in split_top(m.group(1)):
+            out.append((name, None))
+    for fm in FUNC_PARAMS.finditer(ln):
+        for piece in split_top(fm.group(1)):
+            am = ANNOT.match(piece)
+            if am:
+                out.append((am.group(1), (am.group(2), True)))
+            else:
+                nm = re.match(r"[A-Za-z_]\w*", piece)
+                if nm:
+                    out.append((nm.group(0), None))
+    return out
+
+
+USER_TYPE = re.compile(r"^\s*(?:export\s+)?type\s+([A-Za-z_]\w*)")
+
+
+def user_types(lines):
+    """Names this file defines with `type X =`: they shadow Roblox classes of the same name (export type Frame = ...)."""
+    return {m.group(1) for ln in lines for m in [USER_TYPE.match(ln)] if m}
+
+
+def typed_scopes(lines, own_types=frozenset()):
+    """[(var, class, first_line, last_line)] 1-based inclusive: where a variable's class is known and not shadowed or reassigned."""
+    decls = [declarations(ln) for ln in lines]
+    scopes = []
+    for i, ds in enumerate(decls):
+        for name, tagged in ds:
+            if tagged is None:
+                continue
+            cls, loose = tagged
+            if cls not in CLASSES or cls in own_types:
+                continue
+            is_func = bool(FUNC_PARAMS.search(lines[i])) and not LOCAL_DECL.match(lines[i])
+            base = indent_of(lines[i])
+            end = len(lines)
+            reassign = re.compile(r"^\s*" + re.escape(name) + r"\s*=(?!=)")
+            for j in range(i + 1, len(lines)):
+                ln = lines[j]
+                if not ln.strip():
+                    continue
+                ind = indent_of(ln)
+                if (ind <= base) if is_func else (ind < base):
+                    end = j  # the block that declared it has closed
+                    break
+                if any(n == name for n, _ in decls[j]) or reassign.match(ln):
+                    end = j  # shadowed or reassigned: stop trusting the type
+                    break
+            scopes.append((name, cls, i + 2, end, loose))  # first_line is the line after the declaration
+    return scopes
+
+
+def member_issue(var_label, cls, sep, name, mem, strict, after, n):
+    """Issue tuple or None for `<value of class cls><sep><name>`; `after` is the text following the member name."""
+    flags = mem.get(name)
+    is_assign = bool(re.match(r"\s*=(?!=)", after))
+    is_call = after.lstrip().startswith("(") or after.lstrip().startswith("{") or after.lstrip().startswith('"')
+    if flags is None:
+        if CLASSES[cls]["service"] and sep == "." and not is_assign:
+            return None  # services are indexed for children (ReplicatedStorage.Packages)
+        sev = "error" if (sep == ":" or is_assign or is_call or strict) else "warn"
+        what = "method" if sep == ":" else "member"
+        return (n, sev, f"{var_label} is a {cls}; it has no {what} {name}{near(name, mem)}")
+    if flags[0] == "p" and sep == ":":
+        return (n, "error", f"{cls}.{name} is a property, not a method")
+    if "D" in flags:
+        return (n, "warn", f"{cls}.{name} is deprecated")
+    if "N" in flags:
+        return (n, "error", f"{cls}.{name} is not scriptable")
+    return None
 
 
 def check_lines(lines):
     """Return [(line_no, 'error'|'warn', message)] for a list of source lines (comments already blanked)."""
     issues = []
     ok = lambda n: "api-ok" in lines[n - 1]
-    bindings = {}  # var -> set of classes bound via Instance.new
-    other_assign = set()
-    for n, ln in enumerate(lines, 1):
-        m = BIND.match(ln)
-        if m:
-            bindings.setdefault(m.group(1), set()).add(m.group(2))
+    strict = any(ln.strip().startswith("--!strict") for ln in lines[:5])
+    own_types = user_types(lines)
     for n, ln in enumerate(lines, 1):
         if ok(n):
             continue
-        for (c,) in [(x,) for x in NEW.findall(ln)]:
+        for c in NEW.findall(ln):
             if c not in CLASSES:
                 issues.append((n, "error", f'Instance.new("{c}"): no such class{near(c, CLASSES)}'))
             elif not CLASSES[c]["creatable"]:
@@ -93,32 +250,35 @@ def check_lines(lines):
                 issues.append((n, "error", f'GetService("{c}"): no such service{near(c, [k for k, v in CLASSES.items() if v["service"]])}'))
         for e, item in ENUM.findall(ln):
             if e not in ENUMS:
-                if e not in ("GetEnums",):  # Enum:GetEnums() style calls are methods, not names
-                    issues.append((n, "error", f"Enum.{e}: no such enum{near(e, ENUMS)}"))
+                issues.append((n, "error", f"Enum.{e}: no such enum{near(e, ENUMS)}"))
             elif item and item not in ENUMS[e] and item not in ("GetEnumItems", "FromName", "FromValue"):
                 issues.append((n, "error", f"Enum.{e}.{item}: no such item{near(item, ENUMS[e])}"))
         for c in CLASSARG.findall(ln):
             if c not in CLASSES:
                 issues.append((n, "error", f'class name "{c}": no such class{near(c, CLASSES)}'))
-    for var, classes in bindings.items():
-        if len(classes) != 1:
-            continue
-        cls = next(iter(classes))
-        if cls not in CLASSES:
-            continue
-        mem = members_of(cls)
-        pat = re.compile(r"(?<![\w.:])" + re.escape(var) + r"([.:])([A-Za-z_]\w*)")
-        for n, ln in enumerate(lines, 1):
+        for cls, sep, name in [(m.group(1), m.group(2), m.group(3)) for m in SERVICE_MEMBER.finditer(ln)]:
+            if cls in CLASSES:
+                after = ln[ln.index(name, ln.index(f'"{cls}"')) + len(name) :]
+                r = member_issue(f'GetService("{cls}")', cls, sep, name, members_of(cls), strict, after, n)
+                if r:
+                    issues.append(r)
+        for m in CAST.finditer(ln):
+            cls, sep, name = m.groups()
+            if cls in CLASSES and cls not in own_types:
+                r = member_issue("value", cls, sep, name, members_of(cls), strict, ln[m.end() :], n)
+                if r:
+                    issues.append(r)
+    for var, cls, first, last, loose in typed_scopes(lines, own_types):
+        mem = members_loose(cls) if loose else members_of(cls)
+        pat = re.compile(r"(?<![\w.:\"'])" + re.escape(var) + r"([.:])([A-Za-z_]\w*)")
+        for n in range(first, last + 1):
             if ok(n):
                 continue
-            for sep, name in pat.findall(ln):
-                flags = mem.get(name)
-                if flags is None:
-                    issues.append((n, "error", f"{var} is a {cls}; it has no member {name}{near(name, mem)}"))
-                elif "D" in flags:
-                    issues.append((n, "warn", f"{cls}.{name} is deprecated"))
-                elif "N" in flags:
-                    issues.append((n, "error", f"{cls}.{name} is not scriptable"))
+            ln = lines[n - 1]
+            for m in pat.finditer(ln):
+                r = member_issue(var, cls, m.group(1), m.group(2), mem, strict, ln[m.end() :], n)
+                if r:
+                    issues.append(r)
     return sorted(set(issues))
 
 
