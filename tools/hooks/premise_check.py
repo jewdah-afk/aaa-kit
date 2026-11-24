@@ -10,6 +10,8 @@ What counts as an API name (kept narrow so ordinary prose and Studio paths are n
   Class:Method            receiver is an exact class name, `workspace`/`game`, or game:GetService("Class")
   Class.Member(  Class.Member =   Class.Member property|method|event    (a bare Class.Child is a child lookup, not checked)
   Class's Member property|method|...      the Member property of Class
+  Service.Member          bare, in prose, only on services that do not hold children (RunService.Update, not ReplicatedStorage.Remotes)
+  Class.Event:Connect     the event is checked on the class
   Enum.Type.Item
 Strict receivers (exact class name) are flagged when the member is on neither the class, its ancestors nor its subclasses.
 Loose receivers (a variable named like a class, `part:Delete`, or a child access, `script.Parent.Humanoid:X`) are flagged only
@@ -36,6 +38,11 @@ SERVICE = re.compile(rf"GetService\(\s*[\"'](\w+)[\"']\s*\)(:)({ID})")         #
 DOT_CALL = re.compile(rf"(?<![\w.:])({ID})\.({ID})(\(|\s*=(?!=)|\s+{KEYWORD}\b)")
 POSSESSIVE = re.compile(rf"\b([A-Z]\w*)['’]s\s+({ID})(?:\(\))?\s+{KEYWORD}\b")
 OF_FORM = re.compile(rf"\b([A-Z]\w*)(?:\(\))?\s+{KEYWORD}\s+(?:of|on)\s+(?:the\s+|a\s+|an\s+)?([A-Z]\w*)\b")
+BARE = re.compile(rf"(?:(?<=\s)|(?<=^)|(?<=`))({ID})\.({ID})(?=`|\s|$|[,;!?]|\.(?:\s|$))", re.M)  # Service.Member as a prose word
+SIGNAL_USE = {"Connect", "Once", "Wait", "ConnectParallel"}
+# Services that hold children people name in paths (ReplicatedStorage.Remotes, Players.Alice): a bare dot there is a child lookup.
+CONTAINERS = {"Workspace", "ReplicatedStorage", "ReplicatedFirst", "ServerStorage", "ServerScriptService", "StarterGui", "StarterPack",
+              "StarterPlayer", "Lighting", "Players", "Teams", "SoundService", "Chat", "TextChatService", "MaterialService", "CoreGui", "Packages"}
 ENUM = re.compile(rf"\bEnum\.({ID})(?:\.({ID}))?")
 
 
@@ -126,11 +133,15 @@ def candidates(text):
         head, tail, member = m.group(1), m.group(2), m.group(3)
         if tail:  # Recv.a.b:Method -> the last segment is an instance name, not a type
             yield tail.rsplit(".", 1)[1], ":", member, "loose-child"
+            if member in SIGNAL_USE and tail.count(".") == 1:  # RunService.Update:Connect -> is Update an event of RunService?
+                yield head, ".", tail[1:], "var"
         else:
             yield head, ":", member, "var"
     for m in DOT_CALL.finditer(text):
         if m.group(1) != "Enum":
             yield m.group(1), ".", m.group(2), "var"
+    for m in BARE.finditer(text):
+        yield m.group(1), ".", m.group(2), "service"
     for m in POSSESSIVE.finditer(text):
         yield m.group(1), ".", m.group(2), "strict"
     for m in OF_FORM.finditer(text):
@@ -143,6 +154,9 @@ def resolve(api, recv, mode):
     """(class, strict?) for a receiver, or (None, None) when it is not a Roblox type."""
     if mode == "strict":
         return (recv, True) if recv in api.classes else (None, None)
+    if mode == "service":  # bare RunService.Update: only a non-container service, where a child lookup is unlikely
+        c = api.classes.get(recv)
+        return (recv, True) if c and c["service"] and recv not in CONTAINERS else (None, None)
     if recv in GLOBALS:
         return GLOBALS[recv], True
     if mode == "var" and recv in api.classes:
@@ -172,7 +186,8 @@ def alternative(api, cls, member, sep):
         return "Closest real members: " + ", ".join(api.show(f"{cls}.{m}") for m in near[:3]) + "."
     elsewhere = api.anywhere.get(member)
     if elsewhere:
-        return f"`{member}` exists only on {', '.join(sorted(elsewhere)[:3])}, not on {cls}."
+        return (f"No close real member on {cls}. (`{member}` is a member of {', '.join(sorted(elsewhere)[:3])}, which may do "
+                f"something else; check it before using it here.)")
     return "No close real member; describe the real approach instead of inventing one."
 
 
@@ -194,6 +209,16 @@ def bound_names(text):
     return out
 
 
+INSTANCE_RHS = re.compile(r"game\b|workspace\b|script\b|Instance\.new|:Clone\(|:FindFirst|:WaitForChild|:GetChildren|:GetDescendants|::")
+
+
+def own_modules(text):
+    """Names the prompt defines as its own module: `local X = {}`, `local X = require(...)`, `local X = Framework.X`, `function X.f`."""
+    own = {g for m in LOCAL_DEF.finditer(text) for g in m.groups() if g}
+    own |= {m.group(1) for m in LOCAL_VAR.finditer(text) if not INSTANCE_RHS.search(m.group(2))}
+    return own
+
+
 def roblox_shaped(member):
     """Roblox members are PascalCase. A lowercase, snake or ALL_CAPS member is the user's own code (Noise.fbm, Light.WARM)."""
     return member[:1].isupper() and "_" not in member and not (len(member) > 1 and member.isupper())
@@ -201,7 +226,7 @@ def roblox_shaped(member):
 
 def findings(prompt, api):
     text = re.sub(r"https?://\S+", " ", prompt)
-    own = {g for m in LOCAL_DEF.finditer(text) for g in m.groups() if g}  # `local Light = {}` / require: the prompt's own module
+    own = own_modules(text)  # `local Light = {}` / require / Framework.X: the prompt's own module, not the Roblox class
     bound = bound_names(text)  # a variable named like a class may hold a subclass or another class: check it loosely
     out, seen = [], set()
     for recv, sep, member, mode in candidates(text):
@@ -224,6 +249,8 @@ def findings(prompt, api):
         cls, strict = resolve(api, recv, mode)
         if not cls:
             continue
+        if mode == "service" and recv in bound:
+            continue  # a local named like a service, used in code: not prose about the service
         if recv in bound and mode != "strict":
             strict = False
         key = (cls, member)

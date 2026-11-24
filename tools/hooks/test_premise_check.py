@@ -94,6 +94,12 @@ real_prompts += [
     "-- feed on ReplicatedStorage.SpectateRE (no relay in this place)",
     "See https://create.roblox.com/docs/reference/engine/classes/EditableImage#Clear for details",
     "Set the BasePart's MeshId property",  # real on a subclass (MeshPart): loose wording, not a fake
+    "local GenerationService = Framework.GenerationService\nGenerationService:GenerateBlock(Pos)",  # own module named like a service
+    "local Maid = require(Packages.Maid)\nlocal BridgeNet = require(Packages.BridgeNet2)",
+    "local Stats = script.Stats\nlocal Template = Stats.LBTemplate\n",
+    "Connect to RunService.Heartbeat or RunService.RenderStepped, and Players.PlayerAdded:Connect(onJoin).",
+    "Put it in ReplicatedStorage.Remotes then fire ServerStorage.Templates and Players.Alice from a test.",
+    "workspace.Map.Door.Touched:Connect(onTouch)",
 ]
 for p in real_prompts:
     ctx = context(p)
@@ -110,7 +116,14 @@ fake_prompts = {
     "Use Enum.Material.Plasmaa for the core": "Enum.Material.Plasmaa",
     "Use Enum.Materials.Neon": "Enum.Materials",
     "Use workspace:FindPartOnRay(ray) to find the hit.": "deprecated",
+    "Connect a function to RunService.Update every frame.": "RunService.Update",
+    "RunService.Update:Connect(function(dt) end)": "RunService.Update",
+    "Players.PlayerJoined:Connect(onJoin)": "Players.PlayerJoined",
 }
+# the holdout tier: written after the hook, run blind once (8/9 flagged, see RESULTS.md); now a regression test
+for c in [c for c in CASES if c.get("tier") == "false-premise-holdout"]:
+    ctx = context(c["prompt"])
+    check(ctx is not None and any(f in ctx for f in names(c["must_not"])), f"holdout {c['id']} flagged", ctx or "(no output)")
 for p, want in fake_prompts.items():
     ctx = context(p)
     check(ctx is not None and want in ctx, f"fake flagged: {p[:60]!r} -> {want}", ctx or "(no output)")

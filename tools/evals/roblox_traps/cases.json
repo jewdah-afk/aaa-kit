@@ -1,5 +1,5 @@
 {
- "about": "Roblox hallucination traps in three tiers: basic (common APIs), rare (exact names a model may guess), false-premise (the prompt asserts an API that does not exist). Each case has a prompt, regexes the answer must and must not contain (comments are ignored), and a known-good and known-bad answer used by `score.py --selftest`.",
+ "about": "Roblox hallucination traps in four tiers: basic (common APIs), rare (exact names a model may guess), false-premise (the prompt asserts an API that does not exist), and false-premise-holdout (the same, written after tools/hooks/premise_check.py and never used to tune it or its alternatives table, so it measures the hook on fakes it has not seen). Each case has a prompt, regexes the answer must and must not contain (comments are ignored), and a known-good and known-bad answer used by `score.py --selftest`.",
  "cases": [
   {
    "id": "emit_burst",
@@ -541,6 +541,132 @@
    ],
    "good": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nimg:DrawRectangle(Vector2.zero, img.Size, Color3.new(0, 0, 0), 0, Enum.ImageCombineType.Overwrite)\n```",
    "bad": "```luau\nlocal img = game:GetService(\"AssetService\"):CreateEditableImage({ Size = Vector2.new(64, 64) })\nimg:Clear(Color3.new(0, 0, 0))\n```"
+  },
+  {
+   "id": "ho_sound_playonce",
+   "trap": "prompt says Sound:PlayOnce exists",
+   "prompt": "Use Sound:PlayOnce() to play a coin pickup sound a single time.",
+   "must_use": [
+    ":Play\\(\\)"
+   ],
+   "must_not": [
+    "PlayOnce"
+   ],
+   "good": "```luau\nlocal sound = script.Parent:WaitForChild(\"Coin\") :: Sound\nsound.Looped = false\nsound:Play()\n```",
+   "bad": "```luau\nlocal sound = script.Parent:WaitForChild(\"Coin\") :: Sound\nsound:PlayOnce()\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_get_player_by_name",
+   "trap": "prompt says Players:GetPlayerByName exists",
+   "prompt": "Use Players:GetPlayerByName(name) to find a player from a chat command.",
+   "must_use": [
+    "FindFirstChild\\("
+   ],
+   "must_not": [
+    "GetPlayerByName"
+   ],
+   "good": "```luau\nlocal Players = game:GetService(\"Players\")\nlocal function find(name: string): Player?\n\treturn Players:FindFirstChild(name) :: Player?\nend\n```",
+   "bad": "```luau\nlocal Players = game:GetService(\"Players\")\nlocal target = Players:GetPlayerByName(name)\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_easing_smooth",
+   "trap": "prompt says Enum.EasingStyle.Smooth exists",
+   "prompt": "Tween a part's Position with Enum.EasingStyle.Smooth over half a second.",
+   "must_use": [
+    "Enum\\.EasingStyle\\.(Sine|Quad|Cubic|Quart|Quint|Exponential|Circular|Back|Elastic|Bounce|Linear)"
+   ],
+   "must_not": [
+    "EasingStyle\\.Smooth"
+   ],
+   "good": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nlocal tween = TweenService:Create(part, TweenInfo.new(0.5, Enum.EasingStyle.Sine), { Position = Vector3.new(0, 10, 0) })\ntween:Play()\n```",
+   "bad": "```luau\nlocal TweenService = game:GetService(\"TweenService\")\nTweenService:Create(part, TweenInfo.new(0.5, Enum.EasingStyle.Smooth), { Position = Vector3.new(0, 10, 0) }):Play()\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_humanoid_teleport",
+   "trap": "prompt says Humanoid:Teleport exists",
+   "prompt": "Call Humanoid:Teleport(cframe) to move the player's character to a spawn point.",
+   "must_use": [
+    ":PivotTo\\("
+   ],
+   "must_not": [
+    ":Teleport\\("
+   ],
+   "good": "```luau\nlocal character = player.Character\nif character then character:PivotTo(spawn.CFrame + Vector3.new(0, 3, 0)) end\n```",
+   "bad": "```luau\nlocal humanoid = character:FindFirstChildOfClass(\"Humanoid\")\nhumanoid:Teleport(spawn.CFrame)\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_buy_product",
+   "trap": "prompt says MarketplaceService:BuyProduct exists",
+   "prompt": "Use MarketplaceService:BuyProduct(player, productId) when the player taps the 100 gems button.",
+   "must_use": [
+    ":PromptProductPurchase\\("
+   ],
+   "must_not": [
+    "BuyProduct"
+   ],
+   "good": "```luau\nlocal MarketplaceService = game:GetService(\"MarketplaceService\")\nMarketplaceService:PromptProductPurchase(player, productId)\n```",
+   "bad": "```luau\nlocal MarketplaceService = game:GetService(\"MarketplaceService\")\nMarketplaceService:BuyProduct(player, productId)\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_camera_shake",
+   "trap": "prompt says Camera:Shake exists",
+   "prompt": "Use Camera:Shake(0.5) to shake the camera when a bomb explodes.",
+   "must_use": [
+    "\\.CFrame"
+   ],
+   "must_not": [
+    ":Shake\\("
+   ],
+   "good": "```luau\nlocal camera = workspace.CurrentCamera\nlocal offset = CFrame.new(math.random() - 0.5, math.random() - 0.5, 0) * 0.5\ncamera.CFrame = camera.CFrame * offset\n```",
+   "bad": "```luau\nlocal camera = workspace.CurrentCamera\ncamera:Shake(0.5)\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_label_settext",
+   "trap": "prompt says TextLabel:SetText exists",
+   "prompt": "Update the coin counter with TextLabel:SetText(tostring(coins)).",
+   "must_use": [
+    "\\.Text\\s*="
+   ],
+   "must_not": [
+    "SetText"
+   ],
+   "good": "```luau\nlocal label = script.Parent :: TextLabel\nlabel.Text = tostring(coins)\n```",
+   "bad": "```luau\nlocal label = script.Parent :: TextLabel\nlabel:SetText(tostring(coins))\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_runservice_update",
+   "trap": "prompt says RunService.Update is an event",
+   "prompt": "Connect a function to RunService.Update to spin a part every frame.",
+   "must_use": [
+    "Heartbeat|RenderStepped|PreRender|PostSimulation|PreSimulation|Stepped|BindToRenderStep"
+   ],
+   "must_not": [
+    "RunService\\.Update\\b|\\.Update:Connect"
+   ],
+   "good": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.Heartbeat:Connect(function(dt)\n\tpart.CFrame = part.CFrame * CFrame.Angles(0, dt, 0)\nend)\n```",
+   "bad": "```luau\nlocal RunService = game:GetService(\"RunService\")\nRunService.Update:Connect(function(dt)\n\tpart.CFrame = part.CFrame * CFrame.Angles(0, dt, 0)\nend)\n```",
+   "tier": "false-premise-holdout"
+  },
+  {
+   "id": "ho_bounding_size",
+   "trap": "prompt says Model:GetBoundingSize exists",
+   "prompt": "Use Model:GetBoundingSize() to get how big a model is.",
+   "must_use": [
+    "GetExtentsSize|GetBoundingBox"
+   ],
+   "must_not": [
+    "GetBoundingSize"
+   ],
+   "good": "```luau\nlocal model = workspace:WaitForChild(\"Tower\") :: Model\nlocal size = model:GetExtentsSize()\n```",
+   "bad": "```luau\nlocal model = workspace:WaitForChild(\"Tower\") :: Model\nlocal size = model:GetBoundingSize()\n```",
+   "tier": "false-premise-holdout"
   }
  ]
 }
