@@ -401,6 +401,16 @@ def check_lines(lines):
                     r = member_issue(f"{var}.{m.group(2)}", pt, ":", cm.group(1), members_loose(pt), strict, ln[m.end() + cm.end() :], n)
                     if r:
                         issues.append(r)
+    # (x :: any):Method() does not make a missing member exist: for a value of known class the cast is not an excuse
+    for var, cls, first, last, loose in typed_scopes(lines, own_types):
+        mem = members_loose(cls) if loose else members_of(cls)
+        anypat = re.compile(r"\(\s*" + re.escape(var) + r"\s*::\s*any\s*\)\s*([.:])([A-Za-z_]\w*)")
+        for n in range(first, last + 1):
+            if ok(n):
+                continue
+            for m in anypat.finditer(lines[n - 1]):
+                if m.group(2) not in mem and not (CLASSES[cls]["service"] and m.group(1) == "."):
+                    issues.append((n, "error", f"{var} is a {cls}; casting it to any does not give it a member {m.group(2)}{near(m.group(2), mem)}"))
     for n, ln in enumerate(lines, 1):
         if ok(n) or "task" in declared:
             continue

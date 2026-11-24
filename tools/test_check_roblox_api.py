@@ -170,6 +170,11 @@ class Properties(unittest.TestCase):
         self.assertEqual(errs("local p = game:GetService(\"Players\").LocalPlayer\nlocal gui = p.PlayerGui"), [])
         self.assertTrue(errs("local p = game:GetService(\"Players\").LocalPlayer\np:Frobnicate()"))
 
+    def test_cast_to_any_does_not_excuse_a_missing_member(self):
+        src = 'local store = game:GetService("DataStoreService"):GetDataStore("X")\n(store :: any):SaveAsync(k, v)'
+        self.assertTrue(errs(src))
+        self.assertEqual(errs(src.replace("SaveAsync", "SetAsync")), [])
+
     def test_task_library(self):
         self.assertTrue(errs("task.parallel(f)"))
         self.assertEqual(errs("task.spawn(f)\ntask.defer(f)\ntask.desynchronize()"), [])

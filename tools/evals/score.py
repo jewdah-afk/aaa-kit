@@ -91,17 +91,23 @@ def main(argv):
         rows.append({"id": c["id"], "status": "pass" if ok else "FAIL", "reasons": why})
     graded = [r for r in rows if r["status"] != "missing"]
     passed = sum(r["status"] == "pass" for r in graded)
+    for r in graded:
+        # "invented" is the hallucination metric: an API that is not in the dump, or a forbidden call. A missing must_use alone
+        # means the model solved it another way (hand-rolled math, a different real API), which is not a hallucination.
+        r["invented"] = any(x.startswith(("api:", "forbidden")) for x in r["reasons"])
+    invented = sum(r["invented"] for r in graded)
+    tier_of = {c["id"]: c.get("tier", "basic") for c in CASES}
+    tiers = {}
+    for r in graded:
+        ok, bad, n = tiers.get(tier_of[r["id"]], (0, 0, 0))
+        tiers[tier_of[r["id"]]] = (ok + (r["status"] == "pass"), bad + r["invented"], n + 1)
     if "--json" in argv:
-        print(json.dumps({"passed": passed, "graded": len(graded), "total": len(CASES), "rows": rows}, indent=1))
+        print(json.dumps({"passed": passed, "invented": invented, "graded": len(graded), "total": len(CASES), "rows": rows}, indent=1))
     else:
         for r in rows:
-            print(f"{r['status']:7} {r['id']}" + ("".join(f"\n          {x}" for x in r["reasons"])))
-        tiers = {}
-        for r in graded:
-            t = next(c.get("tier", "basic") for c in CASES if c["id"] == r["id"])
-            ok, n = tiers.get(t, (0, 0))
-            tiers[t] = (ok + (r["status"] == "pass"), n + 1)
-        print(f"{passed}/{len(graded)} passed ({len(CASES) - len(graded)} not answered); " + ", ".join(f"{t} {ok}/{n}" for t, (ok, n) in sorted(tiers.items())))
+            print(f"{r['status']:7} {r['id']}" + (" [invented API]" if r.get("invented") else "") + "".join(f"\n          {x}" for x in r["reasons"]))
+        print(f"{passed}/{len(graded)} passed, {invented} invented an API ({len(CASES) - len(graded)} not answered); "
+              + ", ".join(f"{t} {ok}/{n} (invented {bad})" for t, (ok, bad, n) in sorted(tiers.items())))
     return 1 if failed else 0
 
 

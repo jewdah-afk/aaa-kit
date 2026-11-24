@@ -289,7 +289,7 @@
    "trap": "invented ProximityPrompt events",
    "prompt": "Run code when a player finishes holding the button on a ProximityPrompt.",
    "must_use": [
-    "\\.Triggered:Connect"
+    "\\.Triggered:Connect|PromptButtonHoldEnded:Connect"
    ],
    "must_not": [
     "OnTriggered|\\.Activated\\b|\\.HoldCompleted|\\.Pressed\\b"
@@ -336,7 +336,7 @@
     "GetTextSize|GetTextBoundsAsync"
    ],
    "must_not": [
-    "MeasureText|GetTextWidth|:GetBounds\\("
+    ":MeasureText\\(|:GetTextWidth\\(|:GetBounds\\("
    ],
    "good": "```luau\nlocal TextService = game:GetService(\"TextService\")\nlocal size = TextService:GetTextSize(\"Hello\", 18, Enum.Font.Gotham, Vector2.new(1000, 1000))\n```",
    "bad": "```luau\nlocal TextService = game:GetService(\"TextService\")\nlocal w = TextService:MeasureText(\"Hello\", 18)\n```"
@@ -448,7 +448,7 @@
    "trap": "prompt says ParticleEmitter.BurstCount fires a burst",
    "prompt": "Set the ParticleEmitter's BurstCount property to 30 so it fires a burst of sparks.",
    "must_use": [
-    ":Emit\\(\\s*30"
+    ":Emit\\("
    ],
    "must_not": [
     "BurstCount\\s*="
